@@ -1,8 +1,10 @@
 # trong một script seed.py hoặc trong flask shell
 from app import create_app
 from app.extensions import db
-from app.models import Role, User, Building, RoomType, Room
+from app.models import Role, User, Building, RoomType, Room, Registration, Contract, Payment, MaintenanceRequest
 from werkzeug.security import generate_password_hash
+from datetime import datetime, date, timedelta
+import random
 
 app = create_app()
 with app.app_context():
@@ -208,6 +210,214 @@ with app.app_context():
         db.session.commit()
         print("✓ Rooms seeded successfully")
     
+    # Seed Registrations
+    print("Seeding Registrations...")
+    students = User.query.join(Role).filter(Role.role_name == 'Student').all()
+    available_rooms = Room.query.filter_by(status='available').limit(10).all()  # Lấy 10 phòng đầu tiên
+    
+    if students and available_rooms:
+        registration_statuses = ['pending', 'approved', 'rejected']
+        
+        for i, student in enumerate(students):
+            if i < len(available_rooms):  # Đảm bảo có đủ phòng
+                room = available_rooms[i]
+                
+                # Kiểm tra đã có registration chưa
+                existing_registration = Registration.query.filter_by(
+                    student_id=student.user_id,
+                    room_id=room.room_id
+                ).first()
+                
+                if not existing_registration:
+                    # 70% approved, 20% pending, 10% rejected
+                    if i < len(students) * 0.7:
+                        status = 'approved'
+                    elif i < len(students) * 0.9:
+                        status = 'pending'
+                    else:
+                        status = 'rejected'
+                    
+                    registration = Registration(
+                        student_id=student.user_id,
+                        room_id=room.room_id,
+                        status=status,
+                        registration_date=datetime.utcnow() - timedelta(days=random.randint(1, 30))
+                    )
+                    db.session.add(registration)
+                    
+                    # Cập nhật trạng thái phòng nếu approved
+                    if status == 'approved':
+                        room.current_occupancy += 1
+                        if room.current_occupancy >= room.room_type.capacity:
+                            room.status = 'occupied'
+    
+    db.session.commit()
+    print("✓ Registrations seeded successfully")
+    
+    # Seed Contracts
+    print("Seeding Contracts...")
+    approved_registrations = Registration.query.filter_by(status='approved').all()
+    
+    for registration in approved_registrations:
+        # Kiểm tra đã có contract chưa
+        if not Contract.query.filter_by(registration_id=registration.registration_id).first():
+            start_date = date.today() - timedelta(days=random.randint(0, 60))
+            end_date = start_date + timedelta(days=365)  # Hợp đồng 1 năm
+            
+            contract = Contract(
+                registration_id=registration.registration_id,
+                contract_code=f"HD{registration.registration_id:04d}",
+                start_date=start_date,
+                end_date=end_date,
+                created_at=datetime.utcnow() - timedelta(days=random.randint(0, 30))
+            )
+            db.session.add(contract)
+    
+    db.session.commit()
+    print("✓ Contracts seeded successfully")
+    
+    # Seed Payments
+    print("Seeding Payments...")
+    contracts = Contract.query.all()
+    management_users = User.query.join(Role).filter(Role.role_name == 'Management').all()
+    
+    for contract in contracts:
+        room_price = contract.registration.room.room_type.price
+        
+        # Tạo 1-3 khoản thanh toán cho mỗi hợp đồng
+        num_payments = random.randint(1, 3)
+        
+        for i in range(num_payments):
+            # Kiểm tra đã có payment chưa
+            existing_payments = Payment.query.filter_by(contract_id=contract.contract_id).count()
+            
+            if existing_payments < num_payments:
+                # 80% confirmed, 15% pending, 5% failed
+                rand = random.random()
+                if rand < 0.8:
+                    status = 'confirmed'
+                    confirmed_by = random.choice(management_users) if management_users else None
+                elif rand < 0.95:
+                    status = 'pending'
+                    confirmed_by = None
+                else:
+                    status = 'failed'
+                    confirmed_by = None
+                
+                payment_methods = ['bank_transfer', 'cash']
+                payment_method = random.choice(payment_methods)
+                
+                payment = Payment(
+                    contract_id=contract.contract_id,
+                    amount=room_price,
+                    payment_date=datetime.utcnow() - timedelta(days=random.randint(0, 90)),
+                    payment_method=payment_method,
+                    status=status,
+                    proof_image_url=f"https://example.com/proof_{contract.contract_id}_{i+1}.jpg" if payment_method == 'bank_transfer' else None,
+                    confirmed_by_user_id=confirmed_by.user_id if confirmed_by else None
+                )
+                db.session.add(payment)
+    
+    db.session.commit()
+    print("✓ Payments seeded successfully")
+    
+    # Seed Maintenance Requests
+    print("Seeding Maintenance Requests...")
+    students = User.query.join(Role).filter(Role.role_name == 'Student').all()
+    maintenance_staff = User.query.join(Role).filter(Role.role_name == 'MaintenanceStaff').all()
+    occupied_rooms = Room.query.filter_by(status='occupied').all()
+    
+    if students and occupied_rooms:
+        # Danh sách các vấn đề bảo trì thường gặp
+        maintenance_issues = [
+            {
+                'title': 'Điều hòa không hoạt động',
+                'description': 'Điều hòa trong phòng không thể bật được, có thể do hỏng điều khiển hoặc máy nén.'
+            },
+            {
+                'title': 'Vòi nước bị rò rỉ',
+                'description': 'Vòi nước trong phòng tắm bị rò rỉ liên tục, cần thay thế hoặc sửa chữa.'
+            },
+            {
+                'title': 'Đèn trong phòng hỏng',
+                'description': 'Đèn LED trong phòng ngủ bị chập chờn và không sáng đều.'
+            },
+            {
+                'title': 'Ổ khóa cửa bị kẹt',
+                'description': 'Ổ khóa cửa phòng bị kẹt, khó mở và đóng cửa.'
+            },
+            {
+                'title': 'Quạt trần kêu to',
+                'description': 'Quạt trần trong phòng kêu to bất thường, có thể do hỏng động cơ.'
+            },
+            {
+                'title': 'Toilet bị tắc',
+                'description': 'Toilet trong phòng tắm bị tắc, nước không thể xả xuống.'
+            },
+            {
+                'title': 'Cửa sổ không đóng được',
+                'description': 'Cửa sổ phòng bị lệch khung, không thể đóng chặt.'
+            },
+            {
+                'title': 'Ổ cắm điện hỏng',
+                'description': 'Một số ổ cắm điện trong phòng không hoạt động.'
+            }
+        ]
+        
+        # Tạo 10-15 yêu cầu bảo trì
+        for i in range(random.randint(10, 15)):
+            student = random.choice(students)
+            room = random.choice(occupied_rooms)
+            issue = random.choice(maintenance_issues)
+            
+            # Kiểm tra đã có yêu cầu tương tự chưa
+            existing_request = MaintenanceRequest.query.filter_by(
+                student_id=student.user_id,
+                room_id=room.room_id,
+                title=issue['title']
+            ).first()
+            
+            if not existing_request:
+                # Phân bổ trạng thái: 30% pending, 25% assigned, 25% in_progress, 15% completed, 5% cancelled
+                rand = random.random()
+                if rand < 0.3:
+                    status = 'pending'
+                    assigned_to = None
+                    completed_date = None
+                elif rand < 0.55:
+                    status = 'assigned'
+                    assigned_to = random.choice(maintenance_staff) if maintenance_staff else None
+                    completed_date = None
+                elif rand < 0.8:
+                    status = 'in_progress'
+                    assigned_to = random.choice(maintenance_staff) if maintenance_staff else None
+                    completed_date = None
+                elif rand < 0.95:
+                    status = 'completed'
+                    assigned_to = random.choice(maintenance_staff) if maintenance_staff else None
+                    completed_date = datetime.utcnow() - timedelta(days=random.randint(1, 7))
+                else:
+                    status = 'cancelled'
+                    assigned_to = None
+                    completed_date = None
+                
+                maintenance_request = MaintenanceRequest(
+                    student_id=student.user_id,
+                    room_id=room.room_id,
+                    title=issue['title'],
+                    description=issue['description'],
+                    image_url=f"https://example.com/maintenance_photo_{i+1}.jpg" if random.random() > 0.3 else None,
+                    status=status,
+                    request_date=datetime.utcnow() - timedelta(days=random.randint(1, 30)),
+                    assigned_to_user_id=assigned_to.user_id if assigned_to else None,
+                    completed_date=completed_date
+                )
+                db.session.add(maintenance_request)
+    
+    db.session.commit()
+    print("✓ Maintenance Requests seeded successfully")
+    
+    print("\n🎉 All data seeded successfully!")
     print("\n🎉 All data seeded successfully!")
     print(f"Total Roles: {Role.query.count()}")
     print(f"Total Users: {User.query.count()}")
@@ -218,5 +428,22 @@ with app.app_context():
     print(f"Total Buildings: {Building.query.count()}")
     print(f"Total Room Types: {RoomType.query.count()}")
     print(f"Total Rooms: {Room.query.count()}")
+    print(f"  - Available: {Room.query.filter_by(status='available').count()}")
+    print(f"  - Occupied: {Room.query.filter_by(status='occupied').count()}")
+    print(f"Total Registrations: {Registration.query.count()}")
+    print(f"  - Pending: {Registration.query.filter_by(status='pending').count()}")
+    print(f"  - Approved: {Registration.query.filter_by(status='approved').count()}")
+    print(f"  - Rejected: {Registration.query.filter_by(status='rejected').count()}")
+    print(f"Total Contracts: {Contract.query.count()}")
+    print(f"Total Payments: {Payment.query.count()}")
+    print(f"  - Pending: {Payment.query.filter_by(status='pending').count()}")
+    print(f"  - Confirmed: {Payment.query.filter_by(status='confirmed').count()}")
+    print(f"  - Failed: {Payment.query.filter_by(status='failed').count()}")
+    print(f"Total Maintenance Requests: {MaintenanceRequest.query.count()}")
+    print(f"  - Pending: {MaintenanceRequest.query.filter_by(status='pending').count()}")
+    print(f"  - Assigned: {MaintenanceRequest.query.filter_by(status='assigned').count()}")
+    print(f"  - In Progress: {MaintenanceRequest.query.filter_by(status='in_progress').count()}")
+    print(f"  - Completed: {MaintenanceRequest.query.filter_by(status='completed').count()}")
+    print(f"  - Cancelled: {MaintenanceRequest.query.filter_by(status='cancelled').count()}")
 
 
