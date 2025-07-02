@@ -87,7 +87,7 @@ def register():
             return jsonify({'error': 'Mã sinh viên đã được sử dụng'}), 400
         
         # Lấy role Student
-        student_role = Role.query.filter_by(role_name='Student').first()
+        student_role = Role.query.filter_by(role_name='student').first()
         if not student_role:
             return jsonify({'error': 'Role Student không tồn tại'}), 500
         

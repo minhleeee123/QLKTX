@@ -31,7 +31,7 @@ def get_payments():
         status = request.args.get('status')
         
         # Student chỉ xem được payment của mình
-        if current_user.role.role_name == 'Student':
+        if current_user.role.role_name == 'student':
             query = Payment.query.join(Contract).join(Registration).filter_by(student_id=current_user_id)
         else:
             # Admin/Management xem tất cả
@@ -88,7 +88,7 @@ def create_payment():
         current_user = User.query.get(current_user_id)
         
         # Chỉ sinh viên mới được tạo payment
-        if current_user.role.role_name != 'Student':
+        if current_user.role.role_name != 'student':
             return jsonify({'error': 'Chỉ sinh viên mới được tạo thanh toán'}), 403
         
         data = request.get_json()
@@ -140,7 +140,7 @@ def create_payment():
 
 @payments_bp.route('/<int:payment_id>/confirm', methods=['POST'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def confirm_payment(payment_id):
     """Xác nhận thanh toán"""
     try:
@@ -173,7 +173,7 @@ def confirm_payment(payment_id):
 
 @payments_bp.route('/<int:payment_id>/reject', methods=['POST'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def reject_payment(payment_id):
     """Từ chối thanh toán"""
     try:
@@ -213,7 +213,7 @@ def update_payment(payment_id):
             return jsonify({'error': 'Thanh toán không tồn tại'}), 404
         
         # Student chỉ cập nhật được payment của mình và phải ở trạng thái pending
-        if current_user.role.role_name == 'Student':
+        if current_user.role.role_name == 'student':
             if payment.contract.registration.student_id != current_user_id:
                 return jsonify({'error': 'Không có quyền cập nhật thanh toán này'}), 403
             if payment.status != 'pending':
@@ -226,7 +226,7 @@ def update_payment(payment_id):
             payment.proof_image_url = data['proof_image_url']
         
         # Admin/Management có thể cập nhật thêm các trường khác
-        if current_user.role.role_name in ['Admin', 'Management']:
+        if current_user.role.role_name in ['admin', 'management']:
             if 'amount' in data:
                 payment.amount = data['amount']
             if 'payment_method' in data and data['payment_method'] in ['bank_transfer', 'cash']:
@@ -250,7 +250,7 @@ def update_payment(payment_id):
 
 @payments_bp.route('/statistics', methods=['GET'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def get_payment_statistics():
     """Thống kê thanh toán"""
     try:

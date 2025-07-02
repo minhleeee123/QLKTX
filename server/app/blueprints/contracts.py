@@ -30,7 +30,7 @@ def get_contracts():
         per_page = request.args.get('per_page', 10, type=int)
         
         # Student chỉ xem được hợp đồng của mình
-        if current_user.role.role_name == 'Student':
+        if current_user.role.role_name == 'student':
             query = Contract.query.join(Registration).filter_by(student_id=current_user_id)
         else:
             # Admin/Management xem tất cả
@@ -94,7 +94,7 @@ def get_contract(contract_id):
             return jsonify({'error': 'Hợp đồng không tồn tại'}), 404
         
         # Student chỉ xem được hợp đồng của mình
-        if (current_user.role.role_name == 'Student' and 
+        if (current_user.role.role_name == 'student' and 
             contract.registration.student_id != current_user_id):
             return jsonify({'error': 'Không có quyền truy cập'}), 403
         
@@ -147,7 +147,7 @@ def get_contract(contract_id):
 
 @contracts_bp.route('/<int:contract_id>', methods=['PUT'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def update_contract(contract_id):
     """Cập nhật hợp đồng"""
     try:
@@ -184,7 +184,7 @@ def update_contract(contract_id):
 
 @contracts_bp.route('/statistics', methods=['GET'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def get_contract_statistics():
     """Thống kê hợp đồng"""
     try:

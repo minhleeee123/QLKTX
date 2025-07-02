@@ -32,9 +32,9 @@ def get_maintenance_requests():
         status = request.args.get('status')
         
         # Student chỉ xem được yêu cầu của mình
-        if current_user.role.role_name == 'Student':
+        if current_user.role.role_name == 'student':
             query = MaintenanceRequest.query.filter_by(student_id=current_user_id)
-        elif current_user.role.role_name == 'MaintenanceStaff':
+        elif current_user.role.role_name == 'maintenanceStaff':
             # Maintenance staff xem yêu cầu được giao cho mình
             query = MaintenanceRequest.query.filter(
                 db.or_(
@@ -103,7 +103,7 @@ def create_maintenance_request():
         current_user = User.query.get(current_user_id)
         
         # Chỉ sinh viên mới được tạo yêu cầu bảo trì
-        if current_user.role.role_name != 'Student':
+        if current_user.role.role_name != 'student':
             return jsonify({'error': 'Chỉ sinh viên mới được tạo yêu cầu bảo trì'}), 403
         
         data = request.get_json()
@@ -149,7 +149,7 @@ def create_maintenance_request():
 
 @maintenance_bp.route('/<int:request_id>/assign', methods=['POST'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def assign_maintenance_request(request_id):
     """Phân công yêu cầu bảo trì cho nhân viên"""
     try:
@@ -168,7 +168,7 @@ def assign_maintenance_request(request_id):
         
         # Kiểm tra user tồn tại và là maintenance staff
         assigned_user = User.query.get(assigned_to_user_id)
-        if not assigned_user or assigned_user.role.role_name != 'MaintenanceStaff':
+        if not assigned_user or assigned_user.role.role_name != 'maintenanceStaff':
             return jsonify({'error': 'Nhân viên bảo trì không tồn tại'}), 404
         
         maintenance_request.assigned_to_user_id = assigned_to_user_id
@@ -191,7 +191,7 @@ def assign_maintenance_request(request_id):
 
 @maintenance_bp.route('/<int:request_id>/start', methods=['POST'])
 @jwt_required()
-@require_role(['MaintenanceStaff'])
+@require_role(['maintenanceStaff'])
 def start_maintenance(request_id):
     """Bắt đầu xử lý yêu cầu bảo trì"""
     try:
@@ -226,7 +226,7 @@ def start_maintenance(request_id):
 
 @maintenance_bp.route('/<int:request_id>/complete', methods=['POST'])
 @jwt_required()
-@require_role(['MaintenanceStaff'])
+@require_role(['maintenanceStaff'])
 def complete_maintenance(request_id):
     """Hoàn thành yêu cầu bảo trì"""
     try:
@@ -274,13 +274,13 @@ def cancel_maintenance_request(request_id):
             return jsonify({'error': 'Yêu cầu bảo trì không tồn tại'}), 404
         
         # Student chỉ hủy được yêu cầu của mình và phải ở trạng thái pending
-        if current_user.role.role_name == 'Student':
+        if current_user.role.role_name == 'student':
             if (maintenance_request.student_id != current_user_id or 
                 maintenance_request.status != 'pending'):
                 return jsonify({'error': 'Chỉ có thể hủy yêu cầu đang chờ xử lý của mình'}), 403
         
         # Admin/Management có thể hủy bất kỳ yêu cầu nào chưa hoàn thành
-        elif current_user.role.role_name in ['Admin', 'Management']:
+        elif current_user.role.role_name in ['admin', 'management']:
             if maintenance_request.status == 'completed':
                 return jsonify({'error': 'Không thể hủy yêu cầu đã hoàn thành'}), 400
         else:
@@ -304,7 +304,7 @@ def cancel_maintenance_request(request_id):
 
 @maintenance_bp.route('/statistics', methods=['GET'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def get_maintenance_statistics():
     """Thống kê yêu cầu bảo trì"""
     try:

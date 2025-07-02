@@ -113,7 +113,7 @@ def get_room(room_id):
 
 @rooms_bp.route('/', methods=['POST'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def create_room():
     """Tạo phòng mới"""
     try:
@@ -170,7 +170,7 @@ def create_room():
 
 @rooms_bp.route('/<int:room_id>', methods=['PUT'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def update_room(room_id):
     """Cập nhật thông tin phòng"""
     try:

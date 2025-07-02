@@ -32,7 +32,7 @@ def get_registrations():
         status = request.args.get('status')
         
         # Student chỉ xem được đơn của mình
-        if current_user.role.role_name == 'Student':
+        if current_user.role.role_name == 'student':
             query = Registration.query.filter_by(student_id=current_user_id)
         else:
             # Admin/Management xem tất cả
@@ -87,7 +87,7 @@ def create_registration():
         current_user = User.query.get(current_user_id)
         
         # Chỉ sinh viên mới được đăng ký
-        if current_user.role.role_name != 'Student':
+        if current_user.role.role_name != 'student':
             return jsonify({'error': 'Chỉ sinh viên mới được đăng ký phòng'}), 403
         
         data = request.get_json()
@@ -141,7 +141,7 @@ def create_registration():
 
 @registrations_bp.route('/<int:registration_id>/approve', methods=['POST'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def approve_registration(registration_id):
     """Duyệt đơn đăng ký"""
     try:
@@ -195,7 +195,7 @@ def approve_registration(registration_id):
 
 @registrations_bp.route('/<int:registration_id>/reject', methods=['POST'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def reject_registration(registration_id):
     """Từ chối đơn đăng ký"""
     try:
@@ -234,7 +234,7 @@ def cancel_registration(registration_id):
             return jsonify({'error': 'Đơn đăng ký không tồn tại'}), 404
         
         # Sinh viên chỉ hủy được đơn của mình
-        if (current_user.role.role_name == 'Student' and 
+        if (current_user.role.role_name == 'student' and 
             registration.student_id != current_user_id):
             return jsonify({'error': 'Không có quyền hủy đơn này'}), 403
         

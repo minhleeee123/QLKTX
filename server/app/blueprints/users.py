@@ -21,7 +21,7 @@ def require_role(allowed_roles):
 
 @users_bp.route('/', methods=['GET'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def get_users():
     """Lấy danh sách users"""
     try:
@@ -84,7 +84,7 @@ def get_user(user_id):
         
         # Chỉ cho phép xem thông tin của chính mình hoặc Admin/Management
         if (current_user_id != user_id and 
-            current_user.role.role_name not in ['Admin', 'Management']):
+            current_user.role.role_name not in ['admin', 'management']):
             return jsonify({'error': 'Không có quyền truy cập'}), 403
         
         user = User.query.get(user_id)
@@ -109,7 +109,7 @@ def get_user(user_id):
 
 @users_bp.route('/', methods=['POST'])
 @jwt_required()
-@require_role(['Admin', 'Management'])
+@require_role(['admin', 'management'])
 def create_user():
     """Tạo user mới"""
     try:
@@ -173,7 +173,7 @@ def update_user(user_id):
         
         # Chỉ cho phép cập nhật thông tin của chính mình hoặc Admin/Management
         if (current_user_id != user_id and 
-            current_user.role.role_name not in ['Admin', 'Management']):
+            current_user.role.role_name not in ['admin', 'management']):
             return jsonify({'error': 'Không có quyền truy cập'}), 403
         
         user = User.query.get(user_id)
@@ -189,7 +189,7 @@ def update_user(user_id):
             user.phone_number = data['phone_number']
         
         # Chỉ Admin/Management mới được cập nhật role và is_active
-        if current_user.role.role_name in ['Admin', 'Management']:
+        if current_user.role.role_name in ['admin', 'management']:
             if 'is_active' in data:
                 user.is_active = data['is_active']
             if 'role_name' in data:
@@ -221,7 +221,7 @@ def update_user(user_id):
 
 @users_bp.route('/<int:user_id>', methods=['DELETE'])
 @jwt_required()
-@require_role(['Admin'])
+@require_role(['admin'])
 def delete_user(user_id):
     """Xóa user (chỉ Admin)"""
     try:

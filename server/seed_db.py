@@ -10,7 +10,7 @@ app = create_app()
 with app.app_context():
     # Seed Roles
     print("Seeding Roles...")
-    for name in ['Admin','Management','Student','MaintenanceStaff']:
+    for name in ['admin','management','student','maintenanceStaff']:
         if not Role.query.filter_by(role_name=name).first():
             db.session.add(Role(role_name=name))
     db.session.commit()
@@ -20,10 +20,10 @@ with app.app_context():
     print("Seeding Users...")
     
     # Lấy các role đã tạo
-    admin_role = Role.query.filter_by(role_name='Admin').first()
-    management_role = Role.query.filter_by(role_name='Management').first()
-    student_role = Role.query.filter_by(role_name='Student').first()
-    maintenance_role = Role.query.filter_by(role_name='MaintenanceStaff').first()
+    admin_role = Role.query.filter_by(role_name='admin').first()
+    management_role = Role.query.filter_by(role_name='management').first()
+    student_role = Role.query.filter_by(role_name='student').first()
+    maintenance_role = Role.query.filter_by(role_name='maintenanceStaff').first()
     
     # Tạo users mẫu
     users_data = [
@@ -212,7 +212,7 @@ with app.app_context():
     
     # Seed Registrations
     print("Seeding Registrations...")
-    students = User.query.join(Role).filter(Role.role_name == 'Student').all()
+    students = User.query.join(Role).filter(Role.role_name == 'student').all()
     available_rooms = Room.query.filter_by(status='available').limit(10).all()  # Lấy 10 phòng đầu tiên
     
     if students and available_rooms:
@@ -279,7 +279,7 @@ with app.app_context():
     # Seed Payments
     print("Seeding Payments...")
     contracts = Contract.query.all()
-    management_users = User.query.join(Role).filter(Role.role_name == 'Management').all()
+    management_users = User.query.join(Role).filter(Role.role_name == 'management').all()
     
     for contract in contracts:
         room_price = contract.registration.room.room_type.price
@@ -323,8 +323,8 @@ with app.app_context():
     
     # Seed Maintenance Requests
     print("Seeding Maintenance Requests...")
-    students = User.query.join(Role).filter(Role.role_name == 'Student').all()
-    maintenance_staff = User.query.join(Role).filter(Role.role_name == 'MaintenanceStaff').all()
+    students = User.query.join(Role).filter(Role.role_name == 'student').all()
+    maintenance_staff = User.query.join(Role).filter(Role.role_name == 'maintenanceStaff').all()
     occupied_rooms = Room.query.filter_by(status='occupied').all()
     
     if students and occupied_rooms:
@@ -421,10 +421,10 @@ with app.app_context():
     print("\n🎉 All data seeded successfully!")
     print(f"Total Roles: {Role.query.count()}")
     print(f"Total Users: {User.query.count()}")
-    print(f"  - Admin: {User.query.join(Role).filter(Role.role_name == 'Admin').count()}")
-    print(f"  - Management: {User.query.join(Role).filter(Role.role_name == 'Management').count()}")
-    print(f"  - Students: {User.query.join(Role).filter(Role.role_name == 'Student').count()}")
-    print(f"  - Maintenance Staff: {User.query.join(Role).filter(Role.role_name == 'MaintenanceStaff').count()}")
+    print(f"  - Admin: {User.query.join(Role).filter(Role.role_name == 'admin').count()}")
+    print(f"  - Management: {User.query.join(Role).filter(Role.role_name == 'management').count()}")
+    print(f"  - Students: {User.query.join(Role).filter(Role.role_name == 'student').count()}")
+    print(f"  - Maintenance Staff: {User.query.join(Role).filter(Role.role_name == 'maintenanceStaff').count()}")
     print(f"Total Buildings: {Building.query.count()}")
     print(f"Total Room Types: {RoomType.query.count()}")
     print(f"Total Rooms: {Room.query.count()}")
