@@ -1,0 +1,121 @@
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from werkzeug.security import check_password_hash
+from app.extensions import db
+from app.models import User, Role
+
+auth_bp = Blueprint('auth', __name__)
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    """Đăng nhập và lấy JWT token"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({'error': 'Email và password là bắt buộc'}), 400
+        
+        # Tìm user
+        user = User.query.filter_by(email=email, is_active=True).first()
+        if not user or not check_password_hash(user.password_hash, password):
+            return jsonify({'error': 'Email hoặc password không đúng'}), 401
+        
+        # Tạo access token
+        access_token = create_access_token(identity=user.user_id)
+        
+        return jsonify({
+            'access_token': access_token,
+            'user': {
+                'user_id': user.user_id,
+                'full_name': user.full_name,
+                'email': user.email,
+                'role': user.role.role_name,
+                'student_code': user.student_code
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@auth_bp.route('/me', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    """Lấy thông tin user hiện tại"""
+    try:
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({'error': 'User không tồn tại'}), 404
+        
+        return jsonify({
+            'user': {
+                'user_id': user.user_id,
+                'full_name': user.full_name,
+                'email': user.email,
+                'phone_number': user.phone_number,
+                'student_code': user.student_code,
+                'role': user.role.role_name,
+                'created_at': user.created_at.isoformat(),
+                'is_active': user.is_active
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@auth_bp.route('/register', methods=['POST'])
+def register():
+    """Đăng ký tài khoản sinh viên"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['full_name', 'email', 'password', 'student_code']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field} là bắt buộc'}), 400
+        
+        # Kiểm tra email đã tồn tại
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': 'Email đã được sử dụng'}), 400
+        
+        # Kiểm tra student_code đã tồn tại
+        if User.query.filter_by(student_code=data['student_code']).first():
+            return jsonify({'error': 'Mã sinh viên đã được sử dụng'}), 400
+        
+        # Lấy role Student
+        student_role = Role.query.filter_by(role_name='Student').first()
+        if not student_role:
+            return jsonify({'error': 'Role Student không tồn tại'}), 500
+        
+        # Tạo user mới
+        from werkzeug.security import generate_password_hash
+        user = User(
+            role_id=student_role.role_id,
+            full_name=data['full_name'],
+            email=data['email'],
+            password_hash=generate_password_hash(data['password']),
+            phone_number=data.get('phone_number'),
+            student_code=data['student_code'],
+            is_active=True
+        )
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Đăng ký thành công',
+            'user': {
+                'user_id': user.user_id,
+                'full_name': user.full_name,
+                'email': user.email,
+                'student_code': user.student_code
+            }
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
