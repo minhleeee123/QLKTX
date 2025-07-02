@@ -69,7 +69,7 @@ CREATE TABLE registrations (
     status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES users(user_id),
-    FOREIGN KEY (room_id) REFERENCES rooms(room_id),
+    FOREIGN KEY (room_id) REFERENCES rooms(room_id)
 );
 
 -- Bảng lưu hợp đồng
@@ -112,7 +112,7 @@ CREATE TABLE maintenance_requests (
     status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'assigned', 'in_progress', 'completed', 'cancelled'
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     assigned_to_user_id INT, -- ID nhân viên bảo trì được phân công
-    completed_date TIMESTAMP,
+    completed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES users(user_id),
     FOREIGN KEY (room_id) REFERENCES rooms(room_id),
     FOREIGN KEY (assigned_to_user_id) REFERENCES users(user_id)
