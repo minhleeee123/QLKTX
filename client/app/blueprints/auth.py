@@ -1,0 +1,90 @@
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from ..forms.auth_forms import LoginForm, RegisterForm, ChangePasswordForm
+from ..services.auth_service import auth_service
+from ..utils.decorators import anonymous_required, login_required
+
+auth_bp = Blueprint('auth', __name__)
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+@anonymous_required
+def login():
+    """Login page"""
+    form = LoginForm()
+    
+    if form.validate_on_submit():
+        response = auth_service.login(form.email.data, form.password.data)
+        
+        if response['success']:
+            flash('Đăng nhập thành công!', 'success')
+            
+            # Redirect to next page or dashboard
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            else:
+                return redirect(url_for('dashboard.index'))
+        else:
+            error_msg = response.get('error', {}).get('message', 'Đăng nhập thất bại')
+            flash(error_msg, 'error')
+            return redirect(url_for('auth.login'))
+
+    
+    return render_template('auth/login.html', form=form)
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+@anonymous_required
+def register():
+    """Registration page"""
+    form = RegisterForm()
+    
+    if form.validate_on_submit():
+        user_data = {
+            'full_name': form.full_name.data,
+            'email': form.email.data,
+            'phone': form.phone.data,
+            'student_id': form.student_id.data if form.role.data == 'student' else None,
+            'password': form.password.data,
+            'role': form.role.data
+        }
+        
+        response = auth_service.register(user_data)
+        
+        if response['success']:
+            flash('Đăng ký thành công! Vui lòng đăng nhập.', 'success')
+            return redirect(url_for('auth.login'))
+        else:
+            error_msg = response.get('error', {}).get('message', 'Đăng ký thất bại')
+            flash(error_msg, 'error')
+    
+    return render_template('auth/register.html', form=form)
+
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    """Logout user"""
+    auth_service.logout()
+    flash('Đã đăng xuất thành công!', 'success')
+    return redirect(url_for('auth.login'))
+
+@auth_bp.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Change password page"""
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        response = auth_service.change_password(
+            form.current_password.data,
+            form.new_password.data,
+            form.confirm_password.data
+        )
+        
+        if response['success']:
+            flash('Đổi mật khẩu thành công!', 'success')
+            return redirect(url_for('dashboard.index'))
+        else:
+            error_msg = response.get('error', {}).get('message', 'Đổi mật khẩu thất bại')
+            print(response)
+            flash(error_msg, 'error')
+    
+    return render_template('auth/change_password.html', form=form)
