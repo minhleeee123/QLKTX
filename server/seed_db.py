@@ -10,21 +10,21 @@ app = create_app()
 with app.app_context():
     # Seed Roles
     print("Seeding Roles...")
-    for name in ['admin','management','student','maintenanceStaff']:
+    for name in ["admin", "management", "student", "staff"]:
         if not Role.query.filter_by(role_name=name).first():
             db.session.add(Role(role_name=name))
     db.session.commit()
     print("✓ Roles seeded successfully")
-    
+
     # Seed Users
     print("Seeding Users...")
-    
+
     # Lấy các role đã tạo
     admin_role = Role.query.filter_by(role_name='admin').first()
     management_role = Role.query.filter_by(role_name='management').first()
     student_role = Role.query.filter_by(role_name='student').first()
-    maintenance_role = Role.query.filter_by(role_name='maintenanceStaff').first()
-    
+    maintenance_role = Role.query.filter_by(role_name="staff").first()
+
     # Tạo users mẫu
     users_data = [
         # Admin users
@@ -115,7 +115,7 @@ with app.app_context():
             'student_code': 'SV005'
         }
     ]
-    
+
     for user_data in users_data:
         # Kiểm tra user đã tồn tại chưa
         if not User.query.filter_by(email=user_data['email']).first():
@@ -129,10 +129,10 @@ with app.app_context():
                 is_active=True
             )
             db.session.add(user)
-    
+
     db.session.commit()
     print("✓ Users seeded successfully")
-    
+
     # Seed Buildings
     print("Seeding Buildings...")
     buildings_data = [
@@ -142,13 +142,13 @@ with app.app_context():
         'Tòa D - Khu Bắc',
         'Tòa E - Khu Trung tâm'
     ]
-    
+
     for building_name in buildings_data:
         if not Building.query.filter_by(building_name=building_name).first():
             db.session.add(Building(building_name=building_name))
     db.session.commit()
     print("✓ Buildings seeded successfully")
-    
+
     # Seed Room Types
     print("Seeding Room Types...")
     room_types_data = [
@@ -157,7 +157,7 @@ with app.app_context():
         {'type_name': 'Phòng 8 người', 'capacity': 8, 'price': 1000000},
         {'type_name': 'Phòng dịch vụ', 'capacity': 2, 'price': 2500000}
     ]
-    
+
     for room_type_data in room_types_data:
         if not RoomType.query.filter_by(type_name=room_type_data['type_name']).first():
             room_type = RoomType(
@@ -168,25 +168,25 @@ with app.app_context():
             db.session.add(room_type)
     db.session.commit()
     print("✓ Room Types seeded successfully")
-    
+
     # Seed Rooms
     print("Seeding Rooms...")
     buildings = Building.query.all()
     room_types = RoomType.query.all()
-    
+
     if buildings and room_types:
         # Tạo phòng cho mỗi tòa nhà
         for building in buildings:
             for floor in range(1, 6):  # 5 tầng mỗi tòa
                 for room_num in range(1, 11):  # 10 phòng mỗi tầng
                     room_number = f"{floor:01d}{room_num:02d}"  # Format: 101, 102, ..., 510
-                    
+
                     # Kiểm tra phòng đã tồn tại chưa
                     existing_room = Room.query.filter_by(
                         room_number=room_number, 
                         building_id=building.building_id
                     ).first()
-                    
+
                     if not existing_room:
                         # Phân bổ loại phòng ngẫu nhiên (với bias cho phòng 6 người)
                         if room_num <= 6:  # 60% phòng 6 người
@@ -197,7 +197,7 @@ with app.app_context():
                             room_type = next((rt for rt in room_types if rt.type_name == 'Phòng 8 người'), room_types[0])
                         else:  # 10% phòng dịch vụ
                             room_type = next((rt for rt in room_types if rt.type_name == 'Phòng dịch vụ'), room_types[0])
-                        
+
                         room = Room(
                             room_number=room_number,
                             building_id=building.building_id,
@@ -206,28 +206,28 @@ with app.app_context():
                             current_occupancy=0
                         )
                         db.session.add(room)
-        
+
         db.session.commit()
         print("✓ Rooms seeded successfully")
-    
+
     # Seed Registrations
     print("Seeding Registrations...")
     students = User.query.join(Role).filter(Role.role_name == 'student').all()
     available_rooms = Room.query.filter_by(status='available').limit(10).all()  # Lấy 10 phòng đầu tiên
-    
+
     if students and available_rooms:
         registration_statuses = ['pending', 'approved', 'rejected']
-        
+
         for i, student in enumerate(students):
             if i < len(available_rooms):  # Đảm bảo có đủ phòng
                 room = available_rooms[i]
-                
+
                 # Kiểm tra đã có registration chưa
                 existing_registration = Registration.query.filter_by(
                     student_id=student.user_id,
                     room_id=room.room_id
                 ).first()
-                
+
                 if not existing_registration:
                     # 70% approved, 20% pending, 10% rejected
                     if i < len(students) * 0.7:
@@ -236,7 +236,7 @@ with app.app_context():
                         status = 'pending'
                     else:
                         status = 'rejected'
-                    
+
                     registration = Registration(
                         student_id=student.user_id,
                         room_id=room.room_id,
@@ -244,26 +244,26 @@ with app.app_context():
                         registration_date=datetime.utcnow() - timedelta(days=random.randint(1, 30))
                     )
                     db.session.add(registration)
-                    
+
                     # Cập nhật trạng thái phòng nếu approved
                     if status == 'approved':
                         room.current_occupancy += 1
                         if room.current_occupancy >= room.room_type.capacity:
                             room.status = 'occupied'
-    
+
     db.session.commit()
     print("✓ Registrations seeded successfully")
-    
+
     # Seed Contracts
     print("Seeding Contracts...")
     approved_registrations = Registration.query.filter_by(status='approved').all()
-    
+
     for registration in approved_registrations:
         # Kiểm tra đã có contract chưa
         if not Contract.query.filter_by(registration_id=registration.registration_id).first():
             start_date = date.today() - timedelta(days=random.randint(0, 60))
             end_date = start_date + timedelta(days=365)  # Hợp đồng 1 năm
-            
+
             contract = Contract(
                 registration_id=registration.registration_id,
                 contract_code=f"HD{registration.registration_id:04d}",
@@ -272,25 +272,25 @@ with app.app_context():
                 created_at=datetime.utcnow() - timedelta(days=random.randint(0, 30))
             )
             db.session.add(contract)
-    
+
     db.session.commit()
     print("✓ Contracts seeded successfully")
-    
+
     # Seed Payments
     print("Seeding Payments...")
     contracts = Contract.query.all()
     management_users = User.query.join(Role).filter(Role.role_name == 'management').all()
-    
+
     for contract in contracts:
         room_price = contract.registration.room.room_type.price
-        
+
         # Tạo 1-3 khoản thanh toán cho mỗi hợp đồng
         num_payments = random.randint(1, 3)
-        
+
         for i in range(num_payments):
             # Kiểm tra đã có payment chưa
             existing_payments = Payment.query.filter_by(contract_id=contract.contract_id).count()
-            
+
             if existing_payments < num_payments:
                 # 80% confirmed, 15% pending, 5% failed
                 rand = random.random()
@@ -303,10 +303,10 @@ with app.app_context():
                 else:
                     status = 'failed'
                     confirmed_by = None
-                
+
                 payment_methods = ['bank_transfer', 'cash']
                 payment_method = random.choice(payment_methods)
-                
+
                 payment = Payment(
                     contract_id=contract.contract_id,
                     amount=room_price,
@@ -317,16 +317,16 @@ with app.app_context():
                     confirmed_by_user_id=confirmed_by.user_id if confirmed_by else None
                 )
                 db.session.add(payment)
-    
+
     db.session.commit()
     print("✓ Payments seeded successfully")
-    
+
     # Seed Maintenance Requests
     print("Seeding Maintenance Requests...")
     students = User.query.join(Role).filter(Role.role_name == 'student').all()
-    maintenance_staff = User.query.join(Role).filter(Role.role_name == 'maintenanceStaff').all()
+    maintenance_staff = User.query.join(Role).filter(Role.role_name == "staff").all()
     occupied_rooms = Room.query.filter_by(status='occupied').all()
-    
+
     if students and occupied_rooms:
         # Danh sách các vấn đề bảo trì thường gặp
         maintenance_issues = [
@@ -363,20 +363,20 @@ with app.app_context():
                 'description': 'Một số ổ cắm điện trong phòng không hoạt động.'
             }
         ]
-        
+
         # Tạo 10-15 yêu cầu bảo trì
         for i in range(random.randint(10, 15)):
             student = random.choice(students)
             room = random.choice(occupied_rooms)
             issue = random.choice(maintenance_issues)
-            
+
             # Kiểm tra đã có yêu cầu tương tự chưa
             existing_request = MaintenanceRequest.query.filter_by(
                 student_id=student.user_id,
                 room_id=room.room_id,
                 title=issue['title']
             ).first()
-            
+
             if not existing_request:
                 # Phân bổ trạng thái: 30% pending, 25% assigned, 25% in_progress, 15% completed, 5% cancelled
                 rand = random.random()
@@ -400,7 +400,7 @@ with app.app_context():
                     status = 'cancelled'
                     assigned_to = None
                     completed_date = None
-                
+
                 maintenance_request = MaintenanceRequest(
                     student_id=student.user_id,
                     room_id=room.room_id,
@@ -413,10 +413,10 @@ with app.app_context():
                     completed_date=completed_date
                 )
                 db.session.add(maintenance_request)
-    
+
     db.session.commit()
     print("✓ Maintenance Requests seeded successfully")
-    
+
     print("\n🎉 All data seeded successfully!")
     print("\n🎉 All data seeded successfully!")
     print(f"Total Roles: {Role.query.count()}")
@@ -424,7 +424,9 @@ with app.app_context():
     print(f"  - Admin: {User.query.join(Role).filter(Role.role_name == 'admin').count()}")
     print(f"  - Management: {User.query.join(Role).filter(Role.role_name == 'management').count()}")
     print(f"  - Students: {User.query.join(Role).filter(Role.role_name == 'student').count()}")
-    print(f"  - Maintenance Staff: {User.query.join(Role).filter(Role.role_name == 'maintenanceStaff').count()}")
+    print(
+        f"  - Maintenance Staff: {User.query.join(Role).filter(Role.role_name == 'staff').count()}"
+    )
     print(f"Total Buildings: {Building.query.count()}")
     print(f"Total Room Types: {RoomType.query.count()}")
     print(f"Total Rooms: {Room.query.count()}")
@@ -445,5 +447,3 @@ with app.app_context():
     print(f"  - In Progress: {MaintenanceRequest.query.filter_by(status='in_progress').count()}")
     print(f"  - Completed: {MaintenanceRequest.query.filter_by(status='completed').count()}")
     print(f"  - Cancelled: {MaintenanceRequest.query.filter_by(status='cancelled').count()}")
-
-

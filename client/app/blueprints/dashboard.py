@@ -14,7 +14,7 @@ def index():
     if user['role'] == 'admin':
         print("Redirecting to admin dashboard")  # Debugging line
         return redirect(url_for('dashboard.admin'))
-    elif user['role'] == 'staff':
+    elif user["role"] == "staff":
         return redirect(url_for('dashboard.staff'))
     elif user['role'] == 'student':
         return redirect(url_for('dashboard.student'))

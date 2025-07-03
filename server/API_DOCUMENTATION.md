@@ -194,7 +194,7 @@ Thống kê thanh toán (Admin/Management only)
 ### GET /api/maintenance
 Lấy danh sách yêu cầu bảo trì
 - Student: Chỉ xem yêu cầu của mình
-- MaintenanceStaff: Xem yêu cầu được giao
+- staff: Xem yêu cầu được giao
 - Admin/Management: Xem tất cả
 
 ### POST /api/maintenance
@@ -221,10 +221,10 @@ Phân công yêu cầu cho nhân viên (Admin/Management only)
 ```
 
 ### POST /api/maintenance/{request_id}/start
-Bắt đầu xử lý (MaintenanceStaff only)
+Bắt đầu xử lý (staff only)
 
 ### POST /api/maintenance/{request_id}/complete
-Hoàn thành xử lý (MaintenanceStaff only)
+Hoàn thành xử lý (staff only)
 
 ### POST /api/maintenance/{request_id}/cancel
 Hủy yêu cầu
@@ -239,7 +239,7 @@ Thống kê bảo trì (Admin/Management only)
 1. **Admin**: Toàn quyền hệ thống
 2. **Management**: Quản lý operations, không xóa users
 3. **Student**: Chỉ xem/tạo/cập nhật dữ liệu của mình
-4. **MaintenanceStaff**: Xử lý yêu cầu bảo trì được giao
+4. **staff**: Xử lý yêu cầu bảo trì được giao
 
 ---
 

@@ -8,7 +8,7 @@ USE qlktx;
 -- Bảng lưu các vai trò trong hệ thống
 CREATE TABLE roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
-    role_name VARCHAR(50) NOT NULL UNIQUE -- 'admin', 'management', 'student', 'maintenanceStaff'
+    role_name VARCHAR(50) NOT NULL UNIQUE -- 'admin', 'management', 'student', 'staff'
 );
 
 -- Bảng lưu thông tin người dùng
