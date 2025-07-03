@@ -16,7 +16,7 @@ class AuthService:
         if response["success"]:
             # Store user info and token in session
             user_data = response["data"]
-            session["user_id"] = user_data.get("user", {}).get("id")
+            session["user_id"] = user_data.get("user", {}).get("user_id")
             session["email"] = user_data.get("user", {}).get("email")
             session["role"] = user_data.get("user", {}).get("role")
             session["full_name"] = user_data.get("user", {}).get("full_name")

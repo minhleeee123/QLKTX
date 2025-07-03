@@ -13,7 +13,7 @@ def require_role(allowed_roles):
             user_id = get_jwt_identity()
             user = User.query.get(user_id)
             if not user or user.role.role_name not in allowed_roles:
-                return jsonify({'error': 'Không có quyền truy cập'}), 403
+                return jsonify('Không có quyền truy cập'), 403
             return f(*args, **kwargs)
         decorated_function.__name__ = f.__name__
         return decorated_function
@@ -51,7 +51,7 @@ def get_registrations():
                 'student': {
                     'user_id': reg.student.user_id,
                     'full_name': reg.student.full_name,
-                    'student_code': reg.student.student_code,
+                    'student_id': reg.student.student_id,
                     'email': reg.student.email
                 },
                 'room': {
@@ -76,7 +76,7 @@ def get_registrations():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @registrations_bp.route('/', methods=['POST'])
 @jwt_required()
@@ -88,22 +88,22 @@ def create_registration():
         
         # Chỉ sinh viên mới được đăng ký
         if current_user.role.role_name != 'student':
-            return jsonify({'error': 'Chỉ sinh viên mới được đăng ký phòng'}), 403
+            return jsonify('Chỉ sinh viên mới được đăng ký phòng'), 403
         
         data = request.get_json()
         room_id = data.get('room_id')
         
         if not room_id:
-            return jsonify({'error': 'room_id là bắt buộc'}), 400
+            return jsonify('room_id là bắt buộc'), 400
         
         # Kiểm tra phòng tồn tại
         room = Room.query.get(room_id)
         if not room:
-            return jsonify({'error': 'Phòng không tồn tại'}), 404
+            return jsonify('Phòng không tồn tại'), 404
         
         # Kiểm tra phòng còn chỗ trống
         if not room.is_available:
-            return jsonify({'error': 'Phòng đã đầy hoặc không khả dụng'}), 400
+            return jsonify('Phòng đã đầy hoặc không khả dụng'), 400
         
         # Kiểm tra sinh viên đã có đơn đăng ký pending/approved chưa
         existing_registration = Registration.query.filter_by(
@@ -111,7 +111,7 @@ def create_registration():
             status=['pending', 'approved']
         ).first()
         if existing_registration:
-            return jsonify({'error': 'Bạn đã có đơn đăng ký đang chờ xử lý hoặc đã được duyệt'}), 400
+            return jsonify('Bạn đã có đơn đăng ký đang chờ xử lý hoặc đã được duyệt'), 400
         
         # Tạo đơn đăng ký mới
         registration = Registration(
@@ -137,7 +137,7 @@ def create_registration():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @registrations_bp.route('/<int:registration_id>/approve', methods=['POST'])
 @jwt_required()
@@ -147,15 +147,15 @@ def approve_registration(registration_id):
     try:
         registration = Registration.query.get(registration_id)
         if not registration:
-            return jsonify({'error': 'Đơn đăng ký không tồn tại'}), 404
+            return jsonify('Đơn đăng ký không tồn tại'), 404
         
         if registration.status != 'pending':
-            return jsonify({'error': 'Chỉ có thể duyệt đơn đang chờ xử lý'}), 400
+            return jsonify('Chỉ có thể duyệt đơn đang chờ xử lý'), 400
         
         # Kiểm tra phòng còn chỗ trống
         room = registration.room
         if not room.is_available:
-            return jsonify({'error': 'Phòng đã đầy, không thể duyệt đơn'}), 400
+            return jsonify('Phòng đã đầy, không thể duyệt đơn'), 400
         
         # Cập nhật trạng thái đơn đăng ký
         registration.status = 'approved'
@@ -191,7 +191,7 @@ def approve_registration(registration_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @registrations_bp.route('/<int:registration_id>/reject', methods=['POST'])
 @jwt_required()
@@ -201,10 +201,10 @@ def reject_registration(registration_id):
     try:
         registration = Registration.query.get(registration_id)
         if not registration:
-            return jsonify({'error': 'Đơn đăng ký không tồn tại'}), 404
+            return jsonify('Đơn đăng ký không tồn tại'), 404
         
         if registration.status != 'pending':
-            return jsonify({'error': 'Chỉ có thể từ chối đơn đang chờ xử lý'}), 400
+            return jsonify('Chỉ có thể từ chối đơn đang chờ xử lý'), 400
         
         registration.status = 'rejected'
         db.session.commit()
@@ -219,7 +219,7 @@ def reject_registration(registration_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @registrations_bp.route('/<int:registration_id>', methods=['DELETE'])
 @jwt_required()
@@ -231,22 +231,22 @@ def cancel_registration(registration_id):
         
         registration = Registration.query.get(registration_id)
         if not registration:
-            return jsonify({'error': 'Đơn đăng ký không tồn tại'}), 404
+            return jsonify('Đơn đăng ký không tồn tại'), 404
         
         # Sinh viên chỉ hủy được đơn của mình
         if (current_user.role.role_name == 'student' and 
             registration.student_id != current_user_id):
-            return jsonify({'error': 'Không có quyền hủy đơn này'}), 403
+            return jsonify('Không có quyền hủy đơn này'), 403
         
         # Chỉ có thể hủy đơn pending
         if registration.status != 'pending':
-            return jsonify({'error': 'Chỉ có thể hủy đơn đang chờ xử lý'}), 400
+            return jsonify('Chỉ có thể hủy đơn đang chờ xử lý'), 400
         
         db.session.delete(registration)
         db.session.commit()
         
-        return jsonify({'message': 'Hủy đơn đăng ký thành công'}), 200
+        return jsonify('Hủy đơn đăng ký thành công'), 200
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500

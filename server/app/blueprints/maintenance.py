@@ -13,7 +13,7 @@ def require_role(allowed_roles):
             user_id = get_jwt_identity()
             user = User.query.get(user_id)
             if not user or user.role.role_name not in allowed_roles:
-                return jsonify({'error': 'Không có quyền truy cập'}), 403
+                return jsonify('Không có quyền truy cập'), 403
             return f(*args, **kwargs)
         decorated_function.__name__ = f.__name__
         return decorated_function
@@ -59,7 +59,7 @@ def get_maintenance_requests():
                 'student': {
                     'user_id': req.student.user_id,
                     'full_name': req.student.full_name,
-                    'student_code': req.student.student_code,
+                    'student_id': req.student.student_id,
                     'email': req.student.email
                 },
                 'room': {
@@ -92,7 +92,7 @@ def get_maintenance_requests():
         }), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @maintenance_bp.route('/', methods=['POST'])
 @jwt_required()
@@ -104,7 +104,7 @@ def create_maintenance_request():
         
         # Chỉ sinh viên mới được tạo yêu cầu bảo trì
         if current_user.role.role_name != 'student':
-            return jsonify({'error': 'Chỉ sinh viên mới được tạo yêu cầu bảo trì'}), 403
+            return jsonify('Chỉ sinh viên mới được tạo yêu cầu bảo trì'), 403
         
         data = request.get_json()
         
@@ -112,12 +112,12 @@ def create_maintenance_request():
         required_fields = ['room_id', 'title']
         for field in required_fields:
             if not data.get(field):
-                return jsonify({'error': f'{field} là bắt buộc'}), 400
+                return jsonify(f'{field} là bắt buộc'), 400
         
         # Kiểm tra phòng tồn tại
         room = Room.query.get(data['room_id'])
         if not room:
-            return jsonify({'error': 'Phòng không tồn tại'}), 404
+            return jsonify('Phòng không tồn tại'), 404
         
         # Tạo yêu cầu bảo trì mới
         maintenance_request = MaintenanceRequest(
@@ -145,7 +145,7 @@ def create_maintenance_request():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @maintenance_bp.route('/<int:request_id>/assign', methods=['POST'])
 @jwt_required()
@@ -155,21 +155,21 @@ def assign_maintenance_request(request_id):
     try:
         maintenance_request = MaintenanceRequest.query.get(request_id)
         if not maintenance_request:
-            return jsonify({'error': 'Yêu cầu bảo trì không tồn tại'}), 404
+            return jsonify('Yêu cầu bảo trì không tồn tại'), 404
 
         if maintenance_request.status not in ['pending', 'assigned']:
-            return jsonify({'error': 'Chỉ có thể phân công yêu cầu đang chờ xử lý'}), 400
+            return jsonify('Chỉ có thể phân công yêu cầu đang chờ xử lý'), 400
 
         data = request.get_json()
         assigned_to_user_id = data.get('assigned_to_user_id')
 
         if not assigned_to_user_id:
-            return jsonify({'error': 'assigned_to_user_id là bắt buộc'}), 400
+            return jsonify('assigned_to_user_id là bắt buộc'), 400
 
         # Kiểm tra user tồn tại và là maintenance staff
         assigned_user = User.query.get(assigned_to_user_id)
         if not assigned_user or assigned_user.role.role_name != "staff":
-            return jsonify({'error': 'Nhân viên bảo trì không tồn tại'}), 404
+            return jsonify('Nhân viên bảo trì không tồn tại'), 404
 
         maintenance_request.assigned_to_user_id = assigned_to_user_id
         maintenance_request.status = 'assigned'
@@ -200,14 +200,14 @@ def start_maintenance(request_id):
 
         maintenance_request = MaintenanceRequest.query.get(request_id)
         if not maintenance_request:
-            return jsonify({'error': 'Yêu cầu bảo trì không tồn tại'}), 404
+            return jsonify('Yêu cầu bảo trì không tồn tại'), 404
 
         # Chỉ nhân viên được phân công mới được bắt đầu
         if maintenance_request.assigned_to_user_id != current_user_id:
-            return jsonify({'error': 'Bạn không được phân công xử lý yêu cầu này'}), 403
+            return jsonify('Bạn không được phân công xử lý yêu cầu này'), 403
 
         if maintenance_request.status != 'assigned':
-            return jsonify({'error': 'Chỉ có thể bắt đầu yêu cầu đã được phân công'}), 400
+            return jsonify('Chỉ có thể bắt đầu yêu cầu đã được phân công'), 400
 
         maintenance_request.status = 'in_progress'
 
@@ -223,7 +223,7 @@ def start_maintenance(request_id):
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 
 @maintenance_bp.route("/<int:request_id>/complete", methods=["POST"])
@@ -236,14 +236,14 @@ def complete_maintenance(request_id):
         
         maintenance_request = MaintenanceRequest.query.get(request_id)
         if not maintenance_request:
-            return jsonify({'error': 'Yêu cầu bảo trì không tồn tại'}), 404
+            return jsonify('Yêu cầu bảo trì không tồn tại'), 404
         
         # Chỉ nhân viên được phân công mới được hoàn thành
         if maintenance_request.assigned_to_user_id != current_user_id:
-            return jsonify({'error': 'Bạn không được phân công xử lý yêu cầu này'}), 403
+            return jsonify('Bạn không được phân công xử lý yêu cầu này'), 403
         
         if maintenance_request.status != 'in_progress':
-            return jsonify({'error': 'Chỉ có thể hoàn thành yêu cầu đang được xử lý'}), 400
+            return jsonify('Chỉ có thể hoàn thành yêu cầu đang được xử lý'), 400
         
         maintenance_request.status = 'completed'
         maintenance_request.completed_date = datetime.utcnow()
@@ -261,7 +261,7 @@ def complete_maintenance(request_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @maintenance_bp.route('/<int:request_id>/cancel', methods=['POST'])
 @jwt_required()
@@ -273,20 +273,20 @@ def cancel_maintenance_request(request_id):
         
         maintenance_request = MaintenanceRequest.query.get(request_id)
         if not maintenance_request:
-            return jsonify({'error': 'Yêu cầu bảo trì không tồn tại'}), 404
+            return jsonify('Yêu cầu bảo trì không tồn tại'), 404
         
         # Student chỉ hủy được yêu cầu của mình và phải ở trạng thái pending
         if current_user.role.role_name == 'student':
             if (maintenance_request.student_id != current_user_id or 
                 maintenance_request.status != 'pending'):
-                return jsonify({'error': 'Chỉ có thể hủy yêu cầu đang chờ xử lý của mình'}), 403
+                return jsonify('Chỉ có thể hủy yêu cầu đang chờ xử lý của mình'), 403
         
         # Admin/Management có thể hủy bất kỳ yêu cầu nào chưa hoàn thành
         elif current_user.role.role_name in ['admin', 'management']:
             if maintenance_request.status == 'completed':
-                return jsonify({'error': 'Không thể hủy yêu cầu đã hoàn thành'}), 400
+                return jsonify('Không thể hủy yêu cầu đã hoàn thành'), 400
         else:
-            return jsonify({'error': 'Không có quyền hủy yêu cầu này'}), 403
+            return jsonify('Không có quyền hủy yêu cầu này'), 403
         
         maintenance_request.status = 'cancelled'
         
@@ -302,7 +302,7 @@ def cancel_maintenance_request(request_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @maintenance_bp.route('/statistics', methods=['GET'])
 @jwt_required()
@@ -336,4 +336,4 @@ def get_maintenance_statistics():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500

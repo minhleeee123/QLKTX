@@ -34,7 +34,7 @@ with app.app_context():
             'email': 'admin@qlktx.edu.vn',
             'password': 'admin123',
             'phone_number': '0901234567',
-            'student_code': None
+            'student_id': None
         },
         
         # Management users
@@ -44,7 +44,7 @@ with app.app_context():
             'email': 'quanly@qlktx.edu.vn',
             'password': 'quanly123',
             'phone_number': '0901234568',
-            'student_code': None
+            'student_id': None
         },
         {
             'role': management_role,
@@ -52,7 +52,7 @@ with app.app_context():
             'email': 'giamdoc@qlktx.edu.vn',
             'password': 'giamdoc123',
             'phone_number': '0901234569',
-            'student_code': None
+            'student_id': None
         },
         
         # Maintenance Staff
@@ -62,7 +62,7 @@ with app.app_context():
             'email': 'baotri1@qlktx.edu.vn',
             'password': 'baotri123',
             'phone_number': '0901234570',
-            'student_code': None
+            'student_id': None
         },
         {
             'role': maintenance_role,
@@ -70,7 +70,7 @@ with app.app_context():
             'email': 'baotri2@qlktx.edu.vn',
             'password': 'baotri123',
             'phone_number': '0901234571',
-            'student_code': None
+            'student_id': None
         },
         
         # Students
@@ -80,7 +80,7 @@ with app.app_context():
             'email': 'sinhvien1@student.edu.vn',
             'password': 'sinhvien123',
             'phone_number': '0901234572',
-            'student_code': 'SV001'
+            'student_id': 'SV001'
         },
         {
             'role': student_role,
@@ -88,7 +88,7 @@ with app.app_context():
             'email': 'sinhvien2@student.edu.vn',
             'password': 'sinhvien123',
             'phone_number': '0901234573',
-            'student_code': 'SV002'
+            'student_id': 'SV002'
         },
         {
             'role': student_role,
@@ -96,7 +96,7 @@ with app.app_context():
             'email': 'sinhvien3@student.edu.vn',
             'password': 'sinhvien123',
             'phone_number': '0901234574',
-            'student_code': 'SV003'
+            'student_id': 'SV003'
         },
         {
             'role': student_role,
@@ -104,7 +104,7 @@ with app.app_context():
             'email': 'sinhvien4@student.edu.vn',
             'password': 'sinhvien123',
             'phone_number': '0901234575',
-            'student_code': 'SV004'
+            'student_id': 'SV004'
         },
         {
             'role': student_role,
@@ -112,7 +112,7 @@ with app.app_context():
             'email': 'sinhvien5@student.edu.vn',
             'password': 'sinhvien123',
             'phone_number': '0901234576',
-            'student_code': 'SV005'
+            'student_id': 'SV005'
         }
     ]
 
@@ -125,7 +125,7 @@ with app.app_context():
                 email=user_data['email'],
                 password_hash=generate_password_hash(user_data['password']),
                 phone_number=user_data['phone_number'],
-                student_code=user_data['student_code'],
+                student_id=user_data['student_id'],
                 is_active=True
             )
             db.session.add(user)

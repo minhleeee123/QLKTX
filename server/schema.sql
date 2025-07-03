@@ -19,7 +19,7 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     phone_number VARCHAR(15),
-    student_code VARCHAR(20) UNIQUE, -- Mã số sinh viên
+    student_id VARCHAR(20) UNIQUE, -- Mã số sinh viên
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (role_id) REFERENCES roles(role_id)

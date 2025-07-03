@@ -12,7 +12,7 @@ def require_role(allowed_roles):
             user_id = get_jwt_identity()
             user = User.query.get(user_id)
             if not user or user.role.role_name not in allowed_roles:
-                return jsonify({'error': 'Không có quyền truy cập'}), 403
+                return jsonify('Không có quyền truy cập'), 403
             return f(*args, **kwargs)
         decorated_function.__name__ = f.__name__
         return decorated_function
@@ -47,7 +47,7 @@ def get_contracts():
                 'student': {
                     'user_id': contract.registration.student.user_id,
                     'full_name': contract.registration.student.full_name,
-                    'student_code': contract.registration.student.student_code,
+                    'student_id': contract.registration.student.student_id,
                     'email': contract.registration.student.email
                 },
                 'room': {
@@ -79,7 +79,7 @@ def get_contracts():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @contracts_bp.route('/<int:contract_id>', methods=['GET'])
 @jwt_required()
@@ -91,12 +91,12 @@ def get_contract(contract_id):
         
         contract = Contract.query.get(contract_id)
         if not contract:
-            return jsonify({'error': 'Hợp đồng không tồn tại'}), 404
+            return jsonify('Hợp đồng không tồn tại'), 404
         
         # Student chỉ xem được hợp đồng của mình
         if (current_user.role.role_name == 'student' and 
             contract.registration.student_id != current_user_id):
-            return jsonify({'error': 'Không có quyền truy cập'}), 403
+            return jsonify('Không có quyền truy cập'), 403
         
         return jsonify({
             'contract': {
@@ -106,7 +106,7 @@ def get_contract(contract_id):
                 'student': {
                     'user_id': contract.registration.student.user_id,
                     'full_name': contract.registration.student.full_name,
-                    'student_code': contract.registration.student.student_code,
+                    'student_id': contract.registration.student.student_id,
                     'email': contract.registration.student.email,
                     'phone_number': contract.registration.student.phone_number
                 },
@@ -143,7 +143,7 @@ def get_contract(contract_id):
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @contracts_bp.route('/<int:contract_id>', methods=['PUT'])
 @jwt_required()
@@ -153,7 +153,7 @@ def update_contract(contract_id):
     try:
         contract = Contract.query.get(contract_id)
         if not contract:
-            return jsonify({'error': 'Hợp đồng không tồn tại'}), 404
+            return jsonify('Hợp đồng không tồn tại'), 404
         
         data = request.get_json()
         
@@ -163,7 +163,7 @@ def update_contract(contract_id):
             try:
                 contract.end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
             except ValueError:
-                return jsonify({'error': 'Định dạng ngày không hợp lệ (YYYY-MM-DD)'}), 400
+                return jsonify('Định dạng ngày không hợp lệ (YYYY-MM-DD)'), 400
         
         db.session.commit()
         
@@ -180,7 +180,7 @@ def update_contract(contract_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @contracts_bp.route('/statistics', methods=['GET'])
 @jwt_required()
@@ -212,4 +212,4 @@ def get_contract_statistics():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500

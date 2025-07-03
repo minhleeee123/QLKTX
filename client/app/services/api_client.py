@@ -33,7 +33,7 @@ class APIClient:
         try:
             data = response.json()
         except ValueError:
-            data = {'message': 'Invalid response format'}
+            data = 'Invalid response format'
             
         if not response.ok:
             # If token expired, clear session
@@ -64,7 +64,7 @@ class APIClient:
                 'success': False,
                 'status_code': 500,
                 'data': None,
-                'error': {'message': f'Connection error: {str(e)}'}
+                'error': f'Connection error: {str(e)}'
             }
     
     def post(self, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
@@ -84,7 +84,7 @@ class APIClient:
                 'success': False,
                 'status_code': 500,
                 'data': None,
-                'error': {'message': f'Connection error: {str(e)}'}
+                'error': f'Connection error: {str(e)}'
             }
     
     def put(self, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
@@ -104,7 +104,7 @@ class APIClient:
                 'success': False,
                 'status_code': 500,
                 'data': None,
-                'error': {'message': f'Connection error: {str(e)}'}
+                'error': f'Connection error: {str(e)}'
             }
     
     def delete(self, endpoint: str) -> Dict[str, Any]:
@@ -123,7 +123,7 @@ class APIClient:
                 'success': False,
                 'status_code': 500,
                 'data': None,
-                'error': {'message': f'Connection error: {str(e)}'}
+                'error': f'Connection error: {str(e)}'
             }
 
 # Global API client instance

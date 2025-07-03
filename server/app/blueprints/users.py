@@ -13,7 +13,7 @@ def require_role(allowed_roles):
             user_id = get_jwt_identity()
             user = User.query.get(user_id)
             if not user or user.role.role_name not in allowed_roles:
-                return jsonify({'error': 'Không có quyền truy cập'}), 403
+                return jsonify('Không có quyền truy cập'), 403
             return f(*args, **kwargs)
         decorated_function.__name__ = f.__name__
         return decorated_function
@@ -42,7 +42,7 @@ def get_users():
                 db.or_(
                     User.full_name.contains(search),
                     User.email.contains(search),
-                    User.student_code.contains(search)
+                    User.student_id.contains(search)
                 )
             )
         
@@ -56,7 +56,7 @@ def get_users():
                 'full_name': user.full_name,
                 'email': user.email,
                 'phone_number': user.phone_number,
-                'student_code': user.student_code,
+                'student_id': user.student_id,
                 'role': user.role.role_name,
                 'created_at': user.created_at.isoformat(),
                 'is_active': user.is_active
@@ -72,7 +72,7 @@ def get_users():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @users_bp.route('/<int:user_id>', methods=['GET'])
 @jwt_required()
@@ -85,11 +85,11 @@ def get_user(user_id):
         # Chỉ cho phép xem thông tin của chính mình hoặc Admin/Management
         if (current_user_id != user_id and 
             current_user.role.role_name not in ['admin', 'management']):
-            return jsonify({'error': 'Không có quyền truy cập'}), 403
+            return jsonify('Không có quyền truy cập'), 403
         
         user = User.query.get(user_id)
         if not user:
-            return jsonify({'error': 'User không tồn tại'}), 404
+            return jsonify('User không tồn tại'), 404
         
         return jsonify({
             'user': {
@@ -97,7 +97,7 @@ def get_user(user_id):
                 'full_name': user.full_name,
                 'email': user.email,
                 'phone_number': user.phone_number,
-                'student_code': user.student_code,
+                'student_id': user.student_id,
                 'role': user.role.role_name,
                 'created_at': user.created_at.isoformat(),
                 'is_active': user.is_active
@@ -105,7 +105,7 @@ def get_user(user_id):
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @users_bp.route('/', methods=['POST'])
 @jwt_required()
@@ -119,21 +119,21 @@ def create_user():
         required_fields = ['full_name', 'email', 'password', 'role_name']
         for field in required_fields:
             if not data.get(field):
-                return jsonify({'error': f'{field} là bắt buộc'}), 400
+                return jsonify(f'{field} là bắt buộc'), 400
         
         # Kiểm tra email đã tồn tại
         if User.query.filter_by(email=data['email']).first():
-            return jsonify({'error': 'Email đã được sử dụng'}), 400
+            return jsonify('Email đã được sử dụng'), 400
         
-        # Kiểm tra student_code nếu có
-        if data.get('student_code'):
-            if User.query.filter_by(student_code=data['student_code']).first():
-                return jsonify({'error': 'Mã sinh viên đã được sử dụng'}), 400
+        # Kiểm tra student_id nếu có
+        if data.get('student_id'):
+            if User.query.filter_by(student_id=data['student_id']).first():
+                return jsonify('Mã sinh viên đã được sử dụng'), 400
         
         # Lấy role
         role = Role.query.filter_by(role_name=data['role_name']).first()
         if not role:
-            return jsonify({'error': 'Role không tồn tại'}), 400
+            return jsonify('Role không tồn tại'), 400
         
         # Tạo user mới
         user = User(
@@ -142,7 +142,7 @@ def create_user():
             email=data['email'],
             password_hash=generate_password_hash(data['password']),
             phone_number=data.get('phone_number'),
-            student_code=data.get('student_code'),
+            student_id=data.get('student_id'),
             is_active=data.get('is_active', True)
         )
         
@@ -161,7 +161,7 @@ def create_user():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @users_bp.route('/<int:user_id>', methods=['PUT'])
 @jwt_required()
@@ -174,11 +174,11 @@ def update_user(user_id):
         # Chỉ cho phép cập nhật thông tin của chính mình hoặc Admin/Management
         if (current_user_id != user_id and 
             current_user.role.role_name not in ['admin', 'management']):
-            return jsonify({'error': 'Không có quyền truy cập'}), 403
+            return jsonify('Không có quyền truy cập'), 403
         
         user = User.query.get(user_id)
         if not user:
-            return jsonify({'error': 'User không tồn tại'}), 404
+            return jsonify('User không tồn tại'), 404
         
         data = request.get_json()
         
@@ -217,7 +217,7 @@ def update_user(user_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @users_bp.route('/<int:user_id>', methods=['DELETE'])
 @jwt_required()
@@ -227,18 +227,18 @@ def delete_user(user_id):
     try:
         user = User.query.get(user_id)
         if not user:
-            return jsonify({'error': 'User không tồn tại'}), 404
+            return jsonify('User không tồn tại'), 404
         
         # Không cho phép xóa chính mình
         current_user_id = get_jwt_identity()
         if current_user_id == user_id:
-            return jsonify({'error': 'Không thể xóa chính mình'}), 400
+            return jsonify('Không thể xóa chính mình'), 400
         
         db.session.delete(user)
         db.session.commit()
         
-        return jsonify({'message': 'Xóa user thành công'}), 200
+        return jsonify('Xóa user thành công'), 200
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500

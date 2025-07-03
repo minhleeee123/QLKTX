@@ -13,7 +13,7 @@ def login():
     
     if form.validate_on_submit():
         response = auth_service.login(form.email.data, form.password.data)
-        
+        print(response)  # Debugging line to check response
         if response['success']:
             flash('Đăng nhập thành công!', 'success')
             
@@ -24,7 +24,7 @@ def login():
             else:
                 return redirect(url_for('dashboard.index'))
         else:
-            error_msg = response.get('error', {}).get('message', 'Đăng nhập thất bại')
+            error_msg = response.get('error', {})
             flash(error_msg, 'error')
             return redirect(url_for('auth.login'))
 
@@ -53,7 +53,7 @@ def register():
             flash('Đăng ký thành công! Vui lòng đăng nhập.', 'success')
             return redirect(url_for('auth.login'))
         else:
-            error_msg = response.get('error', {}).get('message', 'Đăng ký thất bại')
+            error_msg = response.get('error', {})
             flash(error_msg, 'error')
     
     return render_template('auth/register.html', form=form)
@@ -83,8 +83,7 @@ def change_password():
             flash('Đổi mật khẩu thành công!', 'success')
             return redirect(url_for('dashboard.index'))
         else:
-            error_msg = response.get('error', {}).get('message', 'Đổi mật khẩu thất bại')
-            print(response)
+            error_msg = response.get('error', {})
             flash(error_msg, 'error')
     
     return render_template('auth/change_password.html', form=form)

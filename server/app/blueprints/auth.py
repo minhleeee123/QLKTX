@@ -15,12 +15,12 @@ def login():
         password = data.get('password')
         
         if not email or not password:
-            return jsonify({'error': 'Email và password là bắt buộc'}), 400
+            return jsonify('Email và password là bắt buộc'), 400
         
         # Tìm user
         user = User.query.filter_by(email=email, is_active=True).first()
         if not user or not check_password_hash(user.password_hash, password):
-            return jsonify({'error': 'Email hoặc password không đúng'}), 401
+            return jsonify('Email hoặc password không đúng'), 401
         
         # Tạo access token
         access_token = create_access_token(identity=str(user.user_id))  # ✅ Convert to string
@@ -32,12 +32,12 @@ def login():
                 'full_name': user.full_name,
                 'email': user.email,
                 'role': user.role.role_name,
-                'student_code': user.student_code
+                'student_id': user.student_id
             }
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
@@ -53,7 +53,7 @@ def get_current_user():
         user = User.query.get(user_id)
         
         if not user:
-            return jsonify({'error': 'User không tồn tại'}), 404
+            return jsonify('User không tồn tại'), 404
         
         return jsonify({
             'user': {
@@ -61,7 +61,7 @@ def get_current_user():
                 'full_name': user.full_name,
                 'email': user.email,
                 'phone_number': user.phone_number,
-                'student_code': user.student_code,
+                'student_id': user.student_id,
                 'role': user.role.role_name,
                 'created_at': user.created_at.isoformat(),
                 'is_active': user.is_active
@@ -69,7 +69,7 @@ def get_current_user():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -78,23 +78,23 @@ def register():
         data = request.get_json()
         
         # Validate required fields
-        required_fields = ['full_name', 'email', 'password', 'student_code']
+        required_fields = ['full_name', 'email', 'password', 'student_id']
         for field in required_fields:
             if not data.get(field):
-                return jsonify({'error': f'{field} là bắt buộc'}), 400
+                return jsonify(f'{field} là bắt buộc'), 400
         
         # Kiểm tra email đã tồn tại
         if User.query.filter_by(email=data['email']).first():
-            return jsonify({'error': 'Email đã được sử dụng'}), 400
+            return jsonify('Email đã được sử dụng'), 400
         
-        # Kiểm tra student_code đã tồn tại
-        if User.query.filter_by(student_code=data['student_code']).first():
-            return jsonify({'error': 'Mã sinh viên đã được sử dụng'}), 400
+        # Kiểm tra student_id đã tồn tại
+        if User.query.filter_by(student_id=data['student_id']).first():
+            return jsonify('Mã sinh viên đã được sử dụng'), 400
         
         # Lấy role Student
         student_role = Role.query.filter_by(role_name='student').first()
         if not student_role:
-            return jsonify({'error': 'Role Student không tồn tại'}), 500
+            return jsonify('Role Student không tồn tại'), 500
         
         # Tạo user mới
         from werkzeug.security import generate_password_hash
@@ -104,7 +104,7 @@ def register():
             email=data['email'],
             password_hash=generate_password_hash(data['password']),
             phone_number=data.get('phone_number'),
-            student_code=data['student_code'],
+            student_id=data['student_id'],
             is_active=True
         )
         
@@ -117,13 +117,13 @@ def register():
                 'user_id': user.user_id,
                 'full_name': user.full_name,
                 'email': user.email,
-                'student_code': user.student_code
+                'student_id': user.student_id
             }
         }), 201
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @auth_bp.route('/change-password', methods=['PUT'])
 @jwt_required()
@@ -141,7 +141,7 @@ def change_password():
         user = User.query.get(user_id)
         print(f"User found: {user}")  # Debug
         if not user:
-            return jsonify({'error': 'User không tồn tại'}), 404
+            return jsonify('User không tồn tại'), 404
         
         data = request.get_json()
         
@@ -151,23 +151,23 @@ def change_password():
         required_fields = ['current_password', 'new_password', 'confirm_password']
         for field in required_fields:
             if not data.get(field):
-                return jsonify({'error': f'{field} là bắt buộc'}), 400
+                return jsonify(f'{field} là bắt buộc'), 400
         
         # Kiểm tra mật khẩu hiện tại
         if not check_password_hash(user.password_hash, data['current_password']):
-            return jsonify({'error': 'Mật khẩu hiện tại không đúng'}), 400
+            return jsonify('Mật khẩu hiện tại không đúng'), 400
         
         # Kiểm tra mật khẩu mới và xác nhận
         if data['new_password'] != data['confirm_password']:
-            return jsonify({'error': 'Mật khẩu mới và xác nhận không khớp'}), 400
+            return jsonify('Mật khẩu mới và xác nhận không khớp'), 400
         
         # Kiểm tra độ dài mật khẩu mới
         if len(data['new_password']) < 6:
-            return jsonify({'error': 'Mật khẩu mới phải có ít nhất 6 ký tự'}), 400
+            return jsonify('Mật khẩu mới phải có ít nhất 6 ký tự'), 400
         
         # Kiểm tra mật khẩu mới không giống mật khẩu cũ
         if check_password_hash(user.password_hash, data['new_password']):
-            return jsonify({'error': 'Mật khẩu mới phải khác mật khẩu hiện tại'}), 400
+            return jsonify('Mật khẩu mới phải khác mật khẩu hiện tại'), 400
         
         # Cập nhật mật khẩu
         from werkzeug.security import generate_password_hash
@@ -182,5 +182,5 @@ def change_password():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 

@@ -12,7 +12,7 @@ def require_role(allowed_roles):
             user_id = get_jwt_identity()
             user = User.query.get(user_id)
             if not user or user.role.role_name not in allowed_roles:
-                return jsonify({'error': 'Không có quyền truy cập'}), 403
+                return jsonify('Không có quyền truy cập'), 403
             return f(*args, **kwargs)
         decorated_function.__name__ = f.__name__
         return decorated_function
@@ -51,7 +51,7 @@ def get_payments():
                     'contract_id': payment.contract.contract_id,
                     'contract_code': payment.contract.contract_code,
                     'student_name': payment.contract.registration.student.full_name,
-                    'student_code': payment.contract.registration.student.student_code,
+                    'student_id': payment.contract.registration.student.student_id,
                     'room_number': payment.contract.registration.room.room_number,
                     'building_name': payment.contract.registration.room.building.building_name
                 },
@@ -77,7 +77,7 @@ def get_payments():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @payments_bp.route('/', methods=['POST'])
 @jwt_required()
@@ -89,7 +89,7 @@ def create_payment():
         
         # Chỉ sinh viên mới được tạo payment
         if current_user.role.role_name != 'student':
-            return jsonify({'error': 'Chỉ sinh viên mới được tạo thanh toán'}), 403
+            return jsonify('Chỉ sinh viên mới được tạo thanh toán'), 403
         
         data = request.get_json()
         
@@ -97,19 +97,19 @@ def create_payment():
         required_fields = ['contract_id', 'amount', 'payment_method']
         for field in required_fields:
             if not data.get(field):
-                return jsonify({'error': f'{field} là bắt buộc'}), 400
+                return jsonify(f'{field} là bắt buộc'), 400
         
         # Kiểm tra hợp đồng tồn tại và thuộc về sinh viên này
         contract = Contract.query.get(data['contract_id'])
         if not contract:
-            return jsonify({'error': 'Hợp đồng không tồn tại'}), 404
+            return jsonify('Hợp đồng không tồn tại'), 404
         
         if contract.registration.student_id != current_user_id:
-            return jsonify({'error': 'Hợp đồng không thuộc về bạn'}), 403
+            return jsonify('Hợp đồng không thuộc về bạn'), 403
         
         # Validate payment method
         if data['payment_method'] not in ['bank_transfer', 'cash']:
-            return jsonify({'error': 'Phương thức thanh toán không hợp lệ'}), 400
+            return jsonify('Phương thức thanh toán không hợp lệ'), 400
         
         # Tạo payment mới
         payment = Payment(
@@ -136,7 +136,7 @@ def create_payment():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @payments_bp.route('/<int:payment_id>/confirm', methods=['POST'])
 @jwt_required()
@@ -148,10 +148,10 @@ def confirm_payment(payment_id):
         
         payment = Payment.query.get(payment_id)
         if not payment:
-            return jsonify({'error': 'Thanh toán không tồn tại'}), 404
+            return jsonify('Thanh toán không tồn tại'), 404
         
         if payment.status != 'pending':
-            return jsonify({'error': 'Chỉ có thể xác nhận thanh toán đang chờ xử lý'}), 400
+            return jsonify('Chỉ có thể xác nhận thanh toán đang chờ xử lý'), 400
         
         payment.status = 'confirmed'
         payment.confirmed_by_user_id = current_user_id
@@ -169,7 +169,7 @@ def confirm_payment(payment_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @payments_bp.route('/<int:payment_id>/reject', methods=['POST'])
 @jwt_required()
@@ -179,10 +179,10 @@ def reject_payment(payment_id):
     try:
         payment = Payment.query.get(payment_id)
         if not payment:
-            return jsonify({'error': 'Thanh toán không tồn tại'}), 404
+            return jsonify('Thanh toán không tồn tại'), 404
         
         if payment.status != 'pending':
-            return jsonify({'error': 'Chỉ có thể từ chối thanh toán đang chờ xử lý'}), 400
+            return jsonify('Chỉ có thể từ chối thanh toán đang chờ xử lý'), 400
         
         payment.status = 'failed'
         
@@ -198,7 +198,7 @@ def reject_payment(payment_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @payments_bp.route('/<int:payment_id>', methods=['PUT'])
 @jwt_required()
@@ -210,14 +210,14 @@ def update_payment(payment_id):
         
         payment = Payment.query.get(payment_id)
         if not payment:
-            return jsonify({'error': 'Thanh toán không tồn tại'}), 404
+            return jsonify('Thanh toán không tồn tại'), 404
         
         # Student chỉ cập nhật được payment của mình và phải ở trạng thái pending
         if current_user.role.role_name == 'student':
             if payment.contract.registration.student_id != current_user_id:
-                return jsonify({'error': 'Không có quyền cập nhật thanh toán này'}), 403
+                return jsonify('Không có quyền cập nhật thanh toán này'), 403
             if payment.status != 'pending':
-                return jsonify({'error': 'Chỉ có thể cập nhật thanh toán đang chờ xử lý'}), 400
+                return jsonify('Chỉ có thể cập nhật thanh toán đang chờ xử lý'), 400
         
         data = request.get_json()
         
@@ -246,7 +246,7 @@ def update_payment(payment_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @payments_bp.route('/statistics', methods=['GET'])
 @jwt_required()
@@ -281,4 +281,4 @@ def get_payment_statistics():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500

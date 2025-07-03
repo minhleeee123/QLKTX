@@ -12,7 +12,7 @@ def require_role(allowed_roles):
             user_id = get_jwt_identity()
             user = User.query.get(user_id)
             if not user or user.role.role_name not in allowed_roles:
-                return jsonify({'error': 'Không có quyền truy cập'}), 403
+                return jsonify('Không có quyền truy cập'), 403
             return f(*args, **kwargs)
         decorated_function.__name__ = f.__name__
         return decorated_function
@@ -76,7 +76,7 @@ def get_rooms():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @rooms_bp.route('/<int:room_id>', methods=['GET'])
 @jwt_required()
@@ -85,7 +85,7 @@ def get_room(room_id):
     try:
         room = Room.query.get(room_id)
         if not room:
-            return jsonify({'error': 'Phòng không tồn tại'}), 404
+            return jsonify('Phòng không tồn tại'), 404
         
         return jsonify({
             'room': {
@@ -109,7 +109,7 @@ def get_room(room_id):
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @rooms_bp.route('/', methods=['POST'])
 @jwt_required()
@@ -123,7 +123,7 @@ def create_room():
         required_fields = ['room_number', 'building_id', 'room_type_id']
         for field in required_fields:
             if not data.get(field):
-                return jsonify({'error': f'{field} là bắt buộc'}), 400
+                return jsonify(f'{field} là bắt buộc'), 400
         
         # Kiểm tra phòng đã tồn tại
         existing_room = Room.query.filter_by(
@@ -131,16 +131,16 @@ def create_room():
             building_id=data['building_id']
         ).first()
         if existing_room:
-            return jsonify({'error': 'Phòng đã tồn tại trong tòa nhà này'}), 400
+            return jsonify('Phòng đã tồn tại trong tòa nhà này'), 400
         
         # Kiểm tra building và room_type tồn tại
         building = Building.query.get(data['building_id'])
         if not building:
-            return jsonify({'error': 'Tòa nhà không tồn tại'}), 400
+            return jsonify('Tòa nhà không tồn tại'), 400
         
         room_type = RoomType.query.get(data['room_type_id'])
         if not room_type:
-            return jsonify({'error': 'Loại phòng không tồn tại'}), 400
+            return jsonify('Loại phòng không tồn tại'), 400
         
         # Tạo phòng mới
         room = Room(
@@ -166,7 +166,7 @@ def create_room():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @rooms_bp.route('/<int:room_id>', methods=['PUT'])
 @jwt_required()
@@ -176,7 +176,7 @@ def update_room(room_id):
     try:
         room = Room.query.get(room_id)
         if not room:
-            return jsonify({'error': 'Phòng không tồn tại'}), 404
+            return jsonify('Phòng không tồn tại'), 404
         
         data = request.get_json()
         
@@ -204,7 +204,7 @@ def update_room(room_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @rooms_bp.route('/buildings', methods=['GET'])
 @jwt_required()
@@ -223,7 +223,7 @@ def get_buildings():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
 
 @rooms_bp.route('/room-types', methods=['GET'])
 @jwt_required()
@@ -244,4 +244,4 @@ def get_room_types():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify(str(e)), 500
