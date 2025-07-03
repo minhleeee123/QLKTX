@@ -1,0 +1,186 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Dashboard Sinh viên - Quản lý ký túc xá{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-graduation-cap"></i> 
+            Dashboard Sinh viên
+            <small class="text-muted">Chào mừng, {{ user.full_name }}!</small>
+        </h1>
+    </div>
+</div>
+
+<!-- Current Room Status -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-bed"></i> Thông tin phòng hiện tại</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Phòng: <strong>A201</strong></h6>
+                        <p class="mb-1"><i class="fas fa-building"></i> Tòa: A - Tầng 2</p>
+                        <p class="mb-1"><i class="fas fa-users"></i> Loại phòng: 4 người</p>
+                        <p class="mb-1"><i class="fas fa-calendar"></i> Từ: 01/09/2024 - 31/05/2025</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Giá phòng: <strong class="text-success">2,500,000 VNĐ/tháng</strong></h6>
+                        <p class="mb-1"><i class="fas fa-users"></i> Số người đang ở: 3/4</p>
+                        <p class="mb-1"><i class="fas fa-check-circle text-success"></i> Trạng thái: Đang ở</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Info Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h2 class="mb-0">Đã thanh toán</h2>
+                <small>Tháng 7/2025</small>
+                <i class="fas fa-check-circle fa-2x mt-2"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h5 class="mb-0">2,500,000 VNĐ</h5>
+                <small>Tiền phòng tháng 8</small>
+                <i class="fas fa-credit-card fa-2x mt-2"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h2 class="mb-0">1</h2>
+                <small>Yêu cầu bảo trì</small>
+                <i class="fas fa-tools fa-2x mt-2"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h5 class="mb-0">Valid</h5>
+                <small>Hợp đồng</small>
+                <i class="fas fa-file-contract fa-2x mt-2"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt"></i> Thao tác nhanh</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-outline-success w-100">
+                            <i class="fas fa-credit-card"></i><br>
+                            Thanh toán tiền phòng
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-tools"></i><br>
+                            Yêu cầu sửa chữa
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-file-contract"></i><br>
+                            Xem hợp đồng
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-outline-info w-100">
+                            <i class="fas fa-history"></i><br>
+                            Lịch sử thanh toán
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities & Notifications -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Hoạt động gần đây</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-credit-card text-success"></i>
+                            Thanh toán tiền phòng tháng 7 thành công
+                        </div>
+                        <small class="text-muted">3 ngày trước</small>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-tools text-warning"></i>
+                            Gửi yêu cầu sửa chữa quạt trần
+                        </div>
+                        <small class="text-muted">1 tuần trước</small>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-check-circle text-success"></i>
+                            Yêu cầu sửa chữa đã hoàn thành
+                        </div>
+                        <small class="text-muted">2 tuần trước</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bell"></i> Thông báo</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Nhắc nhở!</strong><br>
+                    Tiền phòng tháng 8 đến hạn thanh toán trong 5 ngày.
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>Thông báo</strong><br>
+                    Bảo trì hệ thống điện vào chủ nhật tuần này.
+                </div>
+                
+                <div class="alert alert-success">
+                    <strong>Hoàn thành</strong><br>
+                    Yêu cầu sửa chữa quạt trần đã được xử lý.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

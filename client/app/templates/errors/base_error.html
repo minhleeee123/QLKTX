@@ -1,0 +1,153 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ error_title or 'Lỗi hệ thống' }} - Quản lý ký túc xá{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="error-template">
+            <div class="error-icon mb-4">
+                <i class="fas {{ error_icon or 'fa-exclamation-triangle' }} fa-5x {{ error_color or 'text-danger' }}"></i>
+            </div>
+            
+            <h1 class="display-1 fw-bold {{ error_color or 'text-danger' }}">
+                {{ error_code or '500' }}
+            </h1>
+            <h2 class="mb-4">{{ error_title or 'Lỗi hệ thống' }}</h2>
+            
+            <div class="error-details mb-4">
+                <p class="text-muted">
+                    {{ error_message or 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.' }}
+                </p>
+            </div>
+            
+            {% if error_suggestion %}
+            <div class="alert alert-{{ error_alert_type or 'warning' }}" role="alert">
+                <i class="fas fa-info-circle"></i>
+                {{ error_suggestion }}
+            </div>
+            {% endif %}
+            
+            <div class="error-actions">
+                <a href="{{ url_for('dashboard.index') if session.user_id else url_for('auth.login') }}" 
+                   class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-home"></i>
+                    {% if session.user_id %}
+                        Về trang chủ
+                    {% else %}
+                        Đăng nhập
+                    {% endif %}
+                </a>
+                
+                {% if show_reload %}
+                <button onclick="location.reload()" class="btn btn-outline-warning btn-lg me-2">
+                    <i class="fas fa-sync-alt"></i>
+                    Thử lại
+                </button>
+                {% endif %}
+                
+                {% if show_logout and session.user_id %}
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-lg me-2">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Đăng xuất
+                </a>
+                {% endif %}
+                
+                <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i>
+                    Quay lại
+                </button>
+            </div>
+            
+            {% if contact_info %}
+            <div class="mt-5">
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-headset"></i>
+                            Cần hỗ trợ?
+                        </h6>
+                        <p class="card-text text-muted small">
+                            {{ contact_info | safe }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Additional CSS for error page -->
+<style>
+.error-template {
+    padding: 60px 15px;
+}
+
+.error-icon {
+    animation: fadeInBounce 1s ease-out;
+}
+
+@keyframes fadeInBounce {
+    0% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translateY(10px) scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.display-1 {
+    font-size: 8rem;
+    line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    animation: fadeIn 1s ease-out 0.3s both;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error-details, .error-actions {
+    animation: fadeIn 1s ease-out 0.6s both;
+}
+
+@media (max-width: 768px) {
+    .display-1 {
+        font-size: 5rem;
+    }
+    
+    .error-template {
+        padding: 30px 15px;
+    }
+    
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+    animation: fadeIn 1s ease-out 0.9s both;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

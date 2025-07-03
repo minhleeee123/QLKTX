@@ -1,0 +1,188 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Dashboard Admin - Quản lý ký túc xá{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt"></i> 
+            Dashboard Admin
+            <small class="text-muted">Chào mừng, {{ user.full_name }}!</small>
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Tổng số phòng</h6>
+                        <h2 class="mb-0">120</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-bed fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Phòng đã thuê</h6>
+                        <h2 class="mb-0">85</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Phòng trống</h6>
+                        <h2 class="mb-0">35</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-door-open fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Tổng sinh viên</h6>
+                        <h2 class="mb-0">156</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt"></i> Thao tác nhanh</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 mb-2">
+                        <a href="#" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-user-plus"></i><br>
+                            Thêm người dùng
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <a href="#" class="btn btn-outline-success w-100">
+                            <i class="fas fa-bed"></i><br>
+                            Thêm phòng
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <a href="#" class="btn btn-outline-info w-100">
+                            <i class="fas fa-file-contract"></i><br>
+                            Tạo hợp đồng
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <a href="#" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-tools"></i><br>
+                            Bảo trì
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <a href="#" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-chart-bar"></i><br>
+                            Báo cáo
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <a href="#" class="btn btn-outline-dark w-100">
+                            <i class="fas fa-cog"></i><br>
+                            Cài đặt
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Hoạt động gần đây</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user-plus text-success"></i>
+                            Sinh viên Nguyễn Văn A đã đăng ký phòng 101
+                        </div>
+                        <small class="text-muted">2 phút trước</small>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-credit-card text-primary"></i>
+                            Thanh toán tiền phòng tháng 7 đã được xác nhận
+                        </div>
+                        <small class="text-muted">15 phút trước</small>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-tools text-warning"></i>
+                            Yêu cầu sửa chữa điều hòa phòng 205
+                        </div>
+                        <small class="text-muted">1 giờ trước</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-exclamation-triangle"></i> Cần chú ý</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>3</strong> yêu cầu bảo trì chờ xử lý
+                </div>
+                <div class="alert alert-info">
+                    <strong>5</strong> hợp đồng sắp hết hạn
+                </div>
+                <div class="alert alert-danger">
+                    <strong>2</strong> thanh toán quá hạn
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

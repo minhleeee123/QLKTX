@@ -1,0 +1,180 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Dashboard Nhân viên - Quản lý ký túc xá{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-user-tie"></i> 
+            Dashboard Nhân viên
+            <small class="text-muted">Chào mừng, {{ user.full_name }}!</small>
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Hợp đồng hôm nay</h6>
+                        <h2 class="mb-0">5</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file-contract fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Yêu cầu bảo trì</h6>
+                        <h2 class="mb-0">8</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tools fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Đã xử lý</h6>
+                        <h2 class="mb-0">12</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt"></i> Thao tác nhanh</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-file-contract"></i><br>
+                            Tạo hợp đồng
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-tools"></i><br>
+                            Xử lý bảo trì
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-outline-info w-100">
+                            <i class="fas fa-bed"></i><br>
+                            Quản lý phòng
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-outline-success w-100">
+                            <i class="fas fa-credit-card"></i><br>
+                            Thanh toán
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tasks -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tasks"></i> Công việc hôm nay</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-tools text-warning"></i>
+                            Sửa chữa điều hòa phòng 205
+                        </div>
+                        <span class="badge bg-warning">Urgent</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-file-contract text-primary"></i>
+                            Tạo hợp đồng cho SV Nguyễn Văn B
+                        </div>
+                        <span class="badge bg-primary">New</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-check text-success"></i>
+                            Kiểm tra phòng 301 sau sửa chữa
+                        </div>
+                        <span class="badge bg-info">Pending</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Tiến độ tuần này</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Hợp đồng đã tạo</span>
+                        <span>15/20</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: 75%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Yêu cầu bảo trì đã xử lý</span>
+                        <span>12/16</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 75%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Thanh toán đã xác nhận</span>
+                        <span>8/10</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: 80%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

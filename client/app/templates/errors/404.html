@@ -1,0 +1,86 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Không tìm thấy trang - Quản lý ký túc xá{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="error-template">
+            <div class="error-icon mb-4">
+                <i class="fas fa-search fa-5x text-muted"></i>
+            </div>
+            
+            <h1 class="display-1 fw-bold text-primary">404</h1>
+            <h2 class="mb-4">Không tìm thấy trang</h2>
+            
+            <div class="error-details mb-4">
+                <p class="text-muted">
+                    Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
+                </p>
+            </div>
+            
+            <div class="error-actions">
+                <a href="{{ url_for('dashboard.index') if session.user_id else url_for('auth.login') }}" 
+                   class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-home"></i>
+                    {% if session.user_id %}
+                        Về trang chủ
+                    {% else %}
+                        Đăng nhập
+                    {% endif %}
+                </a>
+                
+                <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i>
+                    Quay lại
+                </button>
+            </div>
+            
+            <div class="mt-5">
+                <p class="text-muted small">
+                    Nếu bạn nghĩ đây là lỗi hệ thống, vui lòng liên hệ với quản trị viên.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional CSS for error page -->
+<style>
+.error-template {
+    padding: 60px 15px;
+}
+
+.error-icon {
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.display-1 {
+    font-size: 8rem;
+    line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .display-1 {
+        font-size: 5rem;
+    }
+    
+    .error-template {
+        padding: 30px 15px;
+    }
+}
+</style>
+{% endblock %}

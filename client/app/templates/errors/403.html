@@ -1,0 +1,109 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Không có quyền truy cập - Quản lý ký túc xá{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="error-template">
+            <div class="error-icon mb-4">
+                <i class="fas fa-lock fa-5x text-warning"></i>
+            </div>
+            
+            <h1 class="display-1 fw-bold text-warning">403</h1>
+            <h2 class="mb-4">Không có quyền truy cập</h2>
+            
+            <div class="error-details mb-4">
+                <p class="text-muted">
+                    Xin lỗi, bạn không có quyền truy cập vào trang này. 
+                    Vui lòng kiểm tra lại quyền của tài khoản.
+                </p>
+            </div>
+            
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle"></i>
+                <strong>Thông tin:</strong> 
+                Bạn đang đăng nhập với vai trò 
+                <span class="badge bg-secondary">{{ session.role or 'Chưa xác định' }}</span>
+            </div>
+            
+            <div class="error-actions">
+                <a href="{{ url_for('dashboard.index') if session.user_id else url_for('auth.login') }}" 
+                   class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-home"></i>
+                    Về trang chủ
+                </a>
+                
+                {% if session.user_id %}
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-lg me-2">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Đăng xuất
+                </a>
+                {% endif %}
+                
+                <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i>
+                    Quay lại
+                </button>
+            </div>
+            
+            <div class="mt-5">
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-question-circle"></i>
+                            Cần thêm quyền?
+                        </h6>
+                        <p class="card-text text-muted small">
+                            Nếu bạn cần truy cập vào trang này, vui lòng liên hệ với quản trị viên 
+                            để được cấp quyền phù hợp.
+                        </p>
+                        <p class="card-text text-muted small">
+                            Email: admin@qlktx.edu.vn
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional CSS for error page -->
+<style>
+.error-template {
+    padding: 60px 15px;
+}
+
+.error-icon {
+    animation: shake 1s ease-in-out infinite;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+.display-1 {
+    font-size: 8rem;
+    line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .display-1 {
+        font-size: 5rem;
+    }
+    
+    .error-template {
+        padding: 30px 15px;
+    }
+}
+</style>
+{% endblock %}
