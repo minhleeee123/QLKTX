@@ -67,6 +67,7 @@ instance/
 *.db
 *.sqlite
 *.sqlite3
+flask_session/
 
 # Scrapy stuff:
 .scrapy
@@ -181,10 +182,6 @@ migrations/versions/
 *.sqlite3
 
 # Configuration files with sensitive data
-config.py
-.env
-.env.local
-.env.production
 *.cfg
 
 # Logs
