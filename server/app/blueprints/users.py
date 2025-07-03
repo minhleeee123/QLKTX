@@ -222,6 +222,29 @@ def delete_user(user_id):
         if current_user_id == user_id:
             return jsonify('Không thể xóa chính mình'), 400
         
+        # Kiểm tra xem user có dữ liệu liên quan không
+        from app.models import Registration, Contract, Payment, MaintenanceRequest
+        
+        # Kiểm tra registrations
+        registrations = Registration.query.filter_by(student_id=user_id).first()
+        if registrations:
+            return jsonify('Không thể xóa sinh viên này vì còn đăng ký phòng. Vui lòng xóa các đăng ký phòng trước.'), 400
+        
+        # Kiểm tra contracts (thông qua registrations)
+        contracts = Contract.query.join(Registration).filter(Registration.student_id == user_id).first()
+        if contracts:
+            return jsonify('Không thể xóa sinh viên này vì còn hợp đồng. Vui lòng xóa các hợp đồng trước.'), 400
+        
+        # Kiểm tra payments (thông qua contracts)
+        payments = Payment.query.join(Contract).join(Registration).filter(Registration.student_id == user_id).first()
+        if payments:
+            return jsonify('Không thể xóa sinh viên này vì còn thanh toán. Vui lòng xóa các thanh toán trước.'), 400
+        
+        # Kiểm tra maintenance requests
+        maintenance_requests = MaintenanceRequest.query.filter_by(student_id=user_id).first()
+        if maintenance_requests:
+            return jsonify('Không thể xóa sinh viên này vì còn yêu cầu bảo trì. Vui lòng xóa các yêu cầu bảo trì trước.'), 400
+        
         db.session.delete(user)
         db.session.commit()
         
