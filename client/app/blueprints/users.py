@@ -152,10 +152,8 @@ def edit_user(user_id):
 @admin_required
 def delete_user(user_id):
     """Delete user"""
-    current_user = auth_service.get_current_user()
-    
     # Check if trying to delete self
-    if current_user and current_user.get('id') == user_id:
+    if current_user and current_user.id == user_id:
         return jsonify({'success': False, 'message': 'Không thể xóa chính mình'}), 400
     
     response = user_service.delete_user(user_id)
