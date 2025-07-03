@@ -1,8 +1,9 @@
 import os
+from datetime import datetime
 from flask import Flask, redirect, url_for, render_template
 from .extensions import session, csrf
 from .services.auth_service import auth_service
-from .blueprints import auth_bp, dashboard_bp
+from .blueprints import auth_bp, dashboard_bp, users_bp
 
 def create_app():
     app = Flask(__name__)
@@ -24,6 +25,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+    app.register_blueprint(users_bp, url_prefix='/users')
     
     # Global template context processor
     @app.context_processor
@@ -32,6 +34,27 @@ def create_app():
             'current_user': auth_service.get_current_user(),
             'is_authenticated': auth_service.is_authenticated()
         }
+    
+    # Template filters
+    @app.template_filter('datetime')
+    def datetime_filter(value, format='%d/%m/%Y'):
+        """Format datetime string"""
+        if not value:
+            return '-'
+        try:
+            if isinstance(value, str):
+                # Parse ISO format from API
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            else:
+                dt = value
+            return dt.strftime(format)
+        except:
+            return value
+    
+    @app.template_filter('datetime_full')
+    def datetime_full_filter(value):
+        """Format datetime with time"""
+        return datetime_filter(value, '%d/%m/%Y %H:%M')
     
     # Root route - redirect to dashboard or login
     @app.route('/')

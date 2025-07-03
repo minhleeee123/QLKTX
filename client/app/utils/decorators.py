@@ -33,6 +33,20 @@ def admin_required(f):
     """Decorator to require admin role"""
     return role_required('admin')(f)
 
+def management_required(f):
+    """Decorator to require admin or management role"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not auth_service.is_authenticated():
+            flash('Vui lòng đăng nhập để truy cập trang này.', 'warning')
+            return redirect(url_for('auth.login', next=request.url))
+        
+        if not auth_service.has_role('admin') and not auth_service.has_role('management'):
+            abort(403)
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
 def staff_required(f):
     """Decorator to require staff role"""
     return role_required('staff')(f)

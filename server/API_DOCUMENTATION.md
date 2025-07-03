@@ -35,7 +35,7 @@ Authorization: Bearer <token>
     "full_name": "Nguyễn Văn Admin",
     "email": "admin@qlktx.edu.vn",
     "role": "Admin",
-    "student_code": null
+    "student_id": null
   }
 }
 ```
@@ -49,7 +49,7 @@ Authorization: Bearer <token>
   "full_name": "Nguyễn Văn A",
   "email": "student@student.edu.vn",
   "password": "password123",
-  "student_code": "SV006",
+  "student_id": "SV006",
   "phone_number": "0901234567"
 }
 ```
