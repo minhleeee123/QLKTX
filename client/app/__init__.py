@@ -1,9 +1,9 @@
 import os
 from datetime import datetime
 from flask import Flask, redirect, url_for, render_template
-from .extensions import session, csrf
+from .extensions import session, csrf, login_manager
 from .services.auth_service import auth_service
-from .blueprints import auth_bp, dashboard_bp, users_bp
+from .blueprints import auth_bp, dashboard_bp, users_bp, rooms_bp
 
 def create_app():
     app = Flask(__name__)
@@ -21,11 +21,32 @@ def create_app():
     # Initialize extensions
     session.init_app(app)
     csrf.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Vui lòng đăng nhập để truy cập trang này.'
+    login_manager.login_message_category = 'warning'
+    
+    # User loader for Flask-Login
+    from .models.user import User
+    @login_manager.user_loader
+    def load_user(user_id):
+        from flask import session
+        if 'user_id' in session and str(session.get('user_id')) == user_id:
+            # Create user from session data
+            user_data = {
+                'user_id': session.get('user_id'),
+                'email': session.get('email'),
+                'role': session.get('role'),
+                'full_name': session.get('full_name')
+            }
+            return User(user_data)
+        return None
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(users_bp, url_prefix='/users')
+    app.register_blueprint(rooms_bp, url_prefix='/rooms')
     
     # Global template context processor
     @app.context_processor

@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from ..forms.user_forms import UserForm, UserSearchForm
 from ..services.user_service import user_service
 from ..services.auth_service import auth_service
-from ..utils.decorators import login_required, admin_required
+from flask_login import login_required, current_user
+from ..utils.decorators import admin_required
 
 users_bp = Blueprint('users', __name__)
 

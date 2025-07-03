@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for
 from ..services.auth_service import auth_service
-from ..utils.decorators import login_required
+from flask_login import login_required, current_user
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -8,15 +8,14 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @login_required
 def index():
     """Main dashboard page - redirects based on user role"""
-    user = auth_service.get_current_user()
-    print(user)  # Debugging line to check user details
+    print(current_user)  # Debugging line to check user details
     print("Index route accessed")  # Debugging line to check route access
-    if user['role'] == 'admin':
+    if current_user.role == 'admin':
         print("Redirecting to admin dashboard")  # Debugging line
         return redirect(url_for('dashboard.admin'))
-    elif user["role"] == "staff":
+    elif current_user.role == "staff":
         return redirect(url_for('dashboard.staff'))
-    elif user['role'] == 'student':
+    elif current_user.role == 'student':
         return redirect(url_for('dashboard.student'))
     else:
         return redirect(url_for('auth.logout'))

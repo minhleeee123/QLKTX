@@ -1,6 +1,8 @@
 from flask import session
 from typing import Dict, Any, Optional
+from flask_login import login_user, logout_user, current_user
 from .api_client import api_client
+from ..models.user import User
 
 
 class AuthService:
@@ -16,12 +18,17 @@ class AuthService:
         if response["success"]:
             # Store user info and token in session
             user_data = response["data"]
-            session["user_id"] = user_data.get("user", {}).get("user_id")
-            session["email"] = user_data.get("user", {}).get("email")
-            session["role"] = user_data.get("user", {}).get("role")
-            session["full_name"] = user_data.get("user", {}).get("full_name")
+            user_info = user_data.get("user", {})
+            session["user_id"] = user_info.get("user_id")
+            session["email"] = user_info.get("email")
+            session["role"] = user_info.get("role")
+            session["full_name"] = user_info.get("full_name")
             session["access_token"] = user_data.get("access_token")
             session.permanent = True
+            
+            # Create User object for Flask-Login
+            user = User(user_info)
+            login_user(user, remember=True)
 
         return response
 
@@ -34,6 +41,8 @@ class AuthService:
         except:
             pass  # Continue even if server logout fails
         finally:
+            # Logout from Flask-Login
+            logout_user()
             # Clear local session
             session.clear()
 
@@ -45,28 +54,23 @@ class AuthService:
         return api_client.post("/auth/register", user_data)
 
     @staticmethod
-    def get_current_user() -> Optional[Dict[str, Any]]:
-        """Get current user info from session"""
-        if "user_id" in session:
-            return {
-                "id": session.get("user_id"),
-                "email": session.get("email"),
-                "role": session.get("role"),
-                "full_name": session.get("full_name"),
-            }
+    def get_current_user() -> Optional[User]:
+        """Get current user info"""
+        if current_user.is_authenticated:
+            return current_user
         return None
 
     @staticmethod
     def is_authenticated() -> bool:
         """Check if user is authenticated"""
-        return "user_id" in session and "access_token" in session
+        return current_user.is_authenticated and "access_token" in session
 
     @staticmethod
     def has_role(role: str) -> bool:
         """Check if current user has specific role"""
         if not AuthService.is_authenticated():
             return False
-        return session.get("role") == role
+        return current_user.role == role
 
     @staticmethod
     def is_admin() -> bool:

@@ -1,0 +1,84 @@
+{% extends "base/layout.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Tổng quan</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('rooms.list_rooms') }}">Quản lý phòng</a></li>
+        <li class="breadcrumb-item active">{{ title }}</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-edit me-1"></i>
+            {{ title }}
+        </div>
+        <div class="card-body">
+            <form method="POST" action="" class="needs-validation" novalidate>
+                {{ form.csrf_token }}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            {{ form.room_number.label(class="form-label") }}
+                            {{ form.room_number(class="form-control" + (" is-invalid" if form.room_number.errors else "")) }}
+                            {% for error in form.room_number.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.building_id.label(class="form-label") }}
+                            {{ form.building_id(class="form-select" + (" is-invalid" if form.building_id.errors else "")) }}
+                            {% for error in form.building_id.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.room_type_id.label(class="form-label") }}
+                            {{ form.room_type_id(class="form-select" + (" is-invalid" if form.room_type_id.errors else "")) }}
+                            {% for error in form.room_type_id.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                            {% for error in form.status.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.current_occupancy.label(class="form-label") }}
+                            {{ form.current_occupancy(class="form-control" + (" is-invalid" if form.current_occupancy.errors else "")) }}
+                            {% for error in form.current_occupancy.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group mt-3">
+                    {{ form.submit(class="btn btn-primary me-2") }}
+                    <a href="{{ url_for('rooms.list_rooms') }}" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

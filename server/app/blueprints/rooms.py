@@ -2,21 +2,9 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models import User, Room, Building, RoomType
+from app.utils.decorators import require_role
 
 rooms_bp = Blueprint('rooms', __name__)
-
-def require_role(allowed_roles):
-    """Decorator để kiểm tra quyền truy cập"""
-    def decorator(f):
-        def decorated_function(*args, **kwargs):
-            user_id = get_jwt_identity()
-            user = User.query.get(user_id)
-            if not user or user.role.role_name not in allowed_roles:
-                return jsonify('Không có quyền truy cập'), 403
-            return f(*args, **kwargs)
-        decorated_function.__name__ = f.__name__
-        return decorated_function
-    return decorator
 
 @rooms_bp.route('/', methods=['GET'])
 @jwt_required()
