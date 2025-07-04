@@ -2,14 +2,19 @@
 
 {% block title %}Quản lý người dùng - Quản lý ký túc xá{% endblock %}
 
+{% block head %}
+<!-- CSRF Token for AJAX requests -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="fas fa-users"></i> Quản lý người dùng</h1>
-            <a href="{{ url_for('users.create_user') }}" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" onclick="openCreateUserModal()">
                 <i class="fas fa-plus"></i> Thêm người dùng
-            </a>
+            </button>
         </div>
     </div>
 </div>
@@ -100,21 +105,31 @@
                                     <td>{{ user.created_at|datetime if user.created_at else '-' }}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ url_for('users.view_user', user_id=user.user_id) }}" 
-                                               class="btn btn-outline-primary" title="Xem chi tiết">
+                                            <button type="button" 
+                                                    class="btn btn-outline-primary" 
+                                                    title="Xem chi tiết"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#userDetailModal"
+                                                    data-user-id="{{ user.user_id }}"
+                                                    onclick="viewUserDetails(this.dataset.userId)">
                                                 <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ url_for('users.edit_user', user_id=user.user_id) }}" 
-                                               class="btn btn-outline-warning" title="Chỉnh sửa">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-outline-warning" 
+                                                    title="Chỉnh sửa"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#userModal"
+                                                    data-user-id="{{ user.user_id }}"
+                                                    onclick="openEditUserModal(this.dataset.userId)">
+                                                <i class="fas fa-edit"></i> 
+                                            </button>
                                             {% if current_user.id != user.user_id %}
                                             <button type="button" 
                                                     class="btn btn-outline-danger" 
                                                     title="Xóa"
                                                     data-user-id="{{ user.user_id }}"
                                                     data-user-name="{{ user.full_name }}"
-                                                    onclick="deleteUser(this.dataset.userId, this.dataset.userName)">>
+                                                    onclick="deleteUser(this.dataset.userId, this.dataset.userName)">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                             {% endif %}
@@ -173,40 +188,22 @@
                         <i class="fas fa-users fa-3x text-muted mb-3"></i>
                         <h5>Không có người dùng nào</h5>
                         <p class="text-muted">Chưa có người dùng trong hệ thống hoặc không khớp với tìm kiếm của bạn.</p>
-                        <a href="{{ url_for('users.create_user') }}" class="btn btn-primary">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" onclick="openCreateUserModal()">
                             <i class="fas fa-plus"></i> Thêm người dùng đầu tiên
-                        </a>
+                        </button>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Include User Modals -->
+{% include 'users/user_modals.html' %}
+
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-function deleteUser(userId, userName) {
-    if (confirm(`Bạn có chắc chắn muốn xóa người dùng "${userName}"?`)) {
-        fetch(`/users/${userId}/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Lỗi: ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert('Có lỗi xảy ra: ' + error.message);
-        });
-    }
-}
-</script>
+<!-- Include User Operations JavaScript -->
+<script src="{{ url_for('static', filename='js/user_operations.js') }}"></script>
 {% endblock %}
