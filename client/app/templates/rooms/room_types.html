@@ -8,7 +8,7 @@
         <li class="breadcrumb-item"><a href="{{ url_for('rooms.list_rooms') }}">Quản lý phòng</a></li>
         <li class="breadcrumb-item active">Quản lý loại phòng</li>
     </ol>
-    
+
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div>
@@ -46,20 +46,15 @@
                             <td>{{ room_type.available_rooms }}</td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-sm btn-primary edit-room-type" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#roomTypeModal" 
-                                            data-id="{{ room_type.room_type_id }}"
-                                            data-name="{{ room_type.type_name }}"
-                                            data-capacity="{{ room_type.capacity }}"
-                                            data-price="{{ room_type.price }}">
+                                    <button type="button" class="btn btn-sm btn-primary edit-room-type"
+                                        data-bs-toggle="modal" data-bs-target="#roomTypeModal"
+                                        data-id="{{ room_type.room_type_id }}" data-name="{{ room_type.type_name }}"
+                                        data-capacity="{{ room_type.capacity }}" data-price="{{ room_type.price }}">
                                         <i class="fas fa-edit"></i> Sửa
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-danger" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteRoomTypeModal" 
-                                            data-id="{{ room_type.room_type_id }}"
-                                            data-name="{{ room_type.type_name }}">
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteRoomTypeModal" data-id="{{ room_type.room_type_id }}"
+                                        data-name="{{ room_type.type_name }}">
                                         <i class="fas fa-trash"></i> Xóa
                                     </button>
                                 </div>
@@ -89,22 +84,22 @@
                 <form id="roomTypeForm" method="POST" action="{{ url_for('rooms.create_room_type') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="room_type_id" id="room_type_id" value="">
-                    
+
                     <div class="mb-3">
                         <label for="type_name" class="form-label">Tên loại phòng</label>
                         <input type="text" class="form-control" id="type_name" name="type_name" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="capacity" class="form-label">Sức chứa</label>
                         <input type="number" class="form-control" id="capacity" name="capacity" min="1" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="price" class="form-label">Giá phòng (VNĐ)</label>
                         <input type="number" class="form-control" id="price" name="price" min="0" required>
                     </div>
-                    
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                         <button type="submit" class="btn btn-primary">Lưu</button>
@@ -116,7 +111,8 @@
 </div>
 
 <!-- Delete Room Type Modal -->
-<div class="modal fade" id="deleteRoomTypeModal" tabindex="-1" aria-labelledby="deleteRoomTypeModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteRoomTypeModal" tabindex="-1" aria-labelledby="deleteRoomTypeModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -125,7 +121,8 @@
             </div>
             <div class="modal-body">
                 <p>Bạn có chắc chắn muốn xóa loại phòng <span id="roomTypeToDelete"></span>?</p>
-                <p class="text-danger">Lưu ý: Việc xóa loại phòng sẽ ảnh hưởng đến tất cả các phòng sử dụng loại phòng này!</p>
+                <p class="text-danger">Lưu ý: Việc xóa loại phòng sẽ ảnh hưởng đến tất cả các phòng sử dụng loại phòng
+                    này!</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -139,9 +136,12 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Test if elements exist
+        const deleteModal = document.getElementById('deleteRoomTypeModal');
+        const deleteForm = document.getElementById('deleteRoomTypeForm');
         // Handle editing room type
         const roomTypeModal = document.getElementById('roomTypeModal');
         const modalTitle = roomTypeModal.querySelector('.modal-title');
@@ -150,17 +150,17 @@
         const typeNameInput = document.getElementById('type_name');
         const capacityInput = document.getElementById('capacity');
         const priceInput = document.getElementById('price');
-        
+
         roomTypeModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             const isEdit = button.classList.contains('edit-room-type');
-            
+
             if (isEdit) {
                 const roomTypeId = button.getAttribute('data-id');
                 const typeName = button.getAttribute('data-name');
                 const capacity = button.getAttribute('data-capacity');
                 const price = button.getAttribute('data-price');
-                
+
                 modalTitle.textContent = 'Chỉnh sửa loại phòng';
                 roomTypeIdInput.value = roomTypeId;
                 typeNameInput.value = typeName;
@@ -176,17 +176,29 @@
                 roomTypeForm.action = "{{ url_for('rooms.create_room_type') }}";
             }
         });
-        
+
         // Handle delete room type modal
         const deleteRoomTypeModal = document.getElementById('deleteRoomTypeModal');
         deleteRoomTypeModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             const roomTypeId = button.getAttribute('data-id');
             const typeName = button.getAttribute('data-name');
-            
+
+
             document.getElementById('roomTypeToDelete').textContent = typeName;
-            document.getElementById('deleteRoomTypeForm').action = "{{ url_for('rooms.delete_room_type', room_type_id=0) }}".replace('0', roomTypeId);
+            const deleteForm = document.getElementById('deleteRoomTypeForm');
+
+            // Debug the URL generation
+            const baseUrl = "{{ url_for('rooms.delete_room_type', room_type_id=0) }}";
+
+            // Try hardcoded URL first - match server route exactly
+            const actionUrl = `/rooms/room-types/${roomTypeId}`;
+
+            deleteForm.action = actionUrl;
+        });
+
+        // Add form submit handler for debugging
+        deleteForm.addEventListener('submit', function (event) {
         });
     });
 </script>
-{% endblock %}

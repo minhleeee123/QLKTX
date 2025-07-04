@@ -113,13 +113,12 @@
                                     <a href="{{ url_for('rooms.edit_room', room_id=room.room_id) }}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-edit"></i> Sửa
                                     </a>
+                                    <!-- Phương án 2: Button với JavaScript -->
                                     <button type="button" class="btn btn-sm btn-danger" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteModal" 
-                                            data-room-id="{{ room.room_id }}"
-                                            data-room-name="{{ room.room_number }}">
+                                            onclick="deleteRoom('{{ room.room_id }}', '{{ room.room_number }}')">
                                         <i class="fas fa-trash"></i> Xóa
                                     </button>
+                                   
                                     {% endif %}
                                 </div>
                             </td>
@@ -164,47 +163,30 @@
     </div>
 </div>
 
-<!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Bạn có chắc chắn muốn xóa phòng <span id="roomToDelete"></span>?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteForm" method="POST" action="">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger">Xóa</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set up delete modal
-        const deleteModal = document.getElementById('deleteModal');
-        if (deleteModal) {
-            deleteModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const roomId = button.getAttribute('data-room-id');
-                const roomName = button.getAttribute('data-room-name');
-                
-                const modalRoomName = document.getElementById('roomToDelete');
-                const deleteForm = document.getElementById('deleteForm');
-                
-                modalRoomName.textContent = roomName;
-                deleteForm.action = "{{ url_for('rooms.delete_room', room_id=0) }}".replace('0', roomId);
-            });
+    // JavaScript function for delete button
+    function deleteRoom(roomId, roomNumber) {
+        if (confirm('Bạn có chắc chắn muốn xóa phòng ' + roomNumber + '?')) {
+            // Create form dynamically
+            const form = document.createElement('form');
+            form.method = 'POST';
+            // Build URL directly instead of using template placeholder
+            form.action = '/rooms/' + roomId + "/delete"
+            console.log('Delete URL:', form.action);
+            
+            // Add CSRF token
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrf_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
+            
+            // Submit form
+            document.body.appendChild(form);
+            form.submit();
         }
-    });
+    }
 </script>
 {% endblock %}
+
+
