@@ -51,3 +51,18 @@ class Room(db.Model):
     def remaining_capacity(self):
         """Số chỗ còn trống trong phòng"""
         return max(0, self.room_type.capacity - self.current_occupancy)
+    
+    @property
+    def actual_occupancy(self):
+        """Số sinh viên thực tế đang ở trong phòng (từ registrations)"""
+        from app.models import Registration
+        return Registration.query.filter_by(room_id=self.room_id, status='approved').count()
+    
+    @property
+    def current_students(self):
+        """Danh sách sinh viên hiện tại trong phòng"""
+        from app.models import Registration, User
+        return db.session.query(User).join(Registration).filter(
+            Registration.room_id == self.room_id,
+            Registration.status == 'approved'
+        ).all()
