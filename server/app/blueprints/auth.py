@@ -3,6 +3,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from werkzeug.security import check_password_hash
 from app.extensions import db
 from app.models import User, Role
+from werkzeug.security import generate_password_hash
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -21,9 +22,9 @@ def login():
         user = User.query.filter_by(email=email, is_active=True).first()
         if not user or not check_password_hash(user.password_hash, password):
             return jsonify('Email hoặc password không đúng'), 401
-        
+
         # Tạo access token
-        access_token = create_access_token(identity=str(user.user_id))  # ✅ Convert to string
+        access_token = create_access_token(identity=str(user.user_id))
         
         return jsonify({
             'access_token': access_token,
@@ -97,7 +98,6 @@ def register():
             return jsonify('Role Student không tồn tại'), 500
         
         # Tạo user mới
-        from werkzeug.security import generate_password_hash
         user = User(
             role_id=student_role.role_id,
             full_name=data['full_name'],

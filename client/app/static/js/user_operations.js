@@ -32,10 +32,14 @@ function openEditUserModal(userId) {
     modal.show();
     
     // Load user data
-    fetch(`/users/api/${userId}`)
+    fetch(`/users/${userId}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
+            if (data.success) { 
                 const user = data.user;
                 document.getElementById('fullName').value = user.full_name || '';
                 document.getElementById('email').value = user.email || '';
@@ -68,7 +72,11 @@ function viewUserDetails(userId) {
         </div>
     `;
     
-    fetch(`/users/api/${userId}`)
+    fetch(`/users/${userId}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -159,12 +167,20 @@ function deleteUser(userId, userName) {
     userId = parseInt(userId);
     
     if (confirm(`Bạn có chắc chắn muốn xóa người dùng "${userName}"?`)) {
-        fetch(`/users/api/${userId}`, {
-            method: 'DELETE',
+        // Create FormData with CSRF token
+        const formData = new FormData();
+        const csrfToken = document.getElementById('csrfToken')?.value || 
+                         document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+        if (csrfToken) {
+            formData.append('csrf_token', csrfToken);
+        }
+        
+        fetch(`/users/${userId}/delete`, {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
-            }
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
@@ -239,8 +255,25 @@ document.addEventListener('DOMContentLoaded', function() {
             // Remove confirm_password from data
             delete userData.confirm_password;
             
-            const url = isEditMode ? `/users/api/${currentUserId}` : '/users/api';
-            const method = isEditMode ? 'PUT' : 'POST';
+            // Create FormData object
+            const submitFormData = new FormData();
+            
+            // Add CSRF token from the hidden input in the form
+            const csrfToken = document.getElementById('csrfToken')?.value || 
+                             document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+            if (csrfToken) {
+                submitFormData.append('csrf_token', csrfToken);
+            }
+            
+            // Add user data to form
+            Object.keys(userData).forEach(key => {
+                if (userData[key] !== null && userData[key] !== undefined) {
+                    submitFormData.append(key, userData[key]);
+                }
+            });
+            
+            const url = isEditMode ? `/users/${currentUserId}/edit` : '/users/create';
+            const method = 'POST'; // Always use POST for form submission
             
             // Disable submit button
             const submitBtn = document.getElementById('saveUserBtn');
@@ -251,10 +284,9 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(url, {
                 method: method,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify(userData)
+                body: submitFormData
             })
             .then(response => response.json())
             .then(data => {

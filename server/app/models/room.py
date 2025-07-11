@@ -18,7 +18,7 @@ class RoomType(db.Model):
     __tablename__ = 'room_types'
     
     room_type_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    type_name = db.Column(db.String(100), nullable=False)  # 'Phòng 4 người', 'Phòng 6 người', 'Phòng dịch vụ'
+    type_name = db.Column(db.String(100), nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Numeric(10, 2), nullable=False)
     

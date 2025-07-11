@@ -7,18 +7,21 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="userForm">
+                <input type="hidden" id="csrfToken" value="{{ csrf_token() }}">
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="fullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="fullName" name="full_name" required>
+                                <div class="text-danger small" id="fullNameError"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="text-danger small" id="emailError"></div>
                             </div>
                         </div>
                     </div>
@@ -27,12 +30,14 @@
                             <div class="mb-3">
                                 <label for="phoneNumber" class="form-label">Số điện thoại</label>
                                 <input type="tel" class="form-control" id="phoneNumber" name="phone_number">
+                                <div class="text-danger small" id="phoneNumberError"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="studentId" class="form-label">Mã sinh viên</label>
                                 <input type="text" class="form-control" id="studentId" name="student_id">
+                                <div class="text-danger small" id="studentIdError"></div>
                             </div>
                         </div>
                     </div>
@@ -40,15 +45,16 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="role" class="form-label">Vai trò <span class="text-danger">*</span></label>
-                                <select class="form-select" id="role" name="role" required>
+                                <select class="form-select" id="role" name="role_name" required>
                                     <option value="">Chọn vai trò</option>
                                     <option value="student">Sinh viên</option>
                                     <option value="staff">Nhân viên</option>
                                     <option value="management">Quản lý</option>
-                                    {% if current_user.role == 'admin' %}
+                                    {% if current_user and current_user.role == 'admin' %}
                                     <option value="admin">Quản trị viên</option>
                                     {% endif %}
                                 </select>
+                                <div class="text-danger small" id="roleError"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -58,6 +64,7 @@
                                     <option value="true">Hoạt động</option>
                                     <option value="false">Không hoạt động</option>
                                 </select>
+                                <div class="text-danger small" id="isActiveError"></div>
                             </div>
                         </div>
                     </div>
@@ -66,12 +73,14 @@
                             <div class="mb-3">
                                 <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
                                 <input type="password" class="form-control" id="password" name="password">
+                                <div class="text-danger small" id="passwordError"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="confirmPassword" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
                                 <input type="password" class="form-control" id="confirmPassword" name="confirm_password">
+                                <div class="text-danger small" id="confirmPasswordError"></div>
                             </div>
                         </div>
                     </div>

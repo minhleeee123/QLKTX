@@ -17,7 +17,7 @@ class User(db.Model):
     email         = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     phone_number  = db.Column(db.String(15))
-    student_id  = db.Column(db.String(20), unique=True)
+    student_id    = db.Column(db.String(20), unique=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     is_active     = db.Column(db.Boolean, default=True)
 
