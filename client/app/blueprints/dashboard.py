@@ -8,7 +8,7 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @login_required
 def index():
     """Main dashboard page - redirects based on user role"""
-    if current_user.role == 'admin':
+    if current_user.role == 'admin' or current_user.role == 'management':
         return redirect(url_for('dashboard.admin'))
     elif current_user.role == "staff":
         return redirect(url_for('dashboard.staff'))
@@ -21,7 +21,7 @@ def index():
 @login_required
 def admin():
     """Admin dashboard"""
-    if not auth_service.is_admin():
+    if not auth_service.is_admin() and not auth_service.is_management():
         return redirect(url_for('dashboard.index'))
     
     user = auth_service.get_current_user()

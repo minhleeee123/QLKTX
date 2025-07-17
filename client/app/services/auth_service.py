@@ -86,6 +86,12 @@ class AuthService:
     def is_student() -> bool:
         """Check if current user is student"""
         return AuthService.has_role("student")
+    
+
+    @staticmethod
+    def is_management() -> bool:
+        """Check if current user is management"""
+        return AuthService.has_role("management")
 
     @staticmethod
     def change_password(
