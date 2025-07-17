@@ -1,0 +1,69 @@
+/* Register Page Styles */
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.register-bg {
+    background-color: #31447a;
+    background-image: url('../images/login_bg.svg');
+    background-size: 75%;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+.register-container {
+    min-height: calc(100vh - 50px); /* Subtract footer height */
+    margin: 0;
+    padding: 0;
+}
+
+.register-form-container {
+    max-width: 500px;
+    padding: 2rem;
+}
+
+.register-logo {
+    max-height: 80px;
+}
+
+.register-text {
+    text-align: right;
+}
+
+/* Flash messages positioning */
+.register-flash-messages {
+    z-index: 9999;
+    margin-top: 20px;
+}
+
+/* Form specific styles */
+.register-card {
+    border-radius: 15px;
+    border: none;
+}
+
+.register-form-row {
+    margin-bottom: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .register-bg {
+        background-size: 100%;
+    }
+    
+    .register-text {
+        text-align: center;
+        margin: 2rem 0;
+    }
+    
+    .register-form-container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+}

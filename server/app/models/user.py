@@ -22,3 +22,5 @@ class User(db.Model):
     is_active     = db.Column(db.Boolean, default=True)
 
     role = db.relationship('Role', back_populates='users')
+
+# Reading user model

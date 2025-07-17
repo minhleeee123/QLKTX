@@ -62,15 +62,15 @@ function openEditUserModal(userId) {
 function viewUserDetails(userId) {
     // Convert string to number if needed
     userId = parseInt(userId);
+    console.log('viewUserDetails called with userId:', userId);
+    
+    // Show the modal first
+    const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+    modal.show();
     
     // Show loading state
-    document.getElementById('userDetailContent').innerHTML = `
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Đang tải...</span>
-            </div>
-        </div>
-    `;
+    const loadingTemplate = document.getElementById('userDetailLoadingTemplate').innerHTML;
+    document.getElementById('userDetailContent').innerHTML = loadingTemplate;
     
     fetch(`/users/${userId}`, {
         headers: {
@@ -79,63 +79,47 @@ function viewUserDetails(userId) {
     })
         .then(response => response.json())
         .then(data => {
+            console.log('User data received:', data);
             if (data.success) {
                 const user = data.user;
-                const content = `
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <strong>ID:</strong> 
-                                <span class="text-muted">${user.user_id}</span>
-                            </div>
-                            <div class="mb-3">
-                                <strong>Họ và tên:</strong> 
-                                <span class="text-muted">${user.full_name}</span>
-                            </div>
-                            <div class="mb-3">
-                                <strong>Email:</strong> 
-                                <span class="text-muted">${user.email}</span>
-                            </div>
-                            <div class="mb-3">
-                                <strong>Số điện thoại:</strong> 
-                                <span class="text-muted">${user.phone_number || 'Chưa có'}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <strong>Mã sinh viên:</strong> 
-                                <span class="text-muted">${user.student_id || 'Chưa có'}</span>
-                            </div>
-                            <div class="mb-3">
-                                <strong>Vai trò:</strong> 
-                                <span class="badge ${getRoleBadgeClass(user.role)}">${getRoleText(user.role)}</span>
-                            </div>
-                            <div class="mb-3">
-                                <strong>Trạng thái:</strong> 
-                                <span class="badge ${user.is_active ? 'bg-success' : 'bg-secondary'}">${user.is_active ? 'Hoạt động' : 'Không hoạt động'}</span>
-                            </div>
-                            <div class="mb-3">
-                                <strong>Ngày tạo:</strong> 
-                                <span class="text-muted">${user.created_at ? new Date(user.created_at).toLocaleString('vi-VN') : 'Chưa có'}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.getElementById('userDetailContent').innerHTML = content;
+                
+                // Get the template and replace placeholders
+                let template = document.getElementById('userDetailTemplate').innerHTML;
+                console.log('User detail template:', template);
+                
+                // Create a replacement map for easier template handling
+                const replacements = {
+                    '{{user_id}}': user.user_id || 'N/A',
+                    '{{full_name}}': user.full_name || 'N/A',
+                    '{{email}}': user.email || 'N/A',
+                    '{{phone_number}}': user.phone_number || 'Chưa có',
+                    '{{student_id}}': user.student_id || 'Chưa có',
+                    '{{role_badge_class}}': getRoleBadgeClass(user.role),
+                    '{{role_text}}': getRoleText(user.role),
+                    '{{status_badge_class}}': user.is_active ? 'bg-success' : 'bg-secondary',
+                    '{{status_text}}': user.is_active ? 'Hoạt động' : 'Không hoạt động',
+                    '{{created_at}}': user.created_at ? new Date(user.created_at).toLocaleString('vi-VN') : 'Chưa có'
+                };
+                
+                // Replace all placeholders
+                Object.keys(replacements).forEach(key => {
+                    template = template.replaceAll(key, replacements[key]);
+                });
+                
+                document.getElementById('userDetailContent').innerHTML = template;
             } else {
-                document.getElementById('userDetailContent').innerHTML = `
-                    <div class="alert alert-danger" role="alert">
-                        <i class="fas fa-exclamation-triangle"></i> ${data.message}
-                    </div>
-                `;
+                // Show error template
+                let errorTemplate = document.getElementById('userDetailErrorTemplate').innerHTML;
+                errorTemplate = errorTemplate.replaceAll('{{message}}', data.message);
+                document.getElementById('userDetailContent').innerHTML = errorTemplate;
             }
         })
         .catch(error => {
-            document.getElementById('userDetailContent').innerHTML = `
-                <div class="alert alert-danger" role="alert">
-                    <i class="fas fa-exclamation-triangle"></i> Có lỗi xảy ra: ${error.message}
-                </div>
-            `;
+            console.error('Error fetching user data:', error);
+            // Show error template
+            let errorTemplate = document.getElementById('userDetailErrorTemplate').innerHTML;
+            errorTemplate = errorTemplate.replaceAll('{{message}}', 'Có lỗi xảy ra: ' + error.message);
+            document.getElementById('userDetailContent').innerHTML = errorTemplate;
         });
 }
 

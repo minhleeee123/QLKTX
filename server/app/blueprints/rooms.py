@@ -506,7 +506,7 @@ def delete_room_type(room_type_id):
         if not room_type:
             print(f"[SERVER DEBUG] Room type not found with id: {room_type_id}")
             return jsonify({'error': 'Loại phòng không tồn tại'}), 404
-        
+
         # Kiểm tra loại phòng có đang được sử dụng không
         print(f"[SERVER DEBUG] Checking rooms using this room_type: {len(room_type.rooms) if room_type.rooms else 0}")
         if room_type.rooms:
@@ -515,15 +515,17 @@ def delete_room_type(room_type_id):
                 'error': f'Không thể xóa loại phòng này vì đang có {len(room_type.rooms)} phòng sử dụng.',
                 'room_count': len(room_type.rooms)
             }), 400
-        
+
         print(f"[SERVER DEBUG] Proceeding to delete room_type: {room_type.type_name}")
         db.session.delete(room_type)
         db.session.commit()
         print(f"[SERVER DEBUG] Successfully deleted room_type")
-        
+
         return jsonify({'message': 'Xóa loại phòng thành công'}), 200
-        
+
     except Exception as e:
         print(f"[SERVER DEBUG] Exception in delete_room_type: {str(e)}")
         db.session.rollback()
         return jsonify(str(e)), 500
+
+# Reading rooms blueprint

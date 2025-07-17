@@ -8,10 +8,7 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @login_required
 def index():
     """Main dashboard page - redirects based on user role"""
-    print(current_user)  # Debugging line to check user details
-    print("Index route accessed")  # Debugging line to check route access
     if current_user.role == 'admin':
-        print("Redirecting to admin dashboard")  # Debugging line
         return redirect(url_for('dashboard.admin'))
     elif current_user.role == "staff":
         return redirect(url_for('dashboard.staff'))

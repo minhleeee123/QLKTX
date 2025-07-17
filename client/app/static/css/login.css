@@ -1,0 +1,58 @@
+/* Login Page Styles */
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.login-bg {
+    background-color: #31447a;
+    background-image: url('../images/login_bg.svg');
+    background-size: 75%;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+.login-container {
+    min-height: calc(100vh - 50px); /* Subtract footer height */
+    margin: 0;
+    padding: 0;
+}
+
+.login-form-container {
+    max-width: 400px;
+    padding: 2rem;
+}
+
+.login-logo {
+    max-height: 80px;
+}
+
+.login-text {
+    text-align: right;
+}
+
+/* Flash messages positioning */
+.login-flash-messages {
+    z-index: 9999;
+    margin-top: 20px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .login-bg {
+        background-size: 100%;
+    }
+    
+    .login-text {
+        text-align: center;
+        margin: 2rem 0;
+    }
+    
+    .login-form-container {
+        padding: 1rem;
+    }
+}

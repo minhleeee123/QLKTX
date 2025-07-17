@@ -1,131 +1,201 @@
-{% extends "base/layout.html" %}
+<!DOCTYPE html>
+<html lang="vi">
 
-{% block title %}Đăng ký - Quản lý ký túc xá{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Quản lý ký túc xá</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Register CSS -->
+    <link href="{{ url_for('static', filename='css/register.css') }}" rel="stylesheet">
+</head>
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow">
-            <div class="card-header bg-success text-white text-center">
-                <h4><i class="fas fa-user-plus"></i> Đăng ký tài khoản</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.full_name.label(class="form-label") }}
-                            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
-                            {% if form.full_name.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.full_name.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            {{ form.email.label(class="form-label") }}
-                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
-                            {% if form.email.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.phone.label(class="form-label") }}
-                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
-                            {% if form.phone.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.phone.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            {{ form.role.label(class="form-label") }}
-                            {{ form.role(class="form-select", id="role-select") }}
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3" id="student-id-group" style="display: none;">
-                        {{ form.student_id.label(class="form-label") }}
-                        {{ form.student_id(class="form-control" + (" is-invalid" if form.student_id.errors else "")) }}
-                        {% if form.student_id.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.student_id.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
-                            {% if form.password.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.password.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            {{ form.confirm_password.label(class="form-label") }}
-                            {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else "")) }}
-                            {% if form.confirm_password.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid">
-                        {{ form.submit(class="btn btn-success") }}
-                    </div>
-                </form>
-            </div>
-            <div class="card-footer text-center">
-                <small class="text-muted">
-                    Đã có tài khoản? 
-                    <a href="{{ url_for('auth.login') }}">Đăng nhập ngay</a>
-                </small>
-            </div>
+<body>
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="position-fixed top-0 start-50 translate-middle-x register-flash-messages">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    </div>
-</div>
-{% endblock %}
+        {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        <div class="container-fluid p-0 register-container">
+            <div class="row g-0 h-100">
+                <!-- Left Column - Background Image -->
+                <div class="col-md-6 d-flex align-items-start justify-content-end register-bg p-4">
+                    <div class="text-white mt-3 me-3 register-text">
+                        <h1 class="display-4 fw-bold mb-3">Tham gia cộng đồng KTX Phenikaa</h1>
+                        <p class="lead">Đăng ký ngay để trở thành thành viên</p>
+                    </div>
+                </div>
+        
+                <!-- Right Column - Register Form -->
+                <div class="col-md-6 d-flex align-items-center justify-content-center bg-light">
+                    <div class="w-100 register-form-container">
+                        <!-- Logo -->
+                        <div class="text-center mb-4">
+                            <img src="{{ url_for('static', filename='images/pnk_logo.png') }}" alt="Phenikaa Logo"
+                                class="img-fluid mb-3 register-logo">
+                        </div>
+        
+                        <!-- Register Card -->
+                        <div class="card shadow-sm border-0 register-card">
+                            <div class="card-body p-4">
+                                <h4 class="text-center mb-4 text-success">
+                                    <i class="fas fa-user-plus me-2"></i>Đăng ký tài khoản
+                                </h4>
+        
+                                <form method="POST">
+                                    {{ form.hidden_tag() }}
 
-{% block extra_scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const roleSelect = document.getElementById('role-select');
-        const studentIdGroup = document.getElementById('student-id-group');
-        const studentIdField = document.getElementById('student_id');
-        
-        function toggleStudentId() {
-            if (roleSelect.value === 'student') {
-                studentIdGroup.style.display = 'block';
-                studentIdField.required = true;
-            } else {
-                studentIdGroup.style.display = 'none';
-                studentIdField.required = false;
-                studentIdField.value = '';
+                                <!-- Row 1: Full Name and Email -->
+                                <div class="row register-form-row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.full_name.label(class="form-label") }}
+                                        {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else ""), placeholder="Nhập họ tên đầy đủ") }}
+                                        {% if form.full_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.full_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            {{ form.email.label(class="form-label") }}
+                                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="Nhập email") }}
+                                        {% if form.email.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        </div>
+                                        </div>
+
+                                <!-- Row 2: Phone and Role -->
+                                <div class="row register-form-row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.phone.label(class="form-label") }}
+                                        {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="Nhập số điện thoại") }}
+                                        {% if form.phone.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            {{ form.role.label(class="form-label") }}
+                                            {{ form.role(class="form-select", id="role-select") }}
+                                        </div>
+                                        </div>
+
+                                <!-- Student ID (conditional) -->
+                                <div class="mb-3" id="student-id-group" style="display: none;">
+                                    {{ form.student_id.label(class="form-label") }}
+                                    {{ form.student_id(class="form-control" + (" is-invalid" if form.student_id.errors else ""), placeholder="Nhập mã sinh viên") }}
+                                    {% if form.student_id.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.student_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    </div>
+
+                                <!-- Row 3: Password and Confirm Password -->
+                                <div class="row register-form-row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.password.label(class="form-label") }}
+                                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Nhập mật khẩu") }}
+                                        {% if form.password.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            {{ form.confirm_password.label(class="form-label") }}
+                                        {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Xác nhận mật khẩu") }}
+                                        {% if form.confirm_password.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        </div>
+                                        </div>
+                                        
+                                        <div class="d-grid">
+                                    {{ form.submit(class="btn btn-success btn-lg") }}
+                                    </div>
+                                    </form>
+<div class="text-center mt-3">
+    <small class="text-muted">
+        Đã có tài khoản?
+                                    <a href="{{ url_for('auth.login') }}" class="text-success text-decoration-none">Đăng nhập ngay</a>
+                                    </small>
+                                    </div>
+                                    </div>
+                                    </div>
+                                    </div>
+            </div>
+            </div>
+            </div>
+            
+            <!-- Footer -->
+            <footer class="bg-dark text-white py-2">
+                <div class="container-fluid">
+                    <div class="text-center">
+                        <small>
+                            Copyright © 2025. Phenikaa University. All rights reserved.
+                            <span class="text-muted">|</span>
+                            Developed by <strong>HaHoang</strong>
+                        </small>
+                    </div>
+                </div>
+            </footer>
+            
+            <!-- Bootstrap JS -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleSelect = document.getElementById('role-select');
+            const studentIdGroup = document.getElementById('student-id-group');
+            const studentIdField = document.getElementById('student_id');
+
+            function toggleStudentId() {
+                if (roleSelect.value === 'student') {
+                    studentIdGroup.style.display = 'block';
+                    studentIdField.required = true;
+                } else {
+                    studentIdGroup.style.display = 'none';
+                    studentIdField.required = false;
+                    studentIdField.value = '';
+                }
             }
-        }
-        
-        // Initial check
-        toggleStudentId();
-        
-        // Listen for changes
-        roleSelect.addEventListener('change', toggleStudentId);
-        
+
+            // Initial check
+            toggleStudentId();
+
+            // Listen for changes
+            roleSelect.addEventListener('change', toggleStudentId);
+
         // Auto focus on full name field
-        document.getElementById('full_name').focus();
-    });
-</script>
-{% endblock %}
+            const fullNameField = document.querySelector('input[name="full_name"]');
+            if (fullNameField) {
+                fullNameField.focus();
+            }
+        });
+            </script>
+</body>
+
+</html>

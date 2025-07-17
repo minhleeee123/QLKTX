@@ -13,7 +13,6 @@ def login():
     
     if form.validate_on_submit():
         response = auth_service.login(form.email.data, form.password.data)
-        print(response)  # Debugging line to check response
         if response['success']:
             flash('Đăng nhập thành công!', 'success')
             

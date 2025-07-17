@@ -14,7 +14,7 @@ class AuthService:
         data = {"email": email, "password": password}
 
         response = api_client.post("/auth/login", data)
-
+        
         if response["success"]:
             # Store user info and token in session
             user_data = response["data"]
