@@ -104,122 +104,76 @@ def create_user():
 @users_bp.route('/<int:user_id>')
 @login_required
 @admin_required
-def view_user(user_id):
-    """View user details"""
-    response = user_service.get_user(user_id)
-
-    if response['success']:
-        user = response['data']['user']
-
-        # Check if it's an AJAX request
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify({"success": True, "user": user})
-
-        # Regular request - return HTML
-        return render_template('users/view.html', user=user)
-    else:
-        # Check if it's an AJAX request
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify(
-                {
-                    "success": False,
-                    "message": f'Lỗi khi tải thông tin người dùng: {response.get("error", "")}',
-                }
-            )
-
-        # Regular request - flash and redirect
-        flash(f'Lỗi khi tải thông tin người dùng: {response.get("error", "")}', 'error')
+def get_user(user_id):
+    """Get user details - AJAX only"""
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        # Non-AJAX requests should redirect to list
         return redirect(url_for('users.list_users'))
+    
+    response = user_service.get_user(user_id)
+    
+    if response['success']:
+        return jsonify({
+            'success': True, 
+            'user': response['data']
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': response.get('error', 'Lỗi không xác định')
+        }), 404
 
 
-@users_bp.route('/<int:user_id>/edit', methods=['GET', 'POST'])
+@users_bp.route('/<int:user_id>/edit', methods=['POST'])
 @login_required
 @admin_required
 def edit_user(user_id):
-    """Edit user information"""
-    # Get user data first
-    response = user_service.get_user(user_id)
-
-    if not response['success']:
-        flash(f'Lỗi khi tải thông tin người dùng: {response.get("error", "")}', 'error')
+    """Edit user - AJAX only"""
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        # Non-AJAX requests should redirect to list
         return redirect(url_for('users.list_users'))
+    
+    # Handle form data
+    user_data = {
+        "full_name": request.form.get("full_name"),
+        "email": request.form.get("email"),
+        "phone_number": request.form.get("phone_number"),
+        "student_id": request.form.get("student_id"),
+        "role_name": request.form.get("role_name"),
+        "is_active": request.form.get("is_active") == "true",
+    }
+    
+    # Only include password if provided
+    password = request.form.get("password")
+    if password and password.strip():
+        if len(password) < 6:
+            return jsonify({
+                "success": False, 
+                "message": "Mật khẩu phải có ít nhất 6 ký tự"
+            }), 400
+        user_data["password"] = password
 
-    user = response['data']['user']
+    # Basic validation
+    errors = []
+    if not user_data.get("full_name"):
+        errors.append("Họ và tên là bắt buộc")
+    if not user_data.get("email"):
+        errors.append("Email là bắt buộc")
+    if not user_data.get("role_name"):
+        errors.append("Vai trò là bắt buộc")
 
-    if request.method == "POST":
-        # Handle form submission (both regular and AJAX)
-        errors = []
+    if errors:
+        return jsonify({"success": False, "message": "; ".join(errors)}), 400
 
-        # Manual validation
-        full_name = request.form.get("full_name", "").strip()
-        phone_number = request.form.get("phone_number", "").strip()
-        role_name = request.form.get("role_name", "").strip()
-        is_active = request.form.get("is_active")
-        password = request.form.get("password", "").strip()
+    response = user_service.update_user(user_id, user_data)
 
-        if not full_name:
-            errors.append("Họ và tên không được để trống")
-        if phone_number and (len(phone_number) < 10 or not phone_number.isdigit()):
-            errors.append("Số điện thoại phải có ít nhất 10 chữ số")
-        if not role_name:
-            errors.append("Vai trò không được để trống")
-
-        # Check if it's an AJAX request
-        is_ajax = (
-            request.headers.get("X-Requested-With") == "XMLHttpRequest"
-            or request.content_type == "application/json"
-        )
-
-        if errors:
-            if is_ajax:
-                return jsonify({"success": False, "message": "; ".join(errors)})
-            else:
-                for error in errors:
-                    flash(error, "error")
-                return render_template(
-                    "users/form.html",
-                    user=user,
-                    title="Chỉnh sửa người dùng",
-                    is_create=False,
-                )
-
-        # Prepare user data
-        user_data = {
-            "full_name": full_name,
-            "phone_number": phone_number,
-            "role_name": role_name,
-            "is_active": is_active == "on" or is_active == "true",
-        }
-
-        # Add password if provided
-        if password:
-            user_data["password"] = password
-
-        response = user_service.update_user(user_id, user_data)
-
-        if is_ajax:
-            if response["success"]:
-                return jsonify(
-                    {"success": True, "message": "Cập nhật người dùng thành công!"}
-                )
-            else:
-                return jsonify(
-                    {
-                        "success": False,
-                        "message": f'Lỗi khi cập nhật người dùng: {response.get("error", "")}',
-                    }
-                )
-
-        # Regular form submission
-        if response['success']:
-            flash('Cập nhật người dùng thành công!', 'success')
-            return redirect(url_for('users.view_user', user_id=user_id))
-        else:
-            flash(f'Lỗi khi cập nhật người dùng: {response.get("error", "")}', 'error')
-
-    return render_template(
-        "users/form.html", user=user, title="Chỉnh sửa người dùng", is_create=False
-    )
+    if response["success"]:
+        return jsonify({"success": True, "message": "Cập nhật người dùng thành công!"})
+    else:
+        return jsonify({
+            "success": False,
+            "message": f'Lỗi khi cập nhật người dùng: {response.get("error", "")}'
+        }), 400
 
 
 @users_bp.route('/<int:user_id>/delete', methods=['POST'])

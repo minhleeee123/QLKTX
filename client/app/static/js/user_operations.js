@@ -29,18 +29,36 @@ function openEditUserModal(userId) {
     
     // Show loading state
     const modal = new bootstrap.Modal(document.getElementById('userModal'));
+    
+    // Add event listener to cleanup backdrop when modal is hidden
+    const modalElement = document.getElementById('userModal');
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        // Remove any remaining backdrop
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        // Ensure body classes and styles are cleaned up
+        document.body.classList.remove('modal-open');
+        document.body.style.paddingRight = '';
+        document.body.style.overflow = '';
+    }, { once: true }); // Use once: true to prevent multiple listeners
+    
     modal.show();
     
-    // Load user data
+    // Load user data - call server API 
     fetch(`/users/${userId}`, {
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
         }
     })
         .then(response => response.json())
         .then(data => {
+            console.log('Edit user data received:', data);
             if (data.success) { 
-                const user = data.user;
+                const user = data.user.user;
+                console.log('User data for edit:', user);
                 document.getElementById('fullName').value = user.full_name || '';
                 document.getElementById('email').value = user.email || '';
                 document.getElementById('phoneNumber').value = user.phone_number || '';
@@ -50,11 +68,25 @@ function openEditUserModal(userId) {
             } else {
                 alert('Lỗi: ' + data.message);
                 modal.hide();
+                // Remove backdrop manually if it exists
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
             }
         })
         .catch(error => {
             alert('Có lỗi xảy ra khi tải thông tin người dùng: ' + error.message);
             modal.hide();
+            // Remove backdrop manually if it exists
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            document.body.classList.remove('modal-open');
+            document.body.style.paddingRight = '';
         });
 }
 
@@ -81,11 +113,11 @@ function viewUserDetails(userId) {
         .then(data => {
             console.log('User data received:', data);
             if (data.success) {
-                const user = data.user;
+                const user = data.user.user;
+                console.log('User data:', user);
                 
                 // Get the template and replace placeholders
                 let template = document.getElementById('userDetailTemplate').innerHTML;
-                console.log('User detail template:', template);
                 
                 // Create a replacement map for easier template handling
                 const replacements = {
