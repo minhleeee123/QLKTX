@@ -33,46 +33,91 @@ class RoomService:
     def get_room(room_id: int) -> Dict[str, Any]:
         """Get room details by ID"""
         response = api_client.get(f"/rooms/{room_id}")
-        if response.get('success'):
-            return response.get('data', {})
+        
+        # Check if response has room data (server returns {room: {...}})
+        if response and 'room' in response:
+            return {
+                'success': True,
+                'room': response['room']
+            }
+        elif response and response.get('success'):
+            # Handle standardized response format
+            return response
         else:
-            raise Exception(response.get('error', 'Unknown error'))
+            return {
+                'success': False,
+                'error': response.get('error', 'Không thể lấy thông tin phòng')
+            }
 
     @staticmethod
     def create_room(room_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create new room"""
         response = api_client.post("/rooms", room_data)
-        if response.get('success'):
-            return response.get('data', {})
+        
+        # Server might return different response format
+        if response and (response.get('success') or 'room' in response):
+            return {
+                'success': True,
+                'room': response.get('room', response.get('data'))
+            }
         else:
-            raise Exception(response.get('error', 'Unknown error'))
+            return {
+                'success': False,
+                'error': response.get('error', 'Không thể tạo phòng')
+            }
 
     @staticmethod
     def update_room(room_id: int, room_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update room information"""
         response = api_client.put(f"/rooms/{room_id}", room_data)
-        if response.get('success'):
-            return response.get('data', {})
+        
+        # Server might return different response format
+        if response and (response.get('success') or 'room' in response):
+            return {
+                'success': True,
+                'room': response.get('room', response.get('data'))
+            }
         else:
-            raise Exception(response.get('error', 'Unknown error'))
+            return {
+                'success': False,
+                'error': response.get('error', 'Không thể cập nhật phòng')
+            }
 
     @staticmethod
     def delete_room(room_id: int) -> Dict[str, Any]:
         """Delete room by ID"""
         response = api_client.delete(f"/rooms/{room_id}")
-        if response.get('success'):
-            return response.get('data', {})
+        
+        # Server might return different response format
+        if response and (response.get('success') or response.get('message')):
+            return {
+                'success': True,
+                'message': response.get('message', 'Xóa phòng thành công')
+            }
         else:
-            raise Exception(response.get('error', 'Unknown error'))
+            return {
+                'success': False,
+                'error': response.get('error', 'Không thể xóa phòng')
+            }
 
     @staticmethod
     def get_buildings() -> Dict[str, Any]:
         """Get list of buildings"""
         response = api_client.get("/rooms/buildings")
-        if response.get('success'):
-            return response.get('data', {})
+        
+        # Server returns {buildings: [...]} directly
+        if response and 'buildings' in response:
+            return {
+                'success': True,
+                'buildings': response['buildings']
+            }
+        elif response and response.get('success'):
+            return response
         else:
-            raise Exception(response.get('error', 'Unknown error'))
+            return {
+                'success': False,
+                'error': response.get('error', 'Không thể tải danh sách tòa nhà')
+            }
     
     @staticmethod
     def create_building(building_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -105,10 +150,20 @@ class RoomService:
     def get_room_types() -> Dict[str, Any]:
         """Get list of room types"""
         response = api_client.get("/rooms/room-types")
-        if response.get('success'):
-            return response.get('data', {})
+        
+        # Server returns {room_types: [...]} directly
+        if response and 'room_types' in response:
+            return {
+                'success': True,
+                'room_types': response['room_types']
+            }
+        elif response and response.get('success'):
+            return response
         else:
-            raise Exception(response.get('error', 'Unknown error'))
+            return {
+                'success': False,
+                'error': response.get('error', 'Không thể tải danh sách loại phòng')
+            }
     
     @staticmethod
     def create_room_type(room_type_data: Dict[str, Any]) -> Dict[str, Any]:

@@ -1,0 +1,172 @@
+<!-- Room Create/Edit Modal -->
+<div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="roomModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roomModalLabel">Thêm phòng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="roomForm">
+                <input type="hidden" id="csrfToken" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="roomNumber" class="form-label">Số phòng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="roomNumber" name="room_number" required>
+                                <div class="text-danger small" id="roomNumberError"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="buildingId" class="form-label">Tòa nhà <span class="text-danger">*</span></label>
+                                <select class="form-select" id="buildingId" name="building_id" required>
+                                    <option value="">Chọn tòa nhà</option>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                                <div class="text-danger small" id="buildingIdError"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="roomTypeId" class="form-label">Loại phòng <span class="text-danger">*</span></label>
+                                <select class="form-select" id="roomTypeId" name="room_type_id" required>
+                                    <option value="">Chọn loại phòng</option>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                                <div class="text-danger small" id="roomTypeIdError"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="capacity" class="form-label">Sức chứa <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="capacity" name="capacity" min="1" required>
+                                <div class="text-danger small" id="capacityError"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="monthlyPrice" class="form-label">Giá hàng tháng <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="monthlyPrice" name="monthly_price" min="0" step="0.01" required>
+                                <div class="text-danger small" id="monthlyPriceError"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Trạng thái</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="available">Có sẵn</option>
+                                    <option value="occupied">Đã thuê</option>
+                                    <option value="maintenance">Bảo trì</option>
+                                    <option value="unavailable">Không khả dụng</option>
+                                </select>
+                                <div class="text-danger small" id="statusError"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Mô tả</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                <div class="text-danger small" id="descriptionError"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="saveRoomBtn">
+                        <i class="fas fa-save"></i> Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Room Detail Modal -->
+<div class="modal fade" id="roomDetailModal" tabindex="-1" aria-labelledby="roomDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roomDetailModalLabel">Chi tiết phòng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="roomDetailContent">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room Detail Content Template -->
+<script type="text/html" id="roomDetailTemplate">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <strong>ID:</strong> 
+                <span class="text-muted">{% raw %}{{room_id}}{% endraw %}</span>
+            </div>
+            <div class="mb-3">
+                <strong>Số phòng:</strong> 
+                <span class="text-muted">{% raw %}{{room_number}}{% endraw %}</span>
+            </div>
+            <div class="mb-3">
+                <strong>Tòa nhà:</strong> 
+                <span class="text-muted">{% raw %}{{building_name}}{% endraw %}</span>
+            </div>
+            <div class="mb-3">
+                <strong>Loại phòng:</strong> 
+                <span class="text-muted">{% raw %}{{room_type_name}}{% endraw %}</span>
+            </div>
+            <div class="mb-3">
+                <strong>Sức chứa:</strong> 
+                <span class="text-muted">{% raw %}{{capacity}}{% endraw %} người</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <strong>Giá hàng tháng:</strong> 
+                <span class="text-muted">{% raw %}{{monthly_price}}{% endraw %} VNĐ</span>
+            </div>
+            <div class="mb-3">
+                <strong>Trạng thái:</strong> 
+                <span class="badge {% raw %}{{status_badge_class}}{% endraw %}">{% raw %}{{status_text}}{% endraw %}</span>
+            </div>
+            <div class="mb-3">
+                <strong>Mô tả:</strong> 
+                <span class="text-muted">{% raw %}{{description}}{% endraw %}</span>
+            </div>
+            <div class="mb-3">
+                <strong>Ngày tạo:</strong> 
+                <span class="text-muted">{% raw %}{{created_at}}{% endraw %}</span>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- Error Template -->
+<script type="text/html" id="roomDetailErrorTemplate">
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> {% raw %}{{message}}{% endraw %}
+    </div>
+</script>
+
+<!-- Loading Template -->
+<script type="text/html" id="roomDetailLoadingTemplate">
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+    </div>
+</script>

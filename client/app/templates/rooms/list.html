@@ -16,9 +16,9 @@
             </div>
             {% if current_user.role == 'admin' %}
             <div>
-                <a href="{{ url_for('rooms.create_room') }}" class="btn btn-primary">
+                <button type="button" class="btn btn-primary" onclick="openCreateRoomModal()">
                     <i class="fas fa-plus"></i> Thêm phòng mới
-                </a>
+                </button>
                 <a href="{{ url_for('rooms.list_buildings') }}" class="btn btn-secondary">
                     <i class="fas fa-building"></i> Quản lý tòa nhà
                 </a>
@@ -106,13 +106,15 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <a href="{{ url_for('rooms.view_room', room_id=room.room_id) }}" class="btn btn-sm btn-info">
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            onclick="viewRoomDetails('{{ room.room_id }}')">
                                         <i class="fas fa-eye"></i> Xem
-                                    </a>
+                                    </button>
                                     {% if current_user.role == 'admin' %}
-                                    <a href="{{ url_for('rooms.edit_room', room_id=room.room_id) }}" class="btn btn-sm btn-primary">
+                                    <button type="button" class="btn btn-sm btn-primary" 
+                                            onclick="openEditRoomModal('{{ room.room_id }}')">
                                         <i class="fas fa-edit"></i> Sửa
-                                    </a>
+                                    </button>
                                     <!-- Phương án 2: Button với JavaScript -->
                                     <button type="button" class="btn btn-sm btn-danger" 
                                             onclick="deleteRoom('{{ room.room_id }}', '{{ room.room_number }}')">
@@ -187,6 +189,12 @@
         }
     }
 </script>
+
+<!-- Include Room Modals -->
+{% include 'rooms/room_modals.html' %}
+
+<!-- Include Room Operations JavaScript -->
+<script src="{{ url_for('static', filename='js/room_operations.js') }}"></script>
 {% endblock %}
 
 
