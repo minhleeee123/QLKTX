@@ -73,7 +73,7 @@ with app.app_context():
             'student_id': None
         },
         
-        # Students
+        # Students - Extended list
         {
             'role': student_role,
             'full_name': 'Nguyễn Văn Sinh Viên',
@@ -113,6 +113,86 @@ with app.app_context():
             'password': 'sinhvien123',
             'phone_number': '0901234576',
             'student_id': 'SV005'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Hoàng Thị Lan',
+            'email': 'sinhvien6@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234577',
+            'student_id': 'SV006'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Đinh Văn Hùng',
+            'email': 'sinhvien7@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234578',
+            'student_id': 'SV007'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Bùi Thị Hương',
+            'email': 'sinhvien8@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234579',
+            'student_id': 'SV008'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Đặng Văn Quân',
+            'email': 'sinhvien9@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234580',
+            'student_id': 'SV009'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Ngô Thị Trang',
+            'email': 'sinhvien10@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234581',
+            'student_id': 'SV010'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Lý Văn Thành',
+            'email': 'sinhvien11@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234582',
+            'student_id': 'SV011'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Phan Thị Linh',
+            'email': 'sinhvien12@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234583',
+            'student_id': 'SV012'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Cao Văn Minh',
+            'email': 'sinhvien13@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234584',
+            'student_id': 'SV013'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Võ Thị Yến',
+            'email': 'sinhvien14@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234585',
+            'student_id': 'SV014'
+        },
+        {
+            'role': student_role,
+            'full_name': 'Tạ Văn Dũng',
+            'email': 'sinhvien15@student.edu.vn',
+            'password': 'sinhvien123',
+            'phone_number': '0901234586',
+            'student_id': 'SV015'
         }
     ]
 
@@ -213,63 +293,112 @@ with app.app_context():
     # Seed Registrations
     print("Seeding Registrations...")
     students = User.query.join(Role).filter(Role.role_name == 'student').all()
-    available_rooms = Room.query.filter_by(status='available').limit(10).all()  # Lấy 10 phòng đầu tiên
+    available_rooms = Room.query.filter_by(status='available').limit(20).all()  # Lấy 20 phòng để có thêm registrations
 
     if students and available_rooms:
         registration_statuses = ['pending', 'approved', 'rejected']
 
         for i, student in enumerate(students):
-            if i < len(available_rooms):  # Đảm bảo có đủ phòng
-                room = available_rooms[i]
+            # Mỗi sinh viên có thể có nhiều registration
+            num_registrations = random.randint(1, 3)  # 1-3 đơn đăng ký per student
+            
+            for reg_count in range(num_registrations):
+                if (i * num_registrations + reg_count) < len(available_rooms):
+                    room = available_rooms[i * num_registrations + reg_count]
 
-                # Kiểm tra đã có registration chưa
-                existing_registration = Registration.query.filter_by(
-                    student_id=student.user_id,
-                    room_id=room.room_id
-                ).first()
-
-                if not existing_registration:
-                    # 70% approved, 20% pending, 10% rejected
-                    if i < len(students) * 0.7:
-                        status = 'approved'
-                    elif i < len(students) * 0.9:
-                        status = 'pending'
-                    else:
-                        status = 'rejected'
-
-                    registration = Registration(
+                    # Kiểm tra đã có registration chưa
+                    existing_registration = Registration.query.filter_by(
                         student_id=student.user_id,
-                        room_id=room.room_id,
-                        status=status,
-                        registration_date=datetime.utcnow() - timedelta(days=random.randint(1, 30))
-                    )
-                    db.session.add(registration)
+                        room_id=room.room_id
+                    ).first()
 
-                    # Cập nhật trạng thái phòng nếu approved
-                    if status == 'approved':
-                        room.current_occupancy += 1
-                        if room.current_occupancy >= room.room_type.capacity:
-                            room.status = 'occupied'
+                    if not existing_registration:
+                        # 60% approved, 25% pending, 15% rejected
+                        rand = random.random()
+                        if rand < 0.6:
+                            status = 'approved'
+                        elif rand < 0.85:
+                            status = 'pending'
+                        else:
+                            status = 'rejected'
+
+                        registration = Registration(
+                            student_id=student.user_id,
+                            room_id=room.room_id,
+                            status=status,
+                            registration_date=datetime.utcnow() - timedelta(days=random.randint(1, 90))
+                        )
+                        db.session.add(registration)
+
+                        # Cập nhật trạng thái phòng nếu approved
+                        if status == 'approved':
+                            room.current_occupancy += 1
+                            if room.current_occupancy >= room.room_type.capacity:
+                                room.status = 'occupied'
 
     db.session.commit()
     print("✓ Registrations seeded successfully")
 
-    # Seed Contracts
+    # Seed Contracts - Enhanced Version
     print("Seeding Contracts...")
     approved_registrations = Registration.query.filter_by(status='approved').all()
-
-    for registration in approved_registrations:
+    
+    # Các mẫu contract code prefix
+    contract_prefixes = ['HD', 'CT', 'KTX']
+    
+    for i, registration in enumerate(approved_registrations):
         # Kiểm tra đã có contract chưa
         if not Contract.query.filter_by(registration_id=registration.registration_id).first():
-            start_date = date.today() - timedelta(days=random.randint(0, 60))
-            end_date = start_date + timedelta(days=365)  # Hợp đồng 1 năm
+            # Tạo các loại hợp đồng khác nhau
+            contract_types = [
+                {
+                    'duration_days': 365,  # 1 năm
+                    'start_offset_days': random.randint(0, 30),
+                    'weight': 0.5  # 50% hợp đồng 1 năm
+                },
+                {
+                    'duration_days': 180,  # 6 tháng
+                    'start_offset_days': random.randint(0, 60), 
+                    'weight': 0.3  # 30% hợp đồng 6 tháng
+                },
+                {
+                    'duration_days': 90,   # 3 tháng
+                    'start_offset_days': random.randint(0, 90),
+                    'weight': 0.2  # 20% hợp đồng 3 tháng
+                }
+            ]
+            
+            # Chọn loại hợp đồng dựa trên weight
+            rand = random.random()
+            if rand < 0.5:
+                contract_type = contract_types[0]  # 1 năm
+            elif rand < 0.8:
+                contract_type = contract_types[1]  # 6 tháng
+            else:
+                contract_type = contract_types[2]  # 3 tháng
+            
+            # Tạo ngày bắt đầu và kết thúc
+            start_date = date.today() - timedelta(days=contract_type['start_offset_days'])
+            end_date = start_date + timedelta(days=contract_type['duration_days'])
+            
+            # Tạo mã hợp đồng đa dạng
+            prefix = random.choice(contract_prefixes)
+            year = start_date.year
+            contract_code = f"{prefix}{year}{registration.registration_id:04d}"
+            
+            # Đảm bảo contract_code unique
+            counter = 1
+            original_code = contract_code
+            while Contract.query.filter_by(contract_code=contract_code).first():
+                contract_code = f"{original_code}_{counter}"
+                counter += 1
 
             contract = Contract(
                 registration_id=registration.registration_id,
-                contract_code=f"HD{registration.registration_id:04d}",
+                contract_code=contract_code,
                 start_date=start_date,
                 end_date=end_date,
-                created_at=datetime.utcnow() - timedelta(days=random.randint(0, 30))
+                created_at=datetime.utcnow() - timedelta(days=random.randint(0, 60))
             )
             db.session.add(contract)
 

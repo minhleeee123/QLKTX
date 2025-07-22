@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Flask, redirect, url_for, render_template
 from .extensions import session, csrf, login_manager
 from .services.auth_service import auth_service
-from .blueprints import auth_bp, dashboard_bp, users_bp, rooms_bp
+from .blueprints import auth_bp, dashboard_bp, users_bp, rooms_bp, contracts_bp
 
 def create_app():
     app = Flask(__name__)
@@ -47,6 +47,7 @@ def create_app():
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(users_bp, url_prefix='/users')
     app.register_blueprint(rooms_bp, url_prefix='/rooms')
+    app.register_blueprint(contracts_bp, url_prefix='/contracts')
     
     # Global template context processor
     @app.context_processor

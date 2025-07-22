@@ -1,0 +1,313 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Quản lý hợp đồng{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contract-status {
+        font-weight: bold;
+    }
+    .status-active { color: #28a745; }
+    .status-expired { color: #dc3545; }
+    .status-ending-soon { color: #ffc107; }
+    .contract-card {
+        transition: all 0.2s ease;
+        border-left: 4px solid #dee2e6;
+    }
+    .contract-card.active {
+        border-left-color: #28a745;
+    }
+    .contract-card.expired {
+        border-left-color: #dc3545;
+    }
+    .contract-card.ending-soon {
+        border-left-color: #ffc107;
+    }
+    .contract-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+    }
+    .stats-item {
+        text-align: center;
+        padding: 20px;
+    }
+    .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-file-contract me-2"></i>Quản lý hợp đồng
+                    </h2>
+                    <p class="text-muted mb-0">Quản lý hợp đồng thuê phòng ký túc xá</p>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-info" onclick="loadStatistics()">
+                        <i class="fas fa-chart-bar me-1"></i>Thống kê
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="exportContracts()">
+                        <i class="fas fa-file-export me-1"></i>Xuất Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div id="statisticsSection" class="row mb-4" style="display: none;">
+        <div class="col-12">
+            <div class="stats-card">
+                <div class="row g-0">
+                    <div class="col-md-3">
+                        <div class="stats-item">
+                            <div class="stats-number" id="totalContracts">0</div>
+                            <div class="stats-label">Tổng hợp đồng</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 border-start">
+                        <div class="stats-item">
+                            <div class="stats-number" id="activeContracts">0</div>
+                            <div class="stats-label">Đang hiệu lực</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 border-start">
+                        <div class="stats-item">
+                            <div class="stats-number" id="expiredContracts">0</div>
+                            <div class="stats-label">Đã hết hạn</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 border-start">
+                        <div class="stats-item">
+                            <div class="stats-number" id="totalRevenue">0đ</div>
+                            <div class="stats-label">Tổng doanh thu</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.search.label(class="form-label") }}
+                            {{ form.search() }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status() }}
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            {{ form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contracts List -->
+    <div class="row">
+        <div class="col-12">
+            {% if contracts %}
+                <div class="row">
+                    {% for contract in contracts %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card contract-card h-100 
+                            {% if contract.is_active %}active
+                            {% elif contract.is_expired %}expired
+                            {% elif contract.days_remaining <= 30 %}ending-soon{% endif %}">
+                            <div class="card-body">
+                                <!-- Contract Header -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="card-title mb-1">{{ contract.contract_code }}</h5>
+                                        <small class="text-muted">{{ contract.created_at[:10] }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge 
+                                            {% if contract.is_active %}bg-success
+                                            {% elif contract.is_expired %}bg-danger
+                                            {% elif contract.days_remaining <= 30 %}bg-warning{% endif %}">
+                                            {% if contract.is_active %}Đang hiệu lực
+                                            {% elif contract.is_expired %}Đã hết hạn
+                                            {% else %}Sắp hết hạn{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Student Info -->
+                                <div class="mb-3">
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-user me-1"></i>
+                                        {{ contract.student.full_name }}
+                                    </h6>
+                                    <small class="text-muted">
+                                        {{ contract.student.student_id }} • {{ contract.student.email }}
+                                    </small>
+                                </div>
+
+                                <!-- Room Info -->
+                                <div class="mb-3">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Phòng:</small><br>
+                                            <strong>{{ contract.room.room_number }}</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Tòa:</small><br>
+                                            <strong>{{ contract.room.building_name }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contract Dates -->
+                                <div class="mb-3">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Từ:</small><br>
+                                            <strong>{{ contract.start_date }}</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Đến:</small><br>
+                                            <strong>{{ contract.end_date }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Info -->
+                                <div class="mb-3">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Đã thanh toán:</small><br>
+                                            <strong class="text-success">{{ "{:,.0f}".format(contract.total_paid) }}đ</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Số lần TT:</small><br>
+                                            <strong>{{ contract.payment_count }}</strong>
+                                            {% if contract.pending_payments_count > 0 %}
+                                                <small class="text-warning">({{ contract.pending_payments_count }} chờ)</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Days Remaining -->
+                                {% if not contract.is_expired %}
+                                <div class="mb-3">
+                                    <small class="text-muted">Còn lại:</small><br>
+                                    <strong class="
+                                        {% if contract.days_remaining <= 7 %}text-danger
+                                        {% elif contract.days_remaining <= 30 %}text-warning
+                                        {% else %}text-success{% endif %}">
+                                        {{ contract.days_remaining }} ngày
+                                    </strong>
+                                </div>
+                                {% endif %}
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex gap-2 mt-3">
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="viewContractDetails({{ contract.contract_id }})">
+                                        <i class="fas fa-eye"></i> Xem
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning" 
+                                            onclick="editContract({{ contract.contract_id }})">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" 
+                                            onclick="viewPayments({{ contract.contract_id }})">
+                                        <i class="fas fa-money-bill-wave"></i> TT
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if pagination.pages > 1 %}
+                <nav aria-label="Phân trang hợp đồng">
+                    <ul class="pagination justify-content-center">
+                        {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ pagination.prev_num }}{% if request.args.get('status') %}&status={{ request.args.get('status') }}{% endif %}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}">
+                                    Trước
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                            {% if page_num %}
+                                {% if page_num != pagination.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_num }}{% if request.args.get('status') %}&status={{ request.args.get('status') }}{% endif %}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ pagination.next_num }}{% if request.args.get('status') %}&status={{ request.args.get('status') }}{% endif %}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}">
+                                    Sau
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-file-contract fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Không có hợp đồng nào</h5>
+                        <p class="text-muted mb-0">Danh sách hợp đồng sẽ hiển thị ở đây khi có dữ liệu.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Include Contract Modals -->
+{% include 'contracts/modals.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/contract_operations.js') }}"></script>
+{% endblock %}

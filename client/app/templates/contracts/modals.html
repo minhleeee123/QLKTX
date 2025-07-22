@@ -1,0 +1,253 @@
+<!-- Contract Detail Modal -->
+<div class="modal fade" id="contractDetailModal" tabindex="-1" aria-labelledby="contractDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contractDetailModalLabel">
+                    <i class="fas fa-file-contract me-2"></i>Chi tiết hợp đồng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="contractDetailContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contract Edit Modal -->
+<div class="modal fade" id="contractEditModal" tabindex="-1" aria-labelledby="contractEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contractEditModalLabel">
+                    <i class="fas fa-edit me-2"></i>Chỉnh sửa hợp đồng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="contractEditContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Template -->
+<template id="contractDetailLoadingTemplate">
+    <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+        <p class="mt-3 mb-0">Đang tải thông tin hợp đồng...</p>
+    </div>
+</template>
+
+<!-- Error Template -->
+<template id="contractDetailErrorTemplate">
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Lỗi!</strong> {{error_message}}
+    </div>
+</template>
+
+<!-- Contract Detail Template -->
+<template id="contractDetailTemplate">
+    <div class="row">
+        <!-- Contract Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-file-contract me-1"></i>Thông tin hợp đồng</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Mã hợp đồng:</strong></td>
+                            <td>{{contract_code}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ngày tạo:</strong></td>
+                            <td>{{created_at}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ngày bắt đầu:</strong></td>
+                            <td>{{start_date}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ngày kết thúc:</strong></td>
+                            <td>{{end_date}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Thời hạn:</strong></td>
+                            <td>{{duration_months}} tháng</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Trạng thái:</strong></td>
+                            <td><span class="badge {{status_badge_class}}">{{status_text}}</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ngày còn lại:</strong></td>
+                            <td class="{{days_remaining_class}}">{{days_remaining}} ngày</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-user me-1"></i>Thông tin sinh viên</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Họ tên:</strong></td>
+                            <td>{{student_name}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mã sinh viên:</strong></td>
+                            <td>{{student_id}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td>{{student_email}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Số điện thoại:</strong></td>
+                            <td>{{student_phone}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phòng:</strong></td>
+                            <td>{{room_number}} - {{building_name}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Loại phòng:</strong></td>
+                            <td>{{room_type}}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Giá phòng:</strong></td>
+                            <td><strong class="text-primary">{{monthly_price}}đ/tháng</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Summary -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-money-bill-wave me-1"></i>Tóm tắt thanh toán</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h4 class="text-success mb-1">{{total_paid}}đ</h4>
+                                <small class="text-muted">Đã thanh toán</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h4 class="text-info mb-1">{{payment_count}}</h4>
+                                <small class="text-muted">Số lần thanh toán</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-warning mb-1">{{pending_payments}}</h4>
+                            <small class="text-muted">Chờ xác nhận</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Payments -->
+    <div class="row mt-3" id="recentPaymentsSection">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-history me-1"></i>Lịch sử thanh toán gần đây</h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewAllPayments({{contract_id}})">
+                        Xem tất cả
+                    </button>
+                </div>
+                <div class="card-body" id="recentPaymentsList">
+                    <!-- Payments will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        <button type="button" class="btn btn-warning" onclick="editContractFromDetail({{contract_id}})">
+            <i class="fas fa-edit me-1"></i>Chỉnh sửa
+        </button>
+        <button type="button" class="btn btn-success" onclick="viewPayments({{contract_id}})">
+            <i class="fas fa-money-bill-wave me-1"></i>Quản lý thanh toán
+        </button>
+    </div>
+</template>
+
+<!-- Contract Edit Template -->
+<template id="contractEditTemplate">
+    <form id="contractEditForm">
+        <input type="hidden" id="contractId" value="{{contract_id}}">
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="contractCode" class="form-label">Mã hợp đồng</label>
+                    <input type="text" class="form-control" id="contractCode" value="{{contract_code}}" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="studentName" class="form-label">Sinh viên</label>
+                    <input type="text" class="form-control" id="studentName" value="{{student_name}}" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="startDate" class="form-label">Ngày bắt đầu</label>
+                    <input type="date" class="form-control" id="startDate" value="{{start_date}}" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="endDate" class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="endDate" value="{{end_date}}" min="{{today}}" required>
+                    <div class="invalid-feedback">
+                        Vui lòng chọn ngày kết thúc hợp lệ
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="roomInfo" class="form-label">Phòng</label>
+            <input type="text" class="form-control" id="roomInfo" value="{{room_number}} - {{building_name}} ({{room_type}})" readonly>
+        </div>
+
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Lưu ý:</strong> Việc thay đổi ngày kết thúc hợp đồng có thể ảnh hưởng đến lịch thanh toán và tính phí.
+        </div>
+    </form>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-primary" onclick="saveContractChanges()">
+            <i class="fas fa-save me-1"></i>Lưu thay đổi
+        </button>
+    </div>
+</template>

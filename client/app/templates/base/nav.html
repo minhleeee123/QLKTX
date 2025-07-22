@@ -50,14 +50,13 @@
                     </li>
                 {% endif %}
                 
-                {% if current_user and current_user.role in ['admin', 'staff'] %}
+                {% if current_user and current_user.role in ['admin', 'management'] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                             <i class="fas fa-file-contract"></i> Hợp đồng
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-list"></i> Danh sách hợp đồng</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-plus"></i> Tạo hợp đồng</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('contracts.list_contracts') }}"><i class="fas fa-list"></i> Danh sách hợp đồng</a></li>
                         </ul>
                     </li>
                     
