@@ -1,0 +1,140 @@
+{% extends "base/layout.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Quản lý loại phòng</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Tổng quan</a></li>
+        <li class="breadcrumb-item active">Quản lý loại phòng</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-th-large me-1"></i>
+                Danh sách loại phòng
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#roomTypeModal">
+                    <i class="fas fa-plus"></i> Thêm loại phòng mới
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên loại phòng</th>
+                            <th>Sức chứa</th>
+                            <th>Giá phòng (VNĐ)</th>
+                            <th>Tổng số phòng</th>
+                            <th>Số phòng trống</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room_type in room_types %}
+                        <tr>
+                            <td>{{ room_type.room_type_id }}</td>
+                            <td>{{ room_type.type_name }}</td>
+                            <td>{{ room_type.capacity }}</td>
+                            <td>{{ '{:,.0f}'.format(room_type.price) }}</td>
+                            <td>{{ room_type.total_rooms }}</td>
+                            <td>{{ room_type.available_rooms }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-primary edit-room-type"
+                                        data-bs-toggle="modal" data-bs-target="#roomTypeModal"
+                                        data-id="{{ room_type.room_type_id }}" data-name="{{ room_type.type_name }}"
+                                        data-capacity="{{ room_type.capacity }}" data-price="{{ room_type.price }}">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteRoomTypeModal" data-id="{{ room_type.room_type_id }}"
+                                        data-name="{{ room_type.type_name }}">
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">Không có loại phòng nào</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room Type Modal -->
+<div class="modal fade" id="roomTypeModal" tabindex="-1" aria-labelledby="roomTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roomTypeModalLabel">Thêm loại phòng mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="roomTypeForm" method="POST" action="{{ url_for('room_types.create_room_type') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="room_type_id" id="room_type_id" value="">
+
+                    <div class="mb-3">
+                        <label for="type_name" class="form-label">Tên loại phòng</label>
+                        <input type="text" class="form-control" id="type_name" name="type_name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="capacity" class="form-label">Sức chứa</label>
+                        <input type="number" class="form-control" id="capacity" name="capacity" min="1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Giá phòng (VNĐ)</label>
+                        <input type="number" class="form-control" id="price" name="price" min="0" required>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Room Type Modal -->
+<div class="modal fade" id="deleteRoomTypeModal" tabindex="-1" aria-labelledby="deleteRoomTypeModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteRoomTypeModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa loại phòng <span id="roomTypeToDelete"></span>?</p>
+                <p class="text-danger">Lưu ý: Việc xóa loại phòng sẽ ảnh hưởng đến tất cả các phòng sử dụng loại phòng
+                    này!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteRoomTypeForm" method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/room_types/room_type_operations.js') }}"></script>
+{% endblock %}

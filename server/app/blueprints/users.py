@@ -20,7 +20,7 @@ def get_users():
         
         query = User.query.join(Role)
         
-        # Filter by role
+        # Filter by role    
         if role_filter:
             query = query.filter(Role.role_name == role_filter)
         

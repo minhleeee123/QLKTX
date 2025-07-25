@@ -231,8 +231,8 @@ def edit_room_ajax(room_id):
 def get_buildings():
     """Get buildings for dropdown - AJAX only"""
     if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
-        return redirect(url_for('rooms.list_buildings'))
-    
+        return redirect(url_for("buildings.list_buildings"))
+
     try:
         response = room_service.get_buildings()
         return jsonify(response)
@@ -249,8 +249,8 @@ def get_buildings():
 def get_room_types():
     """Get room types for dropdown - AJAX only"""
     if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
-        return redirect(url_for('rooms.list_room_types'))
-    
+        return redirect(url_for("room_types.list_room_types"))
+
     try:
         response = room_service.get_room_types()
         return jsonify(response)
@@ -402,155 +402,3 @@ def delete_room(room_id):
             error_msg = str(e)
             flash(f"Lỗi khi xóa phòng: {error_msg}", "danger")
         return redirect(url_for("rooms.list_rooms"))
-
-
-# Building management routes
-@rooms_bp.route("/buildings", methods=["GET"])
-@login_required
-@admin_required
-def list_buildings():
-    """Display list of all buildings"""
-    try:
-        buildings_data = room_service.get_buildings()
-        buildings = buildings_data.get("buildings", [])
-    except Exception as e:
-        flash(f"Lỗi khi tải danh sách tòa nhà: {str(e)}", "danger")
-        buildings = []
-
-    return render_template(
-        "rooms/buildings.html", buildings=buildings, title="Quản lý tòa nhà"
-    )
-
-
-@rooms_bp.route("/buildings/create", methods=["POST"])
-@login_required
-@admin_required
-def create_building():
-    """Create new building"""
-    building_name = request.form.get("building_name")
-
-    if not building_name:
-        flash("Tên tòa nhà là bắt buộc", "danger")
-        return redirect(url_for("rooms.list_buildings"))
-
-    try:
-        building_data = {"building_name": building_name}
-        result = room_service.create_building(building_data)
-        flash("Tạo tòa nhà mới thành công", "success")
-    except Exception as e:
-        flash(f"Lỗi khi tạo tòa nhà: {str(e)}", "danger")
-
-    return redirect(url_for("rooms.list_buildings"))
-
-
-@rooms_bp.route("/buildings/<int:building_id>/edit", methods=["POST"])
-@login_required
-@admin_required
-def edit_building(building_id):
-    """Edit existing building"""
-    building_name = request.form.get("building_name")
-
-    if not building_name:
-        flash("Tên tòa nhà là bắt buộc", "danger")
-        return redirect(url_for("rooms.list_buildings"))
-
-    try:
-        building_data = {"building_name": building_name}
-        result = room_service.update_building(building_id, building_data)
-        flash("Cập nhật tòa nhà thành công", "success")
-    except Exception as e:
-        flash(f"Lỗi khi cập nhật tòa nhà: {str(e)}", "danger")
-
-    return redirect(url_for("rooms.list_buildings"))
-
-
-@rooms_bp.route("/buildings/<int:building_id>/delete", methods=["POST"])
-@login_required
-@admin_required
-def delete_building(building_id):
-    """Delete building"""
-    try:
-        result = room_service.delete_building(building_id)
-        flash("Xóa tòa nhà thành công", "success")
-    except Exception as e:
-        flash(f"Lỗi khi xóa tòa nhà: {str(e)}", "danger")
-
-    return redirect(url_for("rooms.list_buildings"))
-
-
-# Room types management routes
-@rooms_bp.route("/room-types", methods=["GET"])
-@login_required
-@admin_required
-def list_room_types():
-    """Display list of all room types"""
-    try:
-        room_types_data = room_service.get_room_types()
-        room_types = room_types_data.get("room_types", [])
-    except Exception as e:
-        flash(f"Lỗi khi tải danh sách loại phòng: {str(e)}", "danger")
-        room_types = []
-
-    return render_template(
-        "rooms/room_types.html", room_types=room_types, title="Quản lý loại phòng"
-    )
-
-
-@rooms_bp.route("/room-types/create", methods=["POST"])
-@login_required
-@admin_required
-def create_room_type():
-    """Create new room type"""
-    type_name = request.form.get("type_name")
-    capacity = request.form.get("capacity", type=int)
-    price = request.form.get("price", type=float)
-
-    if not all([type_name, capacity, price]):
-        flash("Vui lòng điền đầy đủ thông tin", "danger")
-        return redirect(url_for("rooms.list_room_types"))
-
-    try:
-        room_type_data = {"type_name": type_name, "capacity": capacity, "price": price}
-        result = room_service.create_room_type(room_type_data)
-        flash("Tạo loại phòng mới thành công", "success")
-    except Exception as e:
-        flash(f"Lỗi khi tạo loại phòng: {str(e)}", "danger")
-
-    return redirect(url_for("rooms.list_room_types"))
-
-
-@rooms_bp.route("/room-types/<int:room_type_id>/edit", methods=["POST"])
-@login_required
-@admin_required
-def edit_room_type(room_type_id):
-    """Edit existing room type"""
-    type_name = request.form.get("type_name")
-    capacity = request.form.get("capacity", type=int)
-    price = request.form.get("price", type=float)
-
-    if not all([type_name, capacity, price]):
-        flash("Vui lòng điền đầy đủ thông tin", "danger")
-        return redirect(url_for("rooms.list_room_types"))
-
-    try:
-        room_type_data = {"type_name": type_name, "capacity": capacity, "price": price}
-        result = room_service.update_room_type(room_type_id, room_type_data)
-        flash("Cập nhật loại phòng thành công", "success")
-    except Exception as e:
-        flash(f"Lỗi khi cập nhật loại phòng: {str(e)}", "danger")
-
-    return redirect(url_for("rooms.list_room_types"))
-
-
-@rooms_bp.route("/room-types/<int:room_type_id>/delete", methods=["POST"])
-@login_required
-@admin_required
-def delete_room_type(room_type_id):
-    """Delete room type"""
-    try:
-        result = room_service.delete_room_type(room_type_id)
-        flash("Xóa loại phòng thành công", "success")
-    except Exception as e:
-        flash(f"Lỗi khi xóa loại phòng: {str(e)}", "danger")
-
-    return redirect(url_for("rooms.list_room_types"))

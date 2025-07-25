@@ -1,200 +1,199 @@
 {% extends "base/layout.html" %}
 
+{% block title %}Quản lý phòng - Quản lý ký túc xá{% endblock %}
+
+{% block head %}
+<!-- CSRF Token for AJAX requests -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid px-4">
-    <h1 class="mt-4">Quản lý phòng ký túc xá</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Tổng quan</a></li>
-        <li class="breadcrumb-item active">Quản lý phòng</li>
-    </ol>
-    
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <div>
-                <i class="fas fa-search me-1"></i>
-                Tìm kiếm và lọc
-            </div>
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-bed"></i> Quản lý phòng ký túc xá</h1>
             {% if current_user.role == 'admin' %}
-            <div>
-                <button type="button" class="btn btn-primary" onclick="openCreateRoomModal()">
-                    <i class="fas fa-plus"></i> Thêm phòng mới
-                </button>
-                <a href="{{ url_for('rooms.list_buildings') }}" class="btn btn-secondary">
-                    <i class="fas fa-building"></i> Quản lý tòa nhà
-                </a>
-                <a href="{{ url_for('rooms.list_room_types') }}" class="btn btn-secondary">
-                    <i class="fas fa-th-large"></i> Quản lý loại phòng
-                </a>
-            </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#roomModal"
+                onclick="openCreateRoomModal()">
+                <i class="fas fa-plus"></i> Thêm phòng mới
+            </button>
             {% endif %}
-        </div>
-        <div class="card-body">
-            <form method="GET" action="{{ url_for('rooms.list_rooms') }}" id="searchForm">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        {{ form.search.label }}
-                        {{ form.search(class="form-control") }}
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        {{ form.building_id.label }}
-                        {{ form.building_id(class="form-select") }}
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        {{ form.room_type_id.label }}
-                        {{ form.room_type_id(class="form-select") }}
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        {{ form.status.label }}
-                        {{ form.status(class="form-select") }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Tìm kiếm
-                        </button>
-                        <a href="{{ url_for('rooms.list_rooms') }}" class="btn btn-secondary">
-                            <i class="fas fa-redo"></i> Đặt lại
-                        </a>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
+    </div>
     
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-table me-1"></i>
-            Danh sách phòng
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>Số phòng</th>
-                            <th>Tòa nhà</th>
-                            <th>Loại phòng</th>
-                            <th>Sức chứa</th>
-                            <th>Số người hiện tại</th>
-                            <th>Chỗ trống</th>
-                            <th>Giá phòng (VNĐ)</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for room in rooms %}
-                        <tr>
-                            <td>{{ room.room_number }}</td>
-                            <td>{{ room.building.building_name }}</td>
-                            <td>{{ room.room_type.type_name }}</td>
-                            <td>{{ room.room_type.capacity }}</td>
-                            <td>{{ room.current_occupancy }}</td>
-                            <td>{{ room.available_slots }}</td>
-                            <td>{{ '{:,.0f}'.format(room.room_type.price) }}</td>
-                            <td>
-                                {% if room.status == 'available' %}
-                                <span class="badge bg-success">Có sẵn</span>
-                                {% elif room.status == 'occupied' %}
-                                <span class="badge bg-danger">Đã có người ở</span>
-                                {% elif room.status == 'pending_approval' %}
-                                <span class="badge bg-warning">Chờ duyệt</span>
-                                {% elif room.status == 'maintenance' %}
-                                <span class="badge bg-secondary">Bảo trì</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-sm btn-info" 
-                                            onclick="viewRoomDetails('{{ room.room_id }}')">
-                                        <i class="fas fa-eye"></i> Xem
-                                    </button>
-                                    {% if current_user.role == 'admin' %}
-                                    <button type="button" class="btn btn-sm btn-primary" 
-                                            onclick="openEditRoomModal('{{ room.room_id }}')">
-                                        <i class="fas fa-edit"></i> Sửa
-                                    </button>
-                                    <!-- Phương án 2: Button với JavaScript -->
-                                    <button type="button" class="btn btn-sm btn-danger" 
-                                            onclick="deleteRoom('{{ room.room_id }}', '{{ room.room_number }}')">
-                                        <i class="fas fa-trash"></i> Xóa
-                                    </button>
-                                   
-                                    {% endif %}
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('rooms.list_rooms') }}" class="row g-3">
+                    {{ form.hidden_tag() }}
+                
+                    <div class="col-md-3">
+                        {{ form.search.label(class="form-label") }}
+                        {{ form.search(class="form-control") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.building_id.label(class="form-label") }}
+                        {{ form.building_id(class="form-select") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.room_type_id.label(class="form-label") }}
+                        {{ form.room_type_id(class="form-select") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select") }}
+                    </div>
+                    <div class="col-md-12 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-search"></i> Tìm kiếm
+                        </button>
+                        <a href="{{ url_for('rooms.list_rooms') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+                </div>
+                </div>
+    </div>
+    </div>
+
+<!-- Rooms Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list"></i> Danh sách phòng</h5>
+                </div>
+                <div class="card-body">
+                {% if rooms %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Số phòng</th>
+                                    <th>Tòa nhà</th>
+                                    <th>Loại phòng</th>
+                                    <th>Sức chứa</th>
+                                    <th>Số người hiện tại</th>
+                                    <th>Chỗ trống</th>
+                                    <th>Giá phòng (VNĐ)</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                <tr>
+                                    <td><strong>{{ room.room_number }}</strong></td>
+                                    <td>{{ room.building.building_name }}</td>
+                                    <td>{{ room.room_type.type_name }}</td>
+                                    <td>{{ room.room_type.capacity }}</td>
+                                    <td>{{ room.current_occupancy }}</td>
+                                    <td>{{ room.available_slots }}</td>
+                                    <td>{{ '{:,.0f}'.format(room.room_type.price) }}</td>
+                                    <td>
+                                        {% if room.status == 'available' %}
+                                        <span class="badge bg-success">Có sẵn</span>
+                                        {% elif room.status == 'occupied' %}
+                                        <span class="badge bg-danger">Đã có người ở</span>
+                                        {% elif room.status == 'pending_approval' %}
+                                        <span class="badge bg-warning">Chờ duyệt</span>
+                                        {% elif room.status == 'maintenance' %}
+                                        <span class="badge bg-secondary">Bảo trì</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary" title="Xem chi tiết"
+                                                onclick="viewRoomDetails('{{ room.room_id }}')">
+                                                <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if current_user.role == 'admin' %}
+                                            <button type="button" class="btn btn-outline-warning" title="Chỉnh sửa" data-bs-toggle="modal"
+                                                data-bs-target="#roomModal" onclick="openEditRoomModal('{{ room.room_id }}')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" title="Xóa" data-bs-toggle="modal"
+                                                data-bs-target="#deleteRoomModal" data-room-id="{{ room.room_id }}" data-room-number="{{ room.room_number }}"
+                                                onclick="openDeleteRoomModal(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                            </div>
+                                            </td>
+                                            </tr>
+                                {% endfor %}
+                                </tbody>
+                                </table>
                                 </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="9" class="text-center">Không tìm thấy phòng nào</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Pagination -->
-            {% if pagination.pages > 1 %}
-            <nav>
-                <ul class="pagination justify-content-center">
-                    <li class="page-item {% if pagination.page == 1 %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('rooms.list_rooms', page=pagination.page-1, building_id=request.args.get('building_id'), room_type_id=request.args.get('room_type_id'), status=request.args.get('status'), search=request.args.get('search')) }}">
-                            Trước
-                        </a>
-                    </li>
-                    
-                    {% for page_num in range([1, pagination.page - 2]|max, [pagination.pages + 1, pagination.page + 3]|min) %}
-                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('rooms.list_rooms', page=page_num, building_id=request.args.get('building_id'), room_type_id=request.args.get('room_type_id'), status=request.args.get('status'), search=request.args.get('search')) }}">
-                            {{ page_num }}
-                        </a>
-                    </li>
-                    {% endfor %}
-                    
-                    <li class="page-item {% if pagination.page == pagination.pages %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('rooms.list_rooms', page=pagination.page+1, building_id=request.args.get('building_id'), room_type_id=request.args.get('room_type_id'), status=request.args.get('status'), search=request.args.get('search')) }}">
-                            Tiếp
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            {% endif %}
-            
+                                
+                                <!-- Pagination -->
+                                {% if pagination.pages > 1 %}
+                    <nav aria-label="Room pagination">
+                        <ul class="pagination justify-content-center">
+                            <!-- Previous page -->
+                            {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="{{ url_for('rooms.list_rooms', page=pagination.page-1, building_id=request.args.get('building_id'), room_type_id=request.args.get('room_type_id'), status=request.args.get('status'), search=request.args.get('search')) }}">Trước</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Trước</span>
+                            </li>
+                            {% endif %}
+                            
+                            <!-- Page numbers -->
+                            {% for page_num in range(1, pagination.pages + 1) %}
+                            {% if page_num == pagination.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                                {% else %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="{{ url_for('rooms.list_rooms', page=page_num, building_id=request.args.get('building_id'), room_type_id=request.args.get('room_type_id'), status=request.args.get('status'), search=request.args.get('search')) }}">{{ page_num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            <!-- Next page -->
+                            {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="{{ url_for('rooms.list_rooms', page=pagination.page+1, building_id=request.args.get('building_id'), room_type_id=request.args.get('room_type_id'), status=request.args.get('status'), search=request.args.get('search')) }}">Sau</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Sau</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                        </nav>
+                        {% endif %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-bed fa-3x text-muted mb-3"></i>
+                    <h5>Không có phòng nào</h5>
+                    <p class="text-muted">Chưa có phòng trong hệ thống hoặc không khớp với tìm kiếm của bạn.</p>
+                    {% if current_user.role == 'admin' %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#roomModal"
+                        onclick="openCreateRoomModal()">
+                        <i class="fas fa-plus"></i> Thêm phòng đầu tiên
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
+                </div>
         </div>
     </div>
 </div>
-
-<script>
-    // JavaScript function for delete button
-    function deleteRoom(roomId, roomNumber) {
-        if (confirm('Bạn có chắc chắn muốn xóa phòng ' + roomNumber + '?')) {
-            // Create form dynamically
-            const form = document.createElement('form');
-            form.method = 'POST';
-            // Build URL directly instead of using template placeholder
-            form.action = '/rooms/' + roomId + "/delete"
-            console.log('Delete URL:', form.action);
-            
-            // Add CSRF token
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = 'csrf_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
-            
-            // Submit form
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-</script>
 
 <!-- Include Room Modals -->
 {% include 'rooms/room_modals.html' %}
 
 <!-- Include Room Operations JavaScript -->
-<script src="{{ url_for('static', filename='js/room_operations.js') }}"></script>
+<script src="{{ url_for('static', filename='js/rooms/room_operations.js') }}"></script>
 {% endblock %}
-
-

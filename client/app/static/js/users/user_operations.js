@@ -55,10 +55,8 @@ function openEditUserModal(userId) {
     })
         .then(response => response.json())
         .then(data => {
-            console.log('Edit user data received:', data);
             if (data.success) { 
                 const user = data.user.user;
-                console.log('User data for edit:', user);
                 document.getElementById('fullName').value = user.full_name || '';
                 document.getElementById('email').value = user.email || '';
                 document.getElementById('phoneNumber').value = user.phone_number || '';
@@ -94,7 +92,6 @@ function openEditUserModal(userId) {
 function viewUserDetails(userId) {
     // Convert string to number if needed
     userId = parseInt(userId);
-    console.log('viewUserDetails called with userId:', userId);
     
     // Show the modal first
     const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
@@ -111,10 +108,8 @@ function viewUserDetails(userId) {
     })
         .then(response => response.json())
         .then(data => {
-            console.log('User data received:', data);
             if (data.success) {
                 const user = data.user.user;
-                console.log('User data:', user);
                 
                 // Get the template and replace placeholders
                 let template = document.getElementById('userDetailTemplate').innerHTML;
@@ -201,41 +196,25 @@ function deleteUser(userId, userName) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Show success message
-                showNotification('success', data.message);
-                // Reload page after a short delay
-                setTimeout(() => {
+                // Redirect to show Flask flash message
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
                     location.reload();
-                }, 1000);
+                }
             } else {
-                showNotification('error', 'Lỗi: ' + data.message);
+                // Redirect to show Flask flash message
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    showNotification('Lỗi: ' + data.message, 'danger');
+                }
             }
         })
         .catch(error => {
-            showNotification('error', 'Có lỗi xảy ra: ' + error.message);
+            showNotification('Có lỗi xảy ra: ' + error.message, 'danger');
         });
     }
-}
-
-// Function to show notifications
-function showNotification(type, message) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1055; min-width: 300px;';
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 5000);
 }
 
 // Handle form submission when DOM is loaded
@@ -258,16 +237,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validate passwords for create mode
             if (!isEditMode) {
                 if (userData.password !== userData.confirm_password) {
-                    showNotification('error', 'Mật khẩu xác nhận không khớp!');
+                    showNotification('Mật khẩu xác nhận không khớp!', 'danger');
                     return;
                 }
                 
                 if (userData.password.length < 6) {
-                    showNotification('error', 'Mật khẩu phải có ít nhất 6 ký tự!');
+                    showNotification('Mật khẩu phải có ít nhất 6 ký tự!', 'danger');
                     return;
                 }
             }
-            
+
             // Remove confirm_password from data
             delete userData.confirm_password;
             
@@ -289,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             const url = isEditMode ? `/users/${currentUserId}/edit` : '/users/create';
-            const method = 'POST'; // Always use POST for form submission
+            const method = 'POST';
             
             // Disable submit button
             const submitBtn = document.getElementById('saveUserBtn');
@@ -304,26 +283,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: submitFormData
             })
-            .then(response => response.json())
+            .then(response => {
+                // Check if response is ok first
+                if (!response.ok) {
+                    // For non-200 responses, still try to parse JSON for error message
+                    return response.json().then(data => {
+                        // For errors, show notification but don't redirect - keep modal open
+                        throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+                    }).catch(parseError => {
+                        // If JSON parsing fails, throw HTTP error
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    // Close modal
+                    // Close modal and redirect only on success
                     const modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
                     modal.hide();
                     
-                    // Show success message
-                    showNotification('success', data.message);
-                    
-                    // Reload page after a short delay
-                    setTimeout(() => {
+                    // Redirect to show Flask flash message
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
                         location.reload();
-                    }, 1000);
+                    }
                 } else {
-                    showNotification('error', 'Lỗi: ' + data.message);
+                    // For server validation errors, redirect to show Flask flash message
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        // Keep modal open and show client-side notification for immediate feedback
+                        showNotification('Lỗi: ' + data.message, 'danger');
+                    }
                 }
             })
             .catch(error => {
-                showNotification('error', 'Có lỗi xảy ra: ' + error.message);
+                // For network/parsing errors, show client-side notification
+                showNotification('Có lỗi xảy ra: ' + error.message, 'danger');
             })
             .finally(() => {
                 // Re-enable submit button

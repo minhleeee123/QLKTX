@@ -34,7 +34,7 @@
                     
                     <div class="col-md-4">
                         {{ search_form.role.label(class="form-label") }}
-                        {{ search_form.role(class="form-select") }}
+                        {{ search_form.role(class="form-select", id="searchRole") }}
                     </div>
                     
                     <div class="col-md-2 d-flex align-items-end">
@@ -198,7 +198,9 @@
 
 <!-- Include User Modals -->
 {% include 'users/user_modals.html' %}
+{% endblock %}
 
+{% block extra_scripts %}
 <!-- Include User Operations JavaScript -->
-<script src="{{ url_for('static', filename='js/user_operations.js') }}"></script>
+<script src="{{ url_for('static', filename='js/users/user_operations.js') }}"></script>
 {% endblock %}

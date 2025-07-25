@@ -6,8 +6,9 @@
                 <h5 class="modal-title" id="roomModalLabel">Thêm phòng</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="roomForm">
-                <input type="hidden" id="csrfToken" value="{{ csrf_token() }}">
+            <form id="roomForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="roomId" name="room_id" value="">
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
@@ -37,22 +38,6 @@
                                     <!-- Options will be populated by JavaScript -->
                                 </select>
                                 <div class="text-danger small" id="roomTypeIdError"></div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="capacity" class="form-label">Sức chứa <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="capacity" name="capacity" min="1" required>
-                                <div class="text-danger small" id="capacityError"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="monthlyPrice" class="form-label">Giá hàng tháng <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="monthlyPrice" name="monthly_price" min="0" step="0.01" required>
-                                <div class="text-danger small" id="monthlyPriceError"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -104,6 +89,29 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Room Modal -->
+<div class="modal fade" id="deleteRoomModal" tabindex="-1" aria-labelledby="deleteRoomModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteRoomModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa phòng <strong id="roomToDelete"></strong>?</p>
+                <p class="text-danger">Lưu ý: Việc xóa phòng sẽ xóa tất cả dữ liệu liên quan đến phòng này!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteRoomForm" method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
             </div>
         </div>
     </div>
