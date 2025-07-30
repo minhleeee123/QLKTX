@@ -1,7 +1,9 @@
 from functools import wraps
-from flask import redirect, url_for, flash, request, abort
-from flask_login import login_required, current_user
-from ..services.auth_service import auth_service
+
+from app.services.auth_service import auth_service
+from flask import abort, flash, redirect, request, url_for
+from flask_login import current_user, login_required
+
 
 def role_required(role):
     """Decorator to require specific role for accessing routes"""

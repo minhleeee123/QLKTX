@@ -1,9 +1,10 @@
 import json
+from typing import Any, Dict, Optional
+
+from app.services.api_client import api_client
+from app.models.user import User
 from flask import session
-from typing import Dict, Any, Optional
-from flask_login import login_user, logout_user, current_user
-from .api_client import api_client
-from ..models.user import User
+from flask_login import current_user, login_user, logout_user
 
 
 class AuthService:
@@ -118,5 +119,7 @@ class AuthService:
         return response
 
 
+# Global auth service instance
+auth_service = AuthService()
 # Global auth service instance
 auth_service = AuthService()

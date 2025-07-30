@@ -1,7 +1,7 @@
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
+from app.services.api_client import api_client
 from flask import json
-from .api_client import api_client
 
 
 class UserService:

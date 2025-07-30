@@ -117,6 +117,8 @@ def create_user():
 def get_user(user_id):
     response = user_service.get_user(user_id)
 
+    print(f"Response from get_user: {json.dumps(response, indent=2)}")
+
     if response.get("success"):
         user = response.get("data")
         return APIResponse.success(
