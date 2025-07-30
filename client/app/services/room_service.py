@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Optional
 
-from .api_client import api_client
+from app.services.api_client import api_client
 
 
 class RoomService:
@@ -53,60 +53,6 @@ class RoomService:
         return api_client.delete(f"/rooms/{room_id}")
 
     @staticmethod
-    def get_buildings() -> Dict[str, Any]:
-        """Get list of buildings"""
-        # Return the complete API response (no data extraction)
-        return api_client.get("/rooms/buildings")
-
-    @staticmethod
-    def get_building(building_id: int) -> Dict[str, Any]:
-        """Get building details by ID"""
-        # Return the complete API response (no data extraction)
-        return api_client.get(f"/rooms/buildings/{building_id}")
-
-    @staticmethod
-    def create_building(building_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create new building"""
-        # Return the complete API response (no data extraction)
-        return api_client.post("/rooms/buildings", building_data)
-
-    @staticmethod
-    def update_building(building_id: int, building_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Update building information"""
-        # Return the complete API response (no data extraction)
-        return api_client.put(f"/rooms/buildings/{building_id}", building_data)
-
-    @staticmethod
-    def delete_building(building_id: int) -> Dict[str, Any]:
-        """Delete building by ID"""
-        # Return the complete API response (no data extraction)
-        return api_client.delete(f"/rooms/buildings/{building_id}")
-
-    @staticmethod
-    def get_room_types() -> Dict[str, Any]:
-        """Get list of room types"""
-        # Return the complete API response (no data extraction)
-        return api_client.get("/rooms/room-types")
-
-    @staticmethod
-    def create_room_type(room_type_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create new room type"""
-        # Return the complete API response (no data extraction)
-        return api_client.post("/rooms/room-types", room_type_data)
-
-    @staticmethod
-    def update_room_type(room_type_id: int, room_type_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Update room type information"""
-        # Return the complete API response (no data extraction)
-        return api_client.put(f"/rooms/room-types/{room_type_id}", room_type_data)
-
-    @staticmethod
-    def delete_room_type(room_type_id: int) -> Dict[str, Any]:
-        """Delete room type by ID"""
-        # Return the complete API response (no data extraction)
-        return api_client.delete(f"/rooms/room-types/{room_type_id}")
-
-    @staticmethod
     def get_room_statuses() -> list:
         """Get available room statuses"""
         return [
@@ -118,5 +64,4 @@ class RoomService:
 
 
 # Global room service instance
-room_service = RoomService()
 room_service = RoomService()
