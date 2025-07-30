@@ -73,10 +73,6 @@ class APIClient:
             response = self.session.post(
                 url, headers=self._get_headers(), json=data, timeout=30
             )
-            print("Response from APIClient POST:")  # Uncomment for debugging
-            print(
-                json.dumps(response.json(), indent=2, ensure_ascii=False)
-            )  # Uncomment for
             return self._handle_response(response)
         except requests.exceptions.RequestException as e:
             return {

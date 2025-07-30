@@ -106,13 +106,17 @@ def create_user():
 
     if errors:
         return APIResponse.error("; ".join(errors), 400)
+
     try:
         response = user_service.create_user(user_data)
+
+        print(f"Response from create_user: {json.dumps(response, indent=2)}")
+
         if response.get("success") != False:  # Success if no explicit failure
             return APIResponse.success(message="Tạo người dùng thành công!")
         else:
             return APIResponse.error(
-                f'Lỗi khi tạo người dùng: {response.get("error", "")}', 400
+                f'Lỗi khi tạo người dùng: {response.get("message", "")}', 400
             )
     except Exception as e:
         return APIResponse.error(f"Lỗi khi tạo người dùng: {str(e)}", 500)
@@ -122,41 +126,15 @@ def create_user():
 @login_required
 @admin_required
 def get_user(user_id):
-    """Get user details - AJAX only"""
-    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
-        # Non-AJAX requests should redirect to list
-        return redirect(url_for("users.list_users"))
+    user = user_service.get_user(user_id)
 
-    response = user_service.get_user(user_id)
-
-    print(
-        f"Response from get_user: {json.dumps(response, indent=2, ensure_ascii=False)}"
-    )  # Debugging output
-
-    return_value = APIResponse.success(
-        data={"user": response}, message="Lấy thông tin người dùng thành công"
-    )
-
-    print(f"Return value from get_user: {return_value}")  # Debugging output
-    # Check if we got an error response
-    if response.get("success") == False:
-        return APIResponse.error(response.get("error", "Lỗi không xác định"), 404)
-    else:
-        # Handle successful response (server data directly)
-        return APIResponse.success(
-            data={"user": response}, message="Lấy thông tin người dùng thành công"
-        )
+    return APIResponse.success(data=user, message="Lấy thông tin người dùng thành công")
 
 
 @users_bp.route("/<int:user_id>/edit", methods=["POST"])
 @login_required
 @admin_required
 def edit_user(user_id):
-    """Edit user - AJAX only"""
-    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
-        # Non-AJAX requests should redirect to list
-        return redirect(url_for("users.list_users"))
-
     # Handle form data
     user_data = {
         "full_name": request.form.get("full_name"),

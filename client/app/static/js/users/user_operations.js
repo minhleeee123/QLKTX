@@ -18,8 +18,10 @@ async function openEditUserModal(userId) {
 
   isEditMode = true;
   currentUserId = userId;
-  document.getElementById("userModalLabel").textContent = "Chỉnh sửa người dùng";
-  document.getElementById("saveUserBtn").innerHTML = '<i class="fas fa-save"></i> Cập nhật';
+  document.getElementById("userModalLabel").textContent =
+    "Chỉnh sửa người dùng";
+  document.getElementById("saveUserBtn").innerHTML =
+    '<i class="fas fa-save"></i> Cập nhật';
   document.getElementById("passwordSection").style.display = "none";
   document.getElementById("password").required = false;
   document.getElementById("confirmPassword").required = false;
@@ -31,7 +33,7 @@ async function openEditUserModal(userId) {
     // Load user data
     const user = await UserDataUtils.fetchUser(userId);
     console.log("Loaded user data:", user);
-    
+
     // Populate form with user data
     UserDataUtils.populateForm(user);
   } catch (error) {
@@ -53,7 +55,9 @@ async function viewUserDetails(userId) {
 
   try {
     const user = await UserDataUtils.fetchUser(userId);
-    
+
+    console.log("Loaded user data for details:", user);
+
     // Prepare template data
     const templateData = {
       user_id: user.user_id || "N/A",
@@ -65,20 +69,22 @@ async function viewUserDetails(userId) {
       role_text: getRoleText(user.role),
       status_badge_class: user.is_active ? "bg-success" : "bg-secondary",
       status_text: user.is_active ? "Hoạt động" : "Không hoạt động",
-      created_at: user.created_at 
-        ? new Date(user.created_at).toLocaleString("vi-VN") 
-        : "Chưa có"
+      created_at: user.created_at
+        ? new Date(user.created_at).toLocaleString("vi-VN")
+        : "Chưa có",
     };
 
     // Render and display template
-    const renderedTemplate = TemplateUtils.render("userDetailTemplate", templateData);
+    const renderedTemplate = TemplateUtils.render(
+      "userDetailTemplate",
+      templateData
+    );
     document.getElementById("userDetailContent").innerHTML = renderedTemplate;
-    
   } catch (error) {
     console.error("Error fetching user data:", error);
     TemplateUtils.showError(
-      "userDetailContent", 
-      "userDetailErrorTemplate", 
+      "userDetailContent",
+      "userDetailErrorTemplate",
       error.message || "Có lỗi xảy ra khi tải thông tin người dùng"
     );
   }
@@ -197,12 +203,12 @@ const TemplateUtils = {
    */
   render(templateId, data) {
     let template = document.getElementById(templateId).innerHTML;
-    
+
     Object.entries(data).forEach(([key, value]) => {
       const placeholder = `{{${key}}}`;
       template = template.replaceAll(placeholder, value);
     });
-    
+
     return template;
   },
 
@@ -222,7 +228,7 @@ const TemplateUtils = {
     const container = document.getElementById(containerId);
     const template = this.render(errorTemplateId, { message });
     container.innerHTML = template;
-  }
+  },
 };
 
 /**
@@ -239,18 +245,17 @@ const UserDataUtils = {
         "Content-Type": "application/json",
       },
     });
-    
-    const data = await response.json();
-    console.log(response)
-    console.log("Fetched user data:", data);
-    
-    if (!data.success) {
-      throw new Error(data.message || "Failed to fetch user data");
+
+    const apiResponse = await response.json();
+    console.log("Fetched API response:", apiResponse);
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to fetch user data");
     }
-    
+
     // Backend returns: {success, message, data: {user: {...}}, status_code}
     // We want just the user object
-    return data.user;
+    return apiResponse.data.user;
   },
 
   /**
@@ -263,7 +268,7 @@ const UserDataUtils = {
       phoneNumber: user.phone_number,
       studentId: user.student_id,
       role: user.role,
-      isActive: user.is_active ? "true" : "false"
+      isActive: user.is_active ? "true" : "false",
     };
 
     Object.entries(fieldMap).forEach(([fieldId, value]) => {
@@ -272,7 +277,7 @@ const UserDataUtils = {
         element.value = value || "";
       }
     });
-  }
+  },
 };
 
 /**
@@ -322,7 +327,7 @@ const ModalUtils = {
     document.body.classList.remove("modal-open");
     document.body.style.paddingRight = "";
     document.body.style.overflow = "";
-  }
+  },
 };
 
 /**
@@ -393,7 +398,7 @@ function handleErrorResponse(error) {
  */
 function closeModalAndRedirect(redirectUrl) {
   ModalUtils.hide("userModal");
-  
+
   if (redirectUrl) {
     window.location.href = redirectUrl;
   } else {
