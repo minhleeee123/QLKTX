@@ -26,11 +26,7 @@ class UserService:
     def get_user(user_id: int) -> Dict[str, Any]:
         """Get user details by ID"""
         # Return the complete API response (no data extraction)
-        response = api_client.get(f"/users/{user_id}")
-
-        user = response.get("data")
-
-        return user
+        return api_client.get(f"/users/{user_id}")
 
     @staticmethod
     def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:

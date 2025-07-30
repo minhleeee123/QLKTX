@@ -107,29 +107,30 @@ def create_user():
     if errors:
         return APIResponse.error("; ".join(errors), 400)
 
-    try:
-        response = user_service.create_user(user_data)
+    response = user_service.create_user(user_data)
+    print(f"Response from create_user: {json.dumps(response, indent=2)}")
 
-        print(f"Response from create_user: {json.dumps(response, indent=2)}")
-
-        if response.get("success") != False:  # Success if no explicit failure
-            return APIResponse.success(message="Tạo người dùng thành công!")
-        else:
-            return APIResponse.error(
-                f'Lỗi khi tạo người dùng: {response.get("message", "")}', 400
-            )
-    except Exception as e:
-        return APIResponse.error(f"Lỗi khi tạo người dùng: {str(e)}", 500)
+    if response.get("success"):
+        return APIResponse.success(message="Tạo người dùng thành công!")
+    else:
+        return APIResponse.error(
+            f'Lỗi khi tạo người dùng: {response.get("message", "")}', 400
+        )
 
 
 @users_bp.route("/<int:user_id>")
 @login_required
 @admin_required
 def get_user(user_id):
-    user = user_service.get_user(user_id)
+    response = user_service.get_user(user_id)
 
-    return APIResponse.success(data=user, message="Lấy thông tin người dùng thành công")
-
+    if response.get("success"):
+        user = response.get("data")
+        return APIResponse.success(data=user, message="Lấy thông tin người dùng thành công")
+    else:
+        return APIResponse.error(
+            f'Lỗi khi lấy thông tin người dùng: {response.get("message", "")}', 404
+        )
 
 @users_bp.route("/<int:user_id>/edit", methods=["POST"])
 @login_required
@@ -164,17 +165,14 @@ def edit_user(user_id):
     if errors:
         return APIResponse.error("; ".join(errors), 400)
 
-    try:
-        response = user_service.update_user(user_id, user_data)
+    response = user_service.update_user(user_id, user_data)
 
-        if response.get("success") != False:  # Success if no explicit failure
-            return APIResponse.success(message="Cập nhật người dùng thành công!")
-        else:
-            return APIResponse.error(
-                f'Lỗi khi cập nhật người dùng: {response.get("error", "")}', 400
-            )
-    except Exception as e:
-        return APIResponse.error(f"Lỗi khi cập nhật người dùng: {str(e)}", 500)
+    if response.get("success"):
+        return APIResponse.success(message="Cập nhật người dùng thành công!")
+    else:
+        return APIResponse.error(
+            f'Lỗi khi cập nhật người dùng: {response.get("message", "")}', 400
+        )
 
 
 @users_bp.route("/<int:user_id>/delete", methods=["POST"])
@@ -196,12 +194,11 @@ def delete_user(user_id):
     ):
         return APIResponse.error("Không thể xóa chính mình", 400)
 
-    try:
-        response = user_service.delete_user(user_id)
+    response = user_service.delete_user(user_id)
 
-        if response.get("success") != False:  # Success if no explicit failure
-            return APIResponse.success(message="Xóa người dùng thành công")
-        else:
-            return APIResponse.error(response.get("error", "Lỗi không xác định"), 400)
-    except Exception as e:
-        return APIResponse.error(f"Lỗi khi xóa người dùng: {str(e)}", 500)
+    if response.get("success"):
+        return APIResponse.success(message="Xóa người dùng thành công")
+    else:
+        return APIResponse.error(
+            f'Lỗi khi xóa người dùng: {response.get("message", "")}', 400
+        )
