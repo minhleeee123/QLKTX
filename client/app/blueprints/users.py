@@ -1,19 +1,17 @@
-from flask import (
-    Blueprint,
-    json,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    flash,
-    jsonify,
-)
-from ..forms.user_forms import UserSearchForm
-from ..services.user_service import user_service
-from ..services.auth_service import auth_service
+from flask import Blueprint
+from flask import json
+from flask import render_template
+from flask import request
+from flask import redirect
+from flask import url_for
+from flask import flash
+from flask import jsonify
+from app.forms.user_forms import UserSearchForm
+from app.services.user_service import user_service
+from app.services.auth_service import auth_service
 from flask_login import login_required, current_user
-from ..utils.decorators import admin_required
-from ..utils.api_response import APIResponse
+from app.utils.decorators import admin_required
+from app.utils.api_response import APIResponse
 
 users_bp = Blueprint("users", __name__)
 
@@ -38,8 +36,6 @@ def list_users():
         search=search if search else None,
         role=role if role else None,
     )
-
-    data = response.get("data", {})
 
     # Check if we got a successful response with users data
     if response.get("success") == False:
@@ -91,6 +87,9 @@ def create_user():
         "password": request.form.get("password"),
     }
 
+    if request.form.get("student_id") == "":
+        user_data["student_id"] = None
+
     # Basic validation
     errors = []
     if not user_data.get("full_name"):
@@ -126,11 +125,14 @@ def get_user(user_id):
 
     if response.get("success"):
         user = response.get("data")
-        return APIResponse.success(data=user, message="Lấy thông tin người dùng thành công")
+        return APIResponse.success(
+            data=user, message="Lấy thông tin người dùng thành công"
+        )
     else:
         return APIResponse.error(
             f'Lỗi khi lấy thông tin người dùng: {response.get("message", "")}', 404
         )
+
 
 @users_bp.route("/<int:user_id>/edit", methods=["POST"])
 @login_required
