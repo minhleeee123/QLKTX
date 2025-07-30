@@ -15,8 +15,6 @@ class AuthService:
         data = {"email": email, "password": password}
 
         response = api_client.post("/auth/login", data)
-        print("Response from auth service:")  # Uncomment for debugging
-        print(json.dumps(response, indent=2, ensure_ascii=False))  # Uncomment for debugging
         
         if response["success"]:
             # Store user info and token in session

@@ -9,6 +9,20 @@ function openCreateUserModal() {
   document.getElementById("passwordSection").style.display = "block";
   document.getElementById("password").required = true;
   document.getElementById("confirmPassword").required = true;
+
+  // Enable all fields for create mode
+  const emailField = document.getElementById("email");
+  const studentIdField = document.getElementById("studentId");
+
+  if (emailField) {
+    emailField.disabled = false;
+    emailField.style.backgroundColor = ""; // Reset background
+  }
+
+  if (studentIdField) {
+    studentIdField.disabled = false;
+    studentIdField.style.backgroundColor = ""; // Reset background
+  }
 }
 
 // Function to open edit user modal
@@ -25,6 +39,20 @@ async function openEditUserModal(userId) {
   document.getElementById("passwordSection").style.display = "none";
   document.getElementById("password").required = false;
   document.getElementById("confirmPassword").required = false;
+
+  // Disable non-updatable fields in edit mode
+  const emailField = document.getElementById("email");
+  const studentIdField = document.getElementById("studentId");
+
+  if (emailField) {
+    emailField.disabled = true;
+    emailField.style.backgroundColor = "#f8f9fa"; // Light gray background
+  }
+
+  if (studentIdField) {
+    studentIdField.disabled = true;
+    studentIdField.style.backgroundColor = "#f8f9fa"; // Light gray background
+  }
 
   // Show modal
   const modal = ModalUtils.show("userModal");
@@ -136,6 +164,9 @@ function deleteUser(userId, userName) {
 
 // Handle form submission when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
+  // Check for and display any stored notifications from redirects
+  showStoredNotification();
+
   const userForm = document.getElementById("userForm");
   if (userForm) {
     userForm.addEventListener("submit", function (e) {
@@ -191,6 +222,32 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+// Notification storage utilities
+/**
+ * Store notification for display after redirect
+ */
+function storeNotificationForRedirect(type, message) {
+  const notification = { type, message };
+  sessionStorage.setItem('pendingNotification', JSON.stringify(notification));
+}
+
+/**
+ * Retrieve and display stored notification, then clear it
+ */
+function showStoredNotification() {
+  const storedNotification = sessionStorage.getItem('pendingNotification');
+  if (storedNotification) {
+    try {
+      const notification = JSON.parse(storedNotification);
+      showNotification(notification.type, notification.message);
+      sessionStorage.removeItem('pendingNotification');
+    } catch (error) {
+      console.error('Error parsing stored notification:', error);
+      sessionStorage.removeItem('pendingNotification');
+    }
+  }
+}
 
 // Utility Functions
 
@@ -375,6 +432,8 @@ async function handleResponse(response) {
  */
 function handleSuccessResponse(data) {
   if (data.success) {
+    // Store notification for after redirect
+    storeNotificationForRedirect("success", data.message || "Thao tác thành công!");
     closeModalAndRedirect(data.redirect);
   } else {
     if (data.redirect) {
@@ -401,8 +460,10 @@ function closeModalAndRedirect(redirectUrl) {
 
   if (redirectUrl) {
     window.location.href = redirectUrl;
-  } else {
-    location.reload();
+  }
+  else {
+    // Reload the current page
+    window.location.reload();
   }
 }
 

@@ -1,17 +1,16 @@
+from app.forms.user_forms import UserSearchForm
+from app.services.auth_service import auth_service
+from app.services.user_service import user_service
+from app.utils.api_response import APIResponse
+from app.utils.decorators import admin_required
 from flask import Blueprint
+from flask import flash
 from flask import json
+from flask import redirect
 from flask import render_template
 from flask import request
-from flask import redirect
 from flask import url_for
-from flask import flash
-from flask import jsonify
-from app.forms.user_forms import UserSearchForm
-from app.services.user_service import user_service
-from app.services.auth_service import auth_service
-from flask_login import login_required, current_user
-from app.utils.decorators import admin_required
-from app.utils.api_response import APIResponse
+from flask_login import login_required
 
 users_bp = Blueprint("users", __name__)
 
@@ -71,11 +70,6 @@ def list_users():
 @login_required
 @admin_required
 def create_user():
-    """Create new user - AJAX only"""
-    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
-        # Non-AJAX requests should redirect to list
-        return redirect(url_for("users.list_users"))
-
     # Handle form data
     user_data = {
         "full_name": request.form.get("full_name"),
@@ -138,29 +132,19 @@ def get_user(user_id):
 @login_required
 @admin_required
 def edit_user(user_id):
-    # Handle form data
+    # Handle form data - exclude email and password from updatable fields
     user_data = {
         "full_name": request.form.get("full_name"),
-        "email": request.form.get("email"),
         "phone_number": request.form.get("phone_number"),
         "student_id": request.form.get("student_id"),
         "role_name": request.form.get("role_name"),
         "is_active": request.form.get("is_active") == "true",
     }
 
-    # Only include password if provided
-    password = request.form.get("password")
-    if password and password.strip():
-        if len(password) < 6:
-            return APIResponse.error("Mật khẩu phải có ít nhất 6 ký tự", 400)
-        user_data["password"] = password
-
     # Basic validation
     errors = []
     if not user_data.get("full_name"):
         errors.append("Họ và tên là bắt buộc")
-    if not user_data.get("email"):
-        errors.append("Email là bắt buộc")
     if not user_data.get("role_name"):
         errors.append("Vai trò là bắt buộc")
 
@@ -168,6 +152,8 @@ def edit_user(user_id):
         return APIResponse.error("; ".join(errors), 400)
 
     response = user_service.update_user(user_id, user_data)
+
+    print(f"Response from edit_user: {json.dumps(response, indent=2)}")
 
     if response.get("success"):
         return APIResponse.success(message="Cập nhật người dùng thành công!")
@@ -181,11 +167,7 @@ def edit_user(user_id):
 @login_required
 @admin_required
 def delete_user(user_id):
-    """Delete user - AJAX only"""
-    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
-        # Non-AJAX requests should redirect to list
-        return redirect(url_for("users.list_users"))
-
+    print(f"Deleting user with ID: {user_id}")
     current_user_obj = auth_service.get_current_user()
 
     # Check if trying to delete self
