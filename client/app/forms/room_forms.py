@@ -60,8 +60,20 @@ class BuildingForm(FlaskForm):
         DataRequired(message='Tên tòa nhà là bắt buộc'),
         Length(min=1, max=100, message='Tên tòa nhà phải từ 1-100 ký tự')
     ])
-    
+
     submit = SubmitField('Lưu')
+
+
+class RoomTypeSearchForm(FlaskForm):
+    """Form for searching room types"""
+
+    search = StringField(
+        "Tìm kiếm",
+        validators=[Optional()],
+        render_kw={"placeholder": "Tìm theo tên loại phòng..."},
+    )
+
+    submit = SubmitField("Tìm kiếm")
 
 
 class RoomTypeForm(FlaskForm):

@@ -93,121 +93,130 @@ function viewContractDetails(contractId) {
 
 // Function to approve contract
 function approveContract(contractId) {
-    if (confirm('Bạn có chắc chắn muốn duyệt hợp đồng này?')) {
-        const formData = new FormData();
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        if (csrfToken) {
-            formData.append('csrf_token', csrfToken);
-        }
-        
-        fetch(`/contracts/${contractId}/approve`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('success', data.message);
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                showNotification('error', 'Lỗi: ' + data.message);
-            }
-        })
-        .catch(error => {
-            showNotification('error', 'Có lỗi xảy ra: ' + error.message);
-        });
+  if (confirm("Bạn có chắc chắn muốn duyệt hợp đồng này?")) {
+    const formData = new FormData();
+    const csrfToken =
+      document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute("content") || "";
+    if (csrfToken) {
+      formData.append("csrf_token", csrfToken);
     }
+
+    fetch(`/contracts/${contractId}/approve`, {
+      method: "POST",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("success", data.message);
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        } else {
+          showNotification("error", "Lỗi: " + data.message);
+        }
+      })
+      .catch((error) => {
+        showNotification("error", "Có lỗi xảy ra: " + error.message);
+      });
+  }
 }
 
 // Function to terminate contract
 function terminateContract(contractId) {
-    if (confirm('Bạn có chắc chắn muốn chấm dứt hợp đồng này?')) {
-        const formData = new FormData();
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        if (csrfToken) {
-            formData.append('csrf_token', csrfToken);
-        }
-        
-        fetch(`/contracts/${contractId}/terminate`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('success', data.message);
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                showNotification('error', 'Lỗi: ' + data.message);
-            }
-        })
-        .catch(error => {
-            showNotification('error', 'Có lỗi xảy ra: ' + error.message);
-        });
+  if (confirm("Bạn có chắc chắn muốn chấm dứt hợp đồng này?")) {
+    const formData = new FormData();
+    const csrfToken =
+      document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute("content") || "";
+    if (csrfToken) {
+      formData.append("csrf_token", csrfToken);
     }
+
+    fetch(`/contracts/${contractId}/terminate`, {
+      method: "POST",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("success", data.message);
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        } else {
+          showNotification("error", "Lỗi: " + data.message);
+        }
+      })
+      .catch((error) => {
+        showNotification("error", "Có lỗi xảy ra: " + error.message);
+      });
+  }
 }
 
 // Handle contract form submission
-document.addEventListener('DOMContentLoaded', function() {
-    const contractForm = document.getElementById('contractForm');
-    if (contractForm) {
-        contractForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const actionUrl = this.action;
-            
-            // Disable submit button
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-            
-            fetch(actionUrl, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Close modal if exists
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('contractModal'));
-                    if (modal) {
-                        modal.hide();
-                    }
-                    
-                    // Show success message
-                    showNotification('success', data.message);
-                    
-                    // Reload page after a short delay
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-                } else {
-                    showNotification('error', 'Lỗi: ' + data.message);
-                }
-            })
-            .catch(error => {
-                showNotification('error', 'Có lỗi xảy ra: ' + error.message);
-            })
-            .finally(() => {
-                // Re-enable submit button
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            });
+document.addEventListener("DOMContentLoaded", function () {
+  const contractForm = document.getElementById("contractForm");
+  if (contractForm) {
+    contractForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const actionUrl = this.action;
+
+      // Disable submit button
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+
+      fetch(actionUrl, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // Close modal if exists
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("contractModal")
+            );
+            if (modal) {
+              modal.hide();
+            }
+
+            // Show success message
+            showNotification("success", data.message);
+
+            // Reload page after a short delay
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          } else {
+            showNotification("error", "Lỗi: " + data.message);
+          }
+        })
+        .catch((error) => {
+          showNotification("error", "Có lỗi xảy ra: " + error.message);
+        })
+        .finally(() => {
+          // Re-enable submit button
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
         });
-    }
+    });
+  }
 });

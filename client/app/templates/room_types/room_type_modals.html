@@ -1,0 +1,121 @@
+<!-- Room Type Create/Edit Modal -->
+<div class="modal fade" id="roomTypeModal" tabindex="-1" aria-labelledby="roomTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roomTypeModalLabel">Thêm loại phòng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="roomTypeForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="roomTypeId" name="room_type_id" value="">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="typeName" class="form-label">Tên loại phòng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="typeName" name="type_name" required>
+                                <div class="text-danger small" id="typeNameError"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="capacity" class="form-label">Sức chứa <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="capacity" name="capacity" min="1" required>
+                                <div class="text-danger small" id="capacityError"></div>
+                                <div class="form-text">Số người tối đa có thể ở trong phòng</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Giá phòng (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="price" name="price" min="0" required>
+                                <div class="text-danger small" id="priceError"></div>
+                                <div class="form-text">Giá thuê phòng hàng tháng</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Mô tả</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Mô tả chi tiết về loại phòng..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        <span id="submitText">Lưu</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Room Type Delete Modal -->
+<div class="modal fade" id="deleteRoomTypeModal" tabindex="-1" aria-labelledby="deleteRoomTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteRoomTypeModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger"></i> Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Cảnh báo!</strong> Hành động này không thể hoàn tác.
+                </div>
+                <p>Bạn có chắc chắn muốn xóa loại phòng <strong id="roomTypeToDelete"></strong>?</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Lưu ý:</strong> Việc xóa loại phòng sẽ ảnh hưởng đến tất cả các phòng đang sử dụng loại phòng này!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    <i class="fas fa-trash"></i> Xóa loại phòng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room Type Details Modal -->
+<div class="modal fade" id="roomTypeDetailsModal" tabindex="-1" aria-labelledby="roomTypeDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roomTypeDetailsModalLabel">
+                    <i class="fas fa-info-circle"></i> Chi tiết loại phòng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="roomTypeDetailsContent">
+                    <!-- Content will be loaded dynamically -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="editFromDetailsBtn" style="display: none;">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

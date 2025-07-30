@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models import User, Room, Building, RoomType
 from app.utils.decorators import require_role
+from app.utils.api_response import APIResponse
 
 rooms_bp = Blueprint('rooms', __name__)
 
@@ -17,9 +18,9 @@ def get_rooms():
         room_type_id = request.args.get('room_type_id', type=int)
         status = request.args.get('status')
         search = request.args.get('search')
-        
+
         query = Room.query.join(Building).join(RoomType)
-        
+
         # Filters
         if building_id:
             query = query.filter(Room.building_id == building_id)
@@ -29,42 +30,49 @@ def get_rooms():
             query = query.filter(Room.status == status)
         if search:
             query = query.filter(Room.room_number.contains(search))
-        
+
         rooms = query.paginate(
             page=page, per_page=per_page, error_out=False
         )
-        
-        return jsonify({
-            'rooms': [{
-                'room_id': room.room_id,
-                'room_number': room.room_number,
-                'building': {
-                    'building_id': room.building.building_id,
-                    'building_name': room.building.building_name
-                },
-                'room_type': {
-                    'room_type_id': room.room_type.room_type_id,
-                    'type_name': room.room_type.type_name,
-                    'capacity': room.room_type.capacity,
-                    'price': float(room.room_type.price)
-                },
-                'status': room.status,
-                'current_occupancy': room.current_occupancy,
-                'available_slots': room.remaining_capacity,
-                'is_available': room.is_available
-            } for room in rooms.items],
-            'pagination': {
-                'page': rooms.page,
-                'pages': rooms.pages,
-                'per_page': rooms.per_page,
-                'total': rooms.total,
-                'has_next': rooms.has_next,
-                'has_prev': rooms.has_prev
-            }
-        }), 200
-        
+
+        rooms_data = {
+            "rooms": [
+                {
+                    "room_id": room.room_id,
+                    "room_number": room.room_number,
+                    "building": {
+                        "building_id": room.building.building_id,
+                        "building_name": room.building.building_name,
+                    },
+                    "room_type": {
+                        "room_type_id": room.room_type.room_type_id,
+                        "type_name": room.room_type.type_name,
+                        "capacity": room.room_type.capacity,
+                        "price": float(room.room_type.price),
+                    },
+                    "status": room.status,
+                    "current_occupancy": room.current_occupancy,
+                    "available_slots": room.remaining_capacity,
+                    "is_available": room.is_available,
+                }
+                for room in rooms.items
+            ],
+            "pagination": {
+                "page": rooms.page,
+                "pages": rooms.pages,
+                "per_page": rooms.per_page,
+                "total": rooms.total,
+                "has_next": rooms.has_next,
+                "has_prev": rooms.has_prev,
+            },
+        }
+
+        return APIResponse.success(
+            data=rooms_data, message="Lấy danh sách phòng thành công"
+        )
+
     except Exception as e:
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/<int:room_id>', methods=['GET'])
 # @jwt_required()
@@ -73,31 +81,45 @@ def get_room(room_id):
     try:
         room = Room.query.get(room_id)
         if not room:
-            return jsonify('Phòng không tồn tại'), 404
-        
-        return jsonify({
-            'room': {
-                'room_id': room.room_id,
-                'room_number': room.room_number,
-                'building': {
-                    'building_id': room.building.building_id,
-                    'building_name': room.building.building_name
+            return APIResponse.error(message="Phòng không tồn tại", status_code=404)
+
+        room_data = {
+            "room": {
+                "room_id": room.room_id,
+                "room_number": room.room_number,
+                "building_id": room.building_id,  # Add building_id for forms
+                "room_type_id": room.room_type_id,  # Add room_type_id for forms
+                "building": {
+                    "building_id": room.building.building_id,
+                    "building_name": room.building.building_name,
                 },
-                'room_type': {
-                    'room_type_id': room.room_type.room_type_id,
-                    'type_name': room.room_type.type_name,
-                    'capacity': room.room_type.capacity,
-                    'price': float(room.room_type.price)
+                "room_type": {
+                    "room_type_id": room.room_type.room_type_id,
+                    "type_name": room.room_type.type_name,
+                    "capacity": room.room_type.capacity,
+                    "price": float(room.room_type.price),
                 },
-                'status': room.status,
-                'current_occupancy': room.current_occupancy,
-                'available_slots': room.remaining_capacity,
-                'is_available': room.is_available
+                "status": room.status,
+                "current_occupancy": room.current_occupancy,
+                "available_slots": room.remaining_capacity,
+                "is_available": room.is_available,
+                "description": getattr(
+                    room, "description", None
+                ),  # Add description field
+                "created_at": (
+                    room.created_at.isoformat()
+                    if hasattr(room, "created_at") and room.created_at
+                    else None
+                ),
             }
-        }), 200
-        
+        }
+
+        return APIResponse.success(
+            data=room_data, message="Lấy thông tin phòng thành công"
+        )
+
     except Exception as e:
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/', methods=['POST'])
 # @jwt_required()
@@ -106,30 +128,36 @@ def create_room():
     """Tạo phòng mới"""
     try:
         data = request.get_json()
-        
+
         # Validate required fields
         required_fields = ['room_number', 'building_id', 'room_type_id']
         for field in required_fields:
             if not data.get(field):
-                return jsonify(f'{field} là bắt buộc'), 400
-        
+                return APIResponse.error(
+                    message=f"{field} là bắt buộc", status_code=400
+                )
+
         # Kiểm tra phòng đã tồn tại
         existing_room = Room.query.filter_by(
             room_number=data['room_number'],
             building_id=data['building_id']
         ).first()
         if existing_room:
-            return jsonify('Phòng đã tồn tại trong tòa nhà này'), 400
-        
+            return APIResponse.error(
+                message="Phòng đã tồn tại trong tòa nhà này", status_code=400
+            )
+
         # Kiểm tra building và room_type tồn tại
         building = Building.query.get(data['building_id'])
         if not building:
-            return jsonify('Tòa nhà không tồn tại'), 400
-        
+            return APIResponse.error(message="Tòa nhà không tồn tại", status_code=400)
+
         room_type = RoomType.query.get(data['room_type_id'])
         if not room_type:
-            return jsonify('Loại phòng không tồn tại'), 400
-        
+            return APIResponse.error(
+                message="Loại phòng không tồn tại", status_code=400
+            )
+
         # Tạo phòng mới
         room = Room(
             room_number=data['room_number'],
@@ -138,23 +166,26 @@ def create_room():
             status=data.get('status', 'available'),
             current_occupancy=data.get('current_occupancy', 0)
         )
-        
+
         db.session.add(room)
         db.session.commit()
-        
-        return jsonify({
-            'message': 'Tạo phòng thành công',
-            'room': {
-                'room_id': room.room_id,
-                'room_number': room.room_number,
-                'building_name': room.building.building_name,
-                'room_type_name': room.room_type.type_name
+
+        room_data = {
+            "room": {
+                "room_id": room.room_id,
+                "room_number": room.room_number,
+                "building_name": room.building.building_name,
+                "room_type_name": room.room_type.type_name,
             }
-        }), 201
-        
+        }
+
+        return APIResponse.success(
+            data=room_data, message="Tạo phòng thành công", status_code=201
+        )
+
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/<int:room_id>', methods=['PUT'])
 # @jwt_required()
@@ -164,10 +195,10 @@ def update_room(room_id):
     try:
         room = Room.query.get(room_id)
         if not room:
-            return jsonify('Phòng không tồn tại'), 404
-        
+            return APIResponse.error(message="Phòng không tồn tại", status_code=404)
+
         data = request.get_json()
-        
+
         # Cập nhật các trường cho phép
         if 'status' in data:
             room.status = data['status']
@@ -177,22 +208,23 @@ def update_room(room_id):
             room_type = RoomType.query.get(data['room_type_id'])
             if room_type:
                 room.room_type_id = data['room_type_id']
-        
+
         db.session.commit()
-        
-        return jsonify({
-            'message': 'Cập nhật phòng thành công',
-            'room': {
-                'room_id': room.room_id,
-                'room_number': room.room_number,
-                'status': room.status,
-                'current_occupancy': room.current_occupancy
+
+        room_data = {
+            "room": {
+                "room_id": room.room_id,
+                "room_number": room.room_number,
+                "status": room.status,
+                "current_occupancy": room.current_occupancy,
             }
-        }), 200
-        
+        }
+
+        return APIResponse.success(data=room_data, message="Cập nhật phòng thành công")
+
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/buildings', methods=['GET'])
 # @jwt_required()
@@ -200,18 +232,27 @@ def get_buildings():
     """Lấy danh sách tòa nhà"""
     try:
         buildings = Building.query.all()
-        
-        return jsonify({
-            'buildings': [{
-                'building_id': building.building_id,
-                'building_name': building.building_name,
-                'total_rooms': len(building.rooms),
-                'available_rooms': len([r for r in building.rooms if r.status == 'available'])
-            } for building in buildings]
-        }), 200
-        
+
+        buildings_data = {
+            "buildings": [
+                {
+                    "building_id": building.building_id,
+                    "building_name": building.building_name,
+                    "total_rooms": len(building.rooms),
+                    "available_rooms": len(
+                        [r for r in building.rooms if r.status == "available"]
+                    ),
+                }
+                for building in buildings
+            ]
+        }
+
+        return APIResponse.success(
+            data=buildings_data, message="Lấy danh sách tòa nhà thành công"
+        )
+
     except Exception as e:
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/buildings', methods=['POST'])
 # @jwt_required()
@@ -220,33 +261,36 @@ def create_building():
     """Tạo tòa nhà mới"""
     try:
         data = request.get_json()
-        
+
         # Validate required fields
         if not data.get('building_name'):
-            return jsonify('Tên tòa nhà là bắt buộc'), 400
-        
+            return APIResponse.error(message="Tên tòa nhà là bắt buộc", status_code=400)
+
         # Kiểm tra tòa nhà đã tồn tại
         existing_building = Building.query.filter_by(building_name=data['building_name']).first()
         if existing_building:
-            return jsonify('Tòa nhà đã tồn tại'), 400
-        
+            return APIResponse.error(message="Tòa nhà đã tồn tại", status_code=400)
+
         # Tạo tòa nhà mới
         building = Building(building_name=data['building_name'])
-        
+
         db.session.add(building)
         db.session.commit()
-        
-        return jsonify({
-            'message': 'Tạo tòa nhà thành công',
-            'building': {
-                'building_id': building.building_id,
-                'building_name': building.building_name
+
+        building_data = {
+            "building": {
+                "building_id": building.building_id,
+                "building_name": building.building_name,
             }
-        }), 201
-        
+        }
+
+        return APIResponse.success(
+            data=building_data, message="Tạo tòa nhà thành công", status_code=201
+        )
+
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/buildings/<int:building_id>', methods=['GET'])
 # @jwt_required()
@@ -255,19 +299,25 @@ def get_building(building_id):
     try:
         building = Building.query.get(building_id)
         if not building:
-            return jsonify({'error': 'Tòa nhà không tồn tại'}), 404
-        
-        return jsonify({
-            'building': {
-                'building_id': building.building_id,
-                'building_name': building.building_name,
-                'total_rooms': len(building.rooms),
-                'available_rooms': len([r for r in building.rooms if r.status == 'available'])
+            return APIResponse.error(message="Tòa nhà không tồn tại", status_code=404)
+
+        building_data = {
+            "building": {
+                "building_id": building.building_id,
+                "building_name": building.building_name,
+                "total_rooms": len(building.rooms),
+                "available_rooms": len(
+                    [r for r in building.rooms if r.status == "available"]
+                ),
             }
-        }), 200
-        
+        }
+
+        return APIResponse.success(
+            data=building_data, message="Lấy thông tin tòa nhà thành công"
+        )
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/buildings/<int:building_id>', methods=['PUT'])
 # @jwt_required()
@@ -277,37 +327,40 @@ def update_building(building_id):
     try:
         building = Building.query.get(building_id)
         if not building:
-            return jsonify('Tòa nhà không tồn tại'), 404
-        
+            return APIResponse.error(message="Tòa nhà không tồn tại", status_code=404)
+
         data = request.get_json()
-        
+
         if not data.get('building_name'):
-            return jsonify({'error': 'Tên tòa nhà là bắt buộc'}), 400
-        
+            return APIResponse.error(message="Tên tòa nhà là bắt buộc", status_code=400)
+
         # Kiểm tra tên tòa nhà đã tồn tại (trừ chính nó)
         existing_building = Building.query.filter(
             Building.building_name == data['building_name'],
             Building.building_id != building_id
         ).first()
         if existing_building:
-            return jsonify({'error': 'Tên tòa nhà đã tồn tại'}), 400
-        
+            return APIResponse.error(message="Tên tòa nhà đã tồn tại", status_code=400)
+
         # Cập nhật thông tin
         building.building_name = data['building_name']
-        
+
         db.session.commit()
-        
-        return jsonify({
-            'message': 'Cập nhật tòa nhà thành công',
-            'building': {
-                'building_id': building.building_id,
-                'building_name': building.building_name
+
+        building_data = {
+            "building": {
+                "building_id": building.building_id,
+                "building_name": building.building_name,
             }
-        }), 200
-        
+        }
+
+        return APIResponse.success(
+            data=building_data, message="Cập nhật tòa nhà thành công"
+        )
+
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/buildings/<int:building_id>', methods=['DELETE', 'POST'])
 # @jwt_required()
@@ -318,23 +371,23 @@ def delete_building(building_id):
     try:
         building = Building.query.get(building_id)
         if not building:
-            return jsonify({'error': 'Tòa nhà không tồn tại'}), 404
-        
+            return APIResponse.error(message="Tòa nhà không tồn tại", status_code=404)
+
         # Kiểm tra tòa nhà có phòng không
         if building.rooms:
-            return jsonify({
-                'error': f'Không thể xóa tòa nhà này vì đang có {len(building.rooms)} phòng.',
-                'room_count': len(building.rooms)
-            }), 400
-        
+            return APIResponse.error(
+                message=f"Không thể xóa tòa nhà này vì đang có {len(building.rooms)} phòng.",
+                status_code=400,
+            )
+
         db.session.delete(building)
         db.session.commit()
-        
-        return jsonify({'message': 'Xóa tòa nhà thành công'}), 200
-        
+
+        return APIResponse.success(message="Xóa tòa nhà thành công")
+
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/room-types', methods=['GET'])
 # @jwt_required()
@@ -342,20 +395,29 @@ def get_room_types():
     """Lấy danh sách loại phòng"""
     try:
         room_types = RoomType.query.all()
-        
-        return jsonify({
-            'room_types': [{
-                'room_type_id': rt.room_type_id,
-                'type_name': rt.type_name,
-                'capacity': rt.capacity,
-                'price': float(rt.price),
-                'total_rooms': len(rt.rooms),
-                'available_rooms': len([r for r in rt.rooms if r.status == 'available'])
-            } for rt in room_types]
-        }), 200
-        
+
+        room_types_data = {
+            "room_types": [
+                {
+                    "room_type_id": rt.room_type_id,
+                    "type_name": rt.type_name,
+                    "capacity": rt.capacity,
+                    "price": float(rt.price),
+                    "total_rooms": len(rt.rooms),
+                    "available_rooms": len(
+                        [r for r in rt.rooms if r.status == "available"]
+                    ),
+                }
+                for rt in room_types
+            ]
+        }
+
+        return APIResponse.success(
+            data=room_types_data, message="Lấy danh sách loại phòng thành công"
+        )
+
     except Exception as e:
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/room-types', methods=['POST'])
 # @jwt_required()
@@ -364,53 +426,60 @@ def create_room_type():
     """Tạo loại phòng mới"""
     try:
         data = request.get_json()
-        
+
         # Validate required fields
         required_fields = ['type_name', 'capacity', 'price']
         for field in required_fields:
             if not data.get(field):
-                return jsonify(f'{field} là bắt buộc'), 400
-        
+                return APIResponse.error(
+                    message=f"{field} là bắt buộc", status_code=400
+                )
+
         # Validate data types and values
         try:
             capacity = int(data['capacity'])
             price = float(data['price'])
         except ValueError:
-            return jsonify('Sức chứa và giá phòng phải là số'), 400
-        
+            return APIResponse.error(
+                message="Sức chứa và giá phòng phải là số", status_code=400
+            )
+
         if capacity <= 0:
-            return jsonify('Sức chứa phải lớn hơn 0'), 400
+            return APIResponse.error(message="Sức chứa phải lớn hơn 0", status_code=400)
         if price < 0:
-            return jsonify('Giá phòng không được âm'), 400
-        
+            return APIResponse.error(message="Giá phòng không được âm", status_code=400)
+
         # Kiểm tra loại phòng đã tồn tại
         existing_room_type = RoomType.query.filter_by(type_name=data['type_name']).first()
         if existing_room_type:
-            return jsonify('Loại phòng đã tồn tại'), 400
-        
+            return APIResponse.error(message="Loại phòng đã tồn tại", status_code=400)
+
         # Tạo loại phòng mới
         room_type = RoomType(
             type_name=data['type_name'],
             capacity=capacity,
             price=price
         )
-        
+
         db.session.add(room_type)
         db.session.commit()
-        
-        return jsonify({
-            'message': 'Tạo loại phòng thành công',
-            'room_type': {
-                'room_type_id': room_type.room_type_id,
-                'type_name': room_type.type_name,
-                'capacity': room_type.capacity,
-                'price': float(room_type.price)
+
+        room_type_data = {
+            "room_type": {
+                "room_type_id": room_type.room_type_id,
+                "type_name": room_type.type_name,
+                "capacity": room_type.capacity,
+                "price": float(room_type.price),
             }
-        }), 201
-        
+        }
+
+        return APIResponse.success(
+            data=room_type_data, message="Tạo loại phòng thành công", status_code=201
+        )
+
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/room-types/<int:room_type_id>', methods=['GET'])
 # @jwt_required()
@@ -419,21 +488,29 @@ def get_room_type(room_type_id):
     try:
         room_type = RoomType.query.get(room_type_id)
         if not room_type:
-            return jsonify({'error': 'Loại phòng không tồn tại'}), 404
-        
-        return jsonify({
-            'room_type': {
-                'room_type_id': room_type.room_type_id,
-                'type_name': room_type.type_name,
-                'capacity': room_type.capacity,
-                'price': float(room_type.price),
-                'total_rooms': len(room_type.rooms),
-                'available_rooms': len([r for r in room_type.rooms if r.status == 'available'])
+            return APIResponse.error(
+                message="Loại phòng không tồn tại", status_code=404
+            )
+
+        room_type_data = {
+            "room_type": {
+                "room_type_id": room_type.room_type_id,
+                "type_name": room_type.type_name,
+                "capacity": room_type.capacity,
+                "price": float(room_type.price),
+                "total_rooms": len(room_type.rooms),
+                "available_rooms": len(
+                    [r for r in room_type.rooms if r.status == "available"]
+                ),
             }
-        }), 200
-        
+        }
+
+        return APIResponse.success(
+            data=room_type_data, message="Lấy thông tin loại phòng thành công"
+        )
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/room-types/<int:room_type_id>', methods=['PUT'])
 # @jwt_required()
@@ -443,56 +520,67 @@ def update_room_type(room_type_id):
     try:
         room_type = RoomType.query.get(room_type_id)
         if not room_type:
-            return jsonify('Loại phòng không tồn tại'), 404
-        
+            return APIResponse.error(
+                message="Loại phòng không tồn tại", status_code=404
+            )
+
         data = request.get_json()
-        
+
         # Validate required fields
         required_fields = ['type_name', 'capacity', 'price']
         for field in required_fields:
             if not data.get(field):
-                return jsonify(f'{field} là bắt buộc'), 400
-        
+                return APIResponse.error(
+                    message=f"{field} là bắt buộc", status_code=400
+                )
+
         # Validate data types and values
         try:
             capacity = int(data['capacity'])
             price = float(data['price'])
         except ValueError:
-            return jsonify('Sức chứa và giá phòng phải là số'), 400
-        
+            return APIResponse.error(
+                message="Sức chứa và giá phòng phải là số", status_code=400
+            )
+
         if capacity <= 0:
-            return jsonify('Sức chứa phải lớn hơn 0'), 400
+            return APIResponse.error(message="Sức chứa phải lớn hơn 0", status_code=400)
         if price < 0:
-            return jsonify('Giá phòng không được âm'), 400
-        
+            return APIResponse.error(message="Giá phòng không được âm", status_code=400)
+
         # Kiểm tra tên loại phòng đã tồn tại (trừ chính nó)
         existing_room_type = RoomType.query.filter(
             RoomType.type_name == data['type_name'],
             RoomType.room_type_id != room_type_id
         ).first()
         if existing_room_type:
-            return jsonify('Tên loại phòng đã tồn tại'), 400
-        
+            return APIResponse.error(
+                message="Tên loại phòng đã tồn tại", status_code=400
+            )
+
         # Cập nhật thông tin
         room_type.type_name = data['type_name']
         room_type.capacity = capacity
         room_type.price = price
-        
+
         db.session.commit()
-        
-        return jsonify({
-            'message': 'Cập nhật loại phòng thành công',
-            'room_type': {
-                'room_type_id': room_type.room_type_id,
-                'type_name': room_type.type_name,
-                'capacity': room_type.capacity,
-                'price': float(room_type.price)
+
+        room_type_data = {
+            "room_type": {
+                "room_type_id": room_type.room_type_id,
+                "type_name": room_type.type_name,
+                "capacity": room_type.capacity,
+                "price": float(room_type.price),
             }
-        }), 200
-        
+        }
+
+        return APIResponse.success(
+            data=room_type_data, message="Cập nhật loại phòng thành công"
+        )
+
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @rooms_bp.route('/room-types/<int:room_type_id>', methods=['DELETE', 'POST'])
 # @jwt_required()
@@ -505,27 +593,29 @@ def delete_room_type(room_type_id):
         print(f"[SERVER DEBUG] Found room_type: {room_type}")
         if not room_type:
             print(f"[SERVER DEBUG] Room type not found with id: {room_type_id}")
-            return jsonify({'error': 'Loại phòng không tồn tại'}), 404
+            return APIResponse.error(
+                message="Loại phòng không tồn tại", status_code=404
+            )
 
         # Kiểm tra loại phòng có đang được sử dụng không
         print(f"[SERVER DEBUG] Checking rooms using this room_type: {len(room_type.rooms) if room_type.rooms else 0}")
         if room_type.rooms:
             print(f"[SERVER DEBUG] Cannot delete - room_type has {len(room_type.rooms)} rooms")
-            return jsonify({
-                'error': f'Không thể xóa loại phòng này vì đang có {len(room_type.rooms)} phòng sử dụng.',
-                'room_count': len(room_type.rooms)
-            }), 400
+            return APIResponse.error(
+                message=f"Không thể xóa loại phòng này vì đang có {len(room_type.rooms)} phòng sử dụng.",
+                status_code=400,
+            )
 
         print(f"[SERVER DEBUG] Proceeding to delete room_type: {room_type.type_name}")
         db.session.delete(room_type)
         db.session.commit()
         print(f"[SERVER DEBUG] Successfully deleted room_type")
 
-        return jsonify({'message': 'Xóa loại phòng thành công'}), 200
+        return APIResponse.success(message="Xóa loại phòng thành công")
 
     except Exception as e:
         print(f"[SERVER DEBUG] Exception in delete_room_type: {str(e)}")
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 # Reading rooms blueprint

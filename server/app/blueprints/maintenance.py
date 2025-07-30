@@ -4,6 +4,7 @@ from app.extensions import db
 from app.models import User, MaintenanceRequest, Room
 from datetime import datetime
 from app.utils.decorators import require_role
+from app.utils.api_response import APIResponse
 
 maintenance_bp = Blueprint('maintenance', __name__)
 
@@ -41,46 +42,59 @@ def get_maintenance_requests():
             page=page, per_page=per_page, error_out=False
         )
 
-        return jsonify({
-            'maintenance_requests': [{
-                'request_id': req.request_id,
-                'student': {
-                    'user_id': req.student.user_id,
-                    'full_name': req.student.full_name,
-                    'student_id': req.student.student_id,
-                    'email': req.student.email
-                },
-                'room': {
-                    'room_id': req.room.room_id,
-                    'room_number': req.room.room_number,
-                    'building_name': req.room.building.building_name
-                },
-                'title': req.title,
-                'description': req.description,
-                'image_url': req.image_url,
-                'status': req.status,
-                'status_display': req.status_display,
-                'request_date': req.request_date.isoformat(),
-                'days_since_request': req.days_since_request,
-                'is_urgent': req.is_urgent,
-                'assigned_to': {
-                    'user_id': req.assigned_to.user_id,
-                    'full_name': req.assigned_to.full_name
-                } if req.assigned_to else None,
-                'completed_date': req.completed_date.isoformat() if req.completed_date else None
-            } for req in requests.items],
-            'pagination': {
-                'page': requests.page,
-                'pages': requests.pages,
-                'per_page': requests.per_page,
-                'total': requests.total,
-                'has_next': requests.has_next,
-                'has_prev': requests.has_prev
-            }
-        }), 200
+        requests_data = {
+            "maintenance_requests": [
+                {
+                    "request_id": req.request_id,
+                    "student": {
+                        "user_id": req.student.user_id,
+                        "full_name": req.student.full_name,
+                        "student_id": req.student.student_id,
+                        "email": req.student.email,
+                    },
+                    "room": {
+                        "room_id": req.room.room_id,
+                        "room_number": req.room.room_number,
+                        "building_name": req.room.building.building_name,
+                    },
+                    "title": req.title,
+                    "description": req.description,
+                    "image_url": req.image_url,
+                    "status": req.status,
+                    "status_display": req.status_display,
+                    "request_date": req.request_date.isoformat(),
+                    "days_since_request": req.days_since_request,
+                    "is_urgent": req.is_urgent,
+                    "assigned_to": (
+                        {
+                            "user_id": req.assigned_to.user_id,
+                            "full_name": req.assigned_to.full_name,
+                        }
+                        if req.assigned_to
+                        else None
+                    ),
+                    "completed_date": (
+                        req.completed_date.isoformat() if req.completed_date else None
+                    ),
+                }
+                for req in requests.items
+            ],
+            "pagination": {
+                "page": requests.page,
+                "pages": requests.pages,
+                "per_page": requests.per_page,
+                "total": requests.total,
+                "has_next": requests.has_next,
+                "has_prev": requests.has_prev,
+            },
+        }
+
+        return APIResponse.success(
+            data=requests_data, message="Lấy danh sách yêu cầu bảo trì thành công"
+        )
 
     except Exception as e:
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @maintenance_bp.route('/', methods=['POST'])
 @jwt_required()
@@ -89,24 +103,28 @@ def create_maintenance_request():
     try:
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        
+
         # Chỉ sinh viên mới được tạo yêu cầu bảo trì
         if current_user.role.role_name != 'student':
-            return jsonify('Chỉ sinh viên mới được tạo yêu cầu bảo trì'), 403
-        
+            return APIResponse.error(
+                message="Chỉ sinh viên mới được tạo yêu cầu bảo trì", status_code=403
+            )
+
         data = request.get_json()
-        
+
         # Validate required fields
         required_fields = ['room_id', 'title']
         for field in required_fields:
             if not data.get(field):
-                return jsonify(f'{field} là bắt buộc'), 400
-        
+                return APIResponse.error(
+                    message=f"{field} là bắt buộc", status_code=400
+                )
+
         # Kiểm tra phòng tồn tại
         room = Room.query.get(data['room_id'])
         if not room:
-            return jsonify('Phòng không tồn tại'), 404
-        
+            return APIResponse.error(message="Phòng không tồn tại", status_code=404)
+
         # Tạo yêu cầu bảo trì mới
         maintenance_request = MaintenanceRequest(
             student_id=current_user_id,
@@ -116,24 +134,27 @@ def create_maintenance_request():
             image_url=data.get('image_url'),
             status='pending'
         )
-        
+
         db.session.add(maintenance_request)
         db.session.commit()
-        
-        return jsonify({
-            'message': 'Tạo yêu cầu bảo trì thành công',
-            'maintenance_request': {
-                'request_id': maintenance_request.request_id,
-                'title': maintenance_request.title,
-                'room_number': maintenance_request.room.room_number,
-                'status': maintenance_request.status,
-                'request_date': maintenance_request.request_date.isoformat()
+
+        request_data = {
+            "maintenance_request": {
+                "request_id": maintenance_request.request_id,
+                "title": maintenance_request.title,
+                "room_number": maintenance_request.room.room_number,
+                "status": maintenance_request.status,
+                "request_date": maintenance_request.request_date.isoformat(),
             }
-        }), 201
-        
+        }
+
+        return APIResponse.success(
+            data=request_data, message="Tạo yêu cầu bảo trì thành công", status_code=201
+        )
+
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return APIResponse.error(message=str(e), status_code=500)
 
 @maintenance_bp.route('/<int:request_id>/assign', methods=['POST'])
 @jwt_required()

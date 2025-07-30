@@ -12,32 +12,37 @@ class UserService:
             'page': page,
             'per_page': per_page
         }
-        
+
         if role:
             params['role'] = role
         if search:
             params['search'] = search
-            
+
+        # Return the complete API response (no data extraction)
         return api_client.get("/users", params)
 
     @staticmethod
     def get_user(user_id: int) -> Dict[str, Any]:
         """Get user details by ID"""
+        # Return the complete API response (no data extraction)
         return api_client.get(f"/users/{user_id}")
 
     @staticmethod
     def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create new user"""
+        # Return the complete API response (no data extraction)
         return api_client.post("/users", user_data)
 
     @staticmethod
     def update_user(user_id: int, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update user information"""
+        # Return the complete API response (no data extraction)
         return api_client.put(f"/users/{user_id}", user_data)
 
     @staticmethod
     def delete_user(user_id: int) -> Dict[str, Any]:
         """Delete user by ID"""
+        # Return the complete API response (no data extraction)
         return api_client.delete(f"/users/{user_id}")
 
     @staticmethod

@@ -71,18 +71,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     modal.hide();
                     
                     // Show success message
-                    showNotification('success', data.message);
+                    showNotification("success", data.message);
                     
                     // Reload page after a short delay
                     setTimeout(() => {
                         location.reload();
                     }, 1000);
                 } else {
-                    showNotification('error', 'Lỗi: ' + data.message);
+                    showNotification("error", "Lỗi: " + data.message);
                 }
             })
             .catch(error => {
-                showNotification('error', 'Có lỗi xảy ra: ' + error.message);
+                showNotification("error", "Có lỗi xảy ra: " + error.message);
             })
             .finally(() => {
                 // Re-enable submit button

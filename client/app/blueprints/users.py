@@ -1,14 +1,24 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import (
+    Blueprint,
+    json,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    jsonify,
+)
 from ..forms.user_forms import UserSearchForm
 from ..services.user_service import user_service
 from ..services.auth_service import auth_service
 from flask_login import login_required, current_user
 from ..utils.decorators import admin_required
+from ..utils.api_response import APIResponse
 
-users_bp = Blueprint('users', __name__)
+users_bp = Blueprint("users", __name__)
 
 
-@users_bp.route('/')
+@users_bp.route("/")
 @login_required
 @admin_required
 def list_users():
@@ -16,23 +26,36 @@ def list_users():
     search_form = UserSearchForm()
 
     # Get query parameters
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    search = request.args.get('search', '')
-    role = request.args.get('role', '')
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    search = request.args.get("search", "")
+    role = request.args.get("role", "")
 
     # Call API to get users
     response = user_service.get_users(
         page=page,
         per_page=per_page,
         search=search if search else None,
-        role=role if role else None
+        role=role if role else None,
     )
 
-    if response['success']:
-        users_data = response['data']
-        users = users_data.get('users', [])
-        pagination = users_data.get('pagination', {})
+    data = response.get("data", {})
+
+    # Check if we got a successful response with users data
+    if response.get("success") == False:
+        # Handle error response
+        flash(f'Lỗi khi tải danh sách người dùng: {response.get("error", "")}', "error")
+        return render_template(
+            "users/list.html",
+            users=[],
+            pagination={},
+            search_form=search_form,
+        )
+    else:
+        data = response.get("data", {})
+        # Handle successful response (server data directly)
+        users = data.get("users", [])
+        pagination = data.get("pagination", {})
 
         # Populate search form with current values
         search_form.search.data = search
@@ -46,22 +69,18 @@ def list_users():
             current_search=search,
             current_role=role,
         )
-    else:
-        flash(f'Lỗi khi tải danh sách người dùng: {response.get("error", "")}', 'error')
-        return render_template(
-            "users/list.html",
-            users=[],
-            pagination={},
-            search_form=search_form,
-        )
 
 
 @users_bp.route("/create", methods=["POST"])
 @login_required
 @admin_required
 def create_user():
-    """Create new user - supports both AJAX and regular form submission"""
-    # Handle regular form data
+    """Create new user - AJAX only"""
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        # Non-AJAX requests should redirect to list
+        return redirect(url_for("users.list_users"))
+
+    # Handle form data
     user_data = {
         "full_name": request.form.get("full_name"),
         "email": request.form.get("email"),
@@ -86,69 +105,58 @@ def create_user():
         errors.append("Mật khẩu phải có ít nhất 6 ký tự")
 
     if errors:
-        error_message = "; ".join(errors)
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            # For AJAX requests, just return error without flash message
-            return jsonify({"success": False, "message": error_message}), 400
+        return APIResponse.error("; ".join(errors), 400)
+    try:
+        response = user_service.create_user(user_data)
+        if response.get("success") != False:  # Success if no explicit failure
+            return APIResponse.success(message="Tạo người dùng thành công!")
         else:
-            flash(error_message, "error")
-            return redirect(url_for("users.list_users"))
-
-    response = user_service.create_user(user_data)
-
-    if response["success"]:
-        success_message = "Tạo người dùng thành công!"
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            # For AJAX success, set flash message and return redirect
-            flash(success_message, "success")
-            return jsonify(
-                {
-                    "success": True,
-                    "message": success_message,
-                    "redirect": url_for("users.list_users"),
-                }
+            return APIResponse.error(
+                f'Lỗi khi tạo người dùng: {response.get("error", "")}', 400
             )
-        else:
-            flash(success_message, "success")
-            return redirect(url_for("users.list_users"))
-    else:
-        error_message = f'Lỗi khi tạo người dùng: {response.get("error", "")}'
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            # For AJAX errors, just return error without flash message (keep modal open)
-            return jsonify({"success": False, "message": error_message}), 400
-        else:
-            flash(error_message, "error")
-            return redirect(url_for("users.list_users"))
+    except Exception as e:
+        return APIResponse.error(f"Lỗi khi tạo người dùng: {str(e)}", 500)
 
 
-@users_bp.route('/<int:user_id>')
+@users_bp.route("/<int:user_id>")
 @login_required
 @admin_required
 def get_user(user_id):
     """Get user details - AJAX only"""
-    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
         # Non-AJAX requests should redirect to list
-        return redirect(url_for('users.list_users'))
-    
+        return redirect(url_for("users.list_users"))
+
     response = user_service.get_user(user_id)
-    
-    if response['success']:
-        return jsonify({
-            'success': True, 
-            'user': response['data']
-        })
+
+    print(
+        f"Response from get_user: {json.dumps(response, indent=2, ensure_ascii=False)}"
+    )  # Debugging output
+
+    return_value = APIResponse.success(
+        data={"user": response}, message="Lấy thông tin người dùng thành công"
+    )
+
+    print(f"Return value from get_user: {return_value}")  # Debugging output
+    # Check if we got an error response
+    if response.get("success") == False:
+        return APIResponse.error(response.get("error", "Lỗi không xác định"), 404)
     else:
-        return jsonify({
-            'success': False,
-            'message': response.get('error', 'Lỗi không xác định')
-        }), 404
+        # Handle successful response (server data directly)
+        return APIResponse.success(
+            data={"user": response}, message="Lấy thông tin người dùng thành công"
+        )
 
 
-@users_bp.route('/<int:user_id>/edit', methods=['POST'])
+@users_bp.route("/<int:user_id>/edit", methods=["POST"])
 @login_required
 @admin_required
 def edit_user(user_id):
-    """Edit user - supports both AJAX and regular form submission"""
+    """Edit user - AJAX only"""
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        # Non-AJAX requests should redirect to list
+        return redirect(url_for("users.list_users"))
+
     # Handle form data
     user_data = {
         "full_name": request.form.get("full_name"),
@@ -163,13 +171,7 @@ def edit_user(user_id):
     password = request.form.get("password")
     if password and password.strip():
         if len(password) < 6:
-            error_message = "Mật khẩu phải có ít nhất 6 ký tự"
-            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                # For AJAX errors, just return error without flash message
-                return jsonify({"success": False, "message": error_message}), 400
-            else:
-                flash(error_message, "error")
-                return redirect(url_for("users.list_users"))
+            return APIResponse.error("Mật khẩu phải có ít nhất 6 ký tự", 400)
         user_data["password"] = password
 
     # Basic validation
@@ -182,45 +184,30 @@ def edit_user(user_id):
         errors.append("Vai trò là bắt buộc")
 
     if errors:
-        error_message = "; ".join(errors)
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            # For AJAX errors, just return error without flash message
-            return jsonify({"success": False, "message": error_message}), 400
+        return APIResponse.error("; ".join(errors), 400)
+
+    try:
+        response = user_service.update_user(user_id, user_data)
+
+        if response.get("success") != False:  # Success if no explicit failure
+            return APIResponse.success(message="Cập nhật người dùng thành công!")
         else:
-            flash(error_message, "error")
-            return redirect(url_for("users.list_users"))
-
-    response = user_service.update_user(user_id, user_data)
-
-    if response["success"]:
-        success_message = "Cập nhật người dùng thành công!"
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            flash(success_message, "success")
-            return jsonify(
-                {
-                    "success": True,
-                    "message": success_message,
-                    "redirect": url_for("users.list_users"),
-                }
+            return APIResponse.error(
+                f'Lỗi khi cập nhật người dùng: {response.get("error", "")}', 400
             )
-        else:
-            flash(success_message, "success")
-            return redirect(url_for("users.list_users"))
-    else:
-        error_message = f'Lỗi khi cập nhật người dùng: {response.get("error", "")}'
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            # For AJAX errors, just return error without flash message
-            return jsonify({"success": False, "message": error_message}), 400
-        else:
-            flash(error_message, "error")
-            return redirect(url_for("users.list_users"))
+    except Exception as e:
+        return APIResponse.error(f"Lỗi khi cập nhật người dùng: {str(e)}", 500)
 
 
-@users_bp.route('/<int:user_id>/delete', methods=['POST'])
+@users_bp.route("/<int:user_id>/delete", methods=["POST"])
 @login_required
 @admin_required
 def delete_user(user_id):
-    """Delete user"""
+    """Delete user - AJAX only"""
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        # Non-AJAX requests should redirect to list
+        return redirect(url_for("users.list_users"))
+
     current_user_obj = auth_service.get_current_user()
 
     # Check if trying to delete self
@@ -229,48 +216,14 @@ def delete_user(user_id):
         and hasattr(current_user_obj, "id")
         and current_user_obj.id == user_id
     ):
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return (
-                jsonify({"success": False, "message": "Không thể xóa chính mình"}),
-                400,
-            )
-        else:
-            flash("Không thể xóa chính mình", "error")
-            return redirect(url_for("users.list_users"))
+        return APIResponse.error("Không thể xóa chính mình", 400)
 
-    response = user_service.delete_user(user_id)
+    try:
+        response = user_service.delete_user(user_id)
 
-    # Check if it's an AJAX request
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        if response["success"]:
-            flash("Xóa người dùng thành công", "success")
-            return jsonify(
-                {
-                    "success": True,
-                    "message": "Xóa người dùng thành công",
-                    "redirect": url_for("users.list_users"),
-                }
-            )
+        if response.get("success") != False:  # Success if no explicit failure
+            return APIResponse.success(message="Xóa người dùng thành công")
         else:
-            error_message = response.get("error", "Lỗi không xác định")
-            flash(f"Lỗi khi xóa người dùng: {error_message}", "error")
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "message": error_message,
-                        "redirect": url_for("users.list_users"),
-                    }
-                ),
-                400,
-            )
-    else:
-        # Regular form submission
-        if response["success"]:
-            flash("Xóa người dùng thành công", "success")
-        else:
-            flash(
-                f'Lỗi khi xóa người dùng: {response.get("error", "Lỗi không xác định")}',
-                "error",
-            )
-        return redirect(url_for("users.list_users"))
+            return APIResponse.error(response.get("error", "Lỗi không xác định"), 400)
+    except Exception as e:
+        return APIResponse.error(f"Lỗi khi xóa người dùng: {str(e)}", 500)

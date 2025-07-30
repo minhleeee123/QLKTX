@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, json, render_template, request, redirect, url_for, flash, session
 from ..forms.auth_forms import LoginForm, RegisterForm, ChangePasswordForm
 from ..services.auth_service import auth_service
 from ..utils.decorators import anonymous_required, login_required
@@ -10,12 +10,14 @@ auth_bp = Blueprint('auth', __name__)
 def login():
     """Login page"""
     form = LoginForm()
-    
+
     if form.validate_on_submit():
         response = auth_service.login(form.email.data, form.password.data)
+        print("Response at login:")  # Uncomment for debugging
+        print(json.dumps(response, indent=2, ensure_ascii=False))  # Uncomment for debugging
         if response['success']:
             flash('Đăng nhập thành công!', 'success')
-            
+
             # Redirect to next page or dashboard
             next_page = request.args.get('next')
             if next_page:
@@ -27,7 +29,6 @@ def login():
             flash(error_msg, 'error')
             return redirect(url_for('auth.login'))
 
-    
     return render_template('auth/login.html', form=form)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])

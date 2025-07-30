@@ -33,7 +33,7 @@
                                 <div class="text-danger small" id="phoneNumberError"></div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="studentIdField" style="display: none;">
                             <div class="mb-3">
                                 <label for="studentId" class="form-label">Mã sinh viên</label>
                                 <input type="text" class="form-control" id="studentId" name="student_id">
@@ -173,3 +173,6 @@
         </div>
     </div>
 </script>
+
+<!-- Include user modal JavaScript -->
+<script src="{{ url_for('static', filename='js/users/user_modals.js') }}"></script>

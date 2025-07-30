@@ -237,7 +237,8 @@ document.head.appendChild(style);
 const notificationSystem = new NotificationSystem();
 
 // Global helper functions
-window.showNotification = (type, message, options) => notificationSystem.show(type, message, options);
+window.showNotification = (type, message, options) =>
+  notificationSystem.show(type, message, options);
 window.showSuccess = (message, options) => notificationSystem.success(message, options);
 window.showError = (message, options) => notificationSystem.error(message, options);
 window.showWarning = (message, options) => notificationSystem.warning(message, options);

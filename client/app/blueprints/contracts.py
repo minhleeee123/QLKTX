@@ -31,7 +31,10 @@ def list_contracts():
             page=page,
             status=status if status else None
         )
-        contracts = result.get("contracts", [])
+
+        print(f"Contracts API response: {result}")  # Debugging line
+
+        contracts = result.get("data", []).get("contracts", [])
 
         # Create pagination object from API response
         pagination_data = result.get("pagination", {})
