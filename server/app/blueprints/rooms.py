@@ -1,16 +1,64 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
-from app.models import User, Room, Building, RoomType
-from app.utils.decorators import require_role
+from app.models import Building, Room, RoomType, User
 from app.utils.api_response import APIResponse
+from app.utils.decorators import require_role
+from flask import Blueprint, json, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 rooms_bp = Blueprint('rooms', __name__)
 
 @rooms_bp.route('/', methods=['GET'])
 # @jwt_required()
 def get_rooms():
-    """Lấy danh sách phòng"""
+    """
+    Lấy danh sách phòng với phân trang và tìm kiếm
+
+    Method: GET
+    Query Parameters:
+        page: int = 1              # Trang hiện tại (optional)
+        per_page: int = 20         # Số phòng mỗi trang (optional)
+        building_id: int           # Lọc theo ID tòa nhà (optional)
+        room_type_id: int          # Lọc theo ID loại phòng (optional)
+        status: string             # Lọc theo trạng thái phòng: 'available', 'occupied', 'maintenance' (optional)
+        search: string             # Tìm kiếm theo số phòng (optional)
+
+    Example URL: GET /rooms?page=1&per_page=20&building_id=1&status=available&search=101
+
+    Response JSON (Success - 200):
+    {
+        "success": true,
+        "message": "Lấy danh sách phòng thành công",
+        "data": {
+            "rooms": [
+                {
+                    "room_id": 1,
+                    "room_number": "101",
+                    "building": {
+                        "building_id": 1,
+                        "building_name": "Tòa A"
+                    },
+                    "room_type": {
+                        "room_type_id": 1,
+                        "type_name": "Phòng đơn",
+                        "capacity": 2,
+                        "price_per_month": 1000000
+                    },
+                    "status": "available",
+                    "created_at": "2024-01-01T00:00:00"
+                }
+            ],
+            "pagination": {
+                "page": 1,
+                "pages": 5,
+                "per_page": 20,
+                "total": 100,
+                "has_next": true,
+                "has_prev": false
+            }
+        },
+        "status_code": 200
+    }
+    """
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
@@ -77,7 +125,48 @@ def get_rooms():
 @rooms_bp.route('/<int:room_id>', methods=['GET'])
 # @jwt_required()
 def get_room(room_id):
-    """Lấy thông tin chi tiết một phòng"""
+    """
+    Lấy thông tin chi tiết một phòng
+
+    Method: GET
+    URL Parameters:
+        room_id: int               # ID của phòng cần lấy thông tin
+
+    Example URL: GET /rooms/123
+
+    Response JSON (Success - 200):
+    {
+        "success": true,
+        "message": "Lấy thông tin phòng thành công",
+        "data": {
+            "room": {
+                "room_id": 1,
+                "room_number": "101",
+                "building": {
+                    "building_id": 1,
+                    "building_name": "Tòa A"
+                },
+                "room_type": {
+                    "room_type_id": 1,
+                    "type_name": "Phòng đơn",
+                    "capacity": 2,
+                    "price_per_month": 1000000
+                },
+                "status": "available",
+                "created_at": "2024-01-01T00:00:00"
+            }
+        },
+        "status_code": 200
+    }
+
+    Response JSON (Error - 404):
+    {
+        "success": false,
+        "message": "Phòng không tồn tại",
+        "data": null,
+        "status_code": 404
+    }
+    """
     try:
         room = Room.query.get(room_id)
         if not room:
@@ -125,7 +214,58 @@ def get_room(room_id):
 # @jwt_required()
 # @require_role(['admin', 'management'])
 def create_room():
-    """Tạo phòng mới"""
+    """
+    Tạo phòng mới
+
+    Method: POST
+    Headers:
+        Authorization: Bearer <access_token> (nếu bật JWT)
+        Content-Type: application/json
+
+    Permissions: Admin và management có thể tạo phòng mới
+
+    Request JSON:
+    {
+        "room_number": "101",          # Required: Số phòng (unique trong cùng tòa nhà)
+        "building_id": 1,              # Required: ID tòa nhà
+        "room_type_id": 1,            # Required: ID loại phòng
+        "status": "available",         # Optional: Trạng thái phòng (default: 'available')
+        "description": "Mô tả phòng"  # Optional: Mô tả phòng
+    }
+
+    Response JSON (Success - 201):
+    {
+        "success": true,
+        "message": "Tạo phòng thành công",
+        "data": {
+            "room": {
+                "room_id": 1,
+                "room_number": "101",
+                "building": {
+                    "building_id": 1,
+                    "building_name": "Tòa A"
+                },
+                "room_type": {
+                    "room_type_id": 1,
+                    "type_name": "Phòng đơn",
+                    "capacity": 2,
+                    "price_per_month": 1000000
+                },
+                "status": "available",
+                "created_at": "2024-01-01T00:00:00"
+            }
+        },
+        "status_code": 201
+    }
+
+    Response JSON (Error - 400):
+    {
+        "success": false,
+        "message": "Số phòng đã tồn tại trong tòa nhà này" | "Building không tồn tại" | "Room type không tồn tại",
+        "data": null,
+        "status_code": 400
+    }
+    """
     try:
         data = request.get_json()
 
@@ -187,9 +327,10 @@ def create_room():
         db.session.rollback()
         return APIResponse.error(message=str(e), status_code=500)
 
-@rooms_bp.route('/<int:room_id>', methods=['PUT'])
-# @jwt_required()
-# @require_role(['admin', 'management'])
+
+@rooms_bp.route("/<int:room_id>", methods=["PUT"])
+@jwt_required()
+@require_role(["admin", "management"])
 def update_room(room_id):
     """Cập nhật thông tin phòng"""
     try:

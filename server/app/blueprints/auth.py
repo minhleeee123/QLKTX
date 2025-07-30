@@ -1,16 +1,51 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from werkzeug.security import check_password_hash
 from app.extensions import db
-from app.models import User, Role
-from werkzeug.security import generate_password_hash
+from app.models import Role, User
 from app.utils.api_response import APIResponse
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from werkzeug.security import check_password_hash, generate_password_hash
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """Đăng nhập và lấy JWT token"""
+    """
+    Đăng nhập và lấy JWT token
+
+    Method: POST
+    Content-Type: application/json
+
+    Request JSON:
+    {
+        "email": "user@example.com",      # Required: Email của user
+        "password": "userpassword"        # Required: Mật khẩu
+    }
+
+    Response JSON (Success - 200):
+    {
+        "success": true,
+        "message": "Đăng nhập thành công",
+        "data": {
+            "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+            "user": {
+                "user_id": 1,
+                "full_name": "Nguyễn Văn A",
+                "email": "user@example.com",
+                "role": "student",
+                "student_id": "SV001"
+            }
+        },
+        "status_code": 200
+    }
+
+    Response JSON (Error - 400/401):
+    {
+        "success": false,
+        "message": "Email và password là bắt buộc" | "Email hoặc password không đúng",
+        "data": null,
+        "status_code": 400 | 401
+    }
+    """
     try:
         data = request.get_json()
         email = data.get('email')
@@ -50,7 +85,42 @@ def login():
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_current_user():
-    """Lấy thông tin user hiện tại"""
+    """
+    Lấy thông tin user hiện tại
+
+    Method: GET
+    Headers:
+        Authorization: Bearer <access_token>
+
+    Request: No request body needed
+
+    Response JSON (Success - 200):
+    {
+        "success": true,
+        "message": "Lấy thông tin user thành công",
+        "data": {
+            "user": {
+                "user_id": 1,
+                "full_name": "Nguyễn Văn A",
+                "email": "user@example.com",
+                "phone_number": "0123456789",
+                "student_id": "SV001",
+                "role": "student",
+                "created_at": "2024-01-01T00:00:00",
+                "is_active": true
+            }
+        },
+        "status_code": 200
+    }
+
+    Response JSON (Error - 404):
+    {
+        "success": false,
+        "message": "User không tồn tại",
+        "data": null,
+        "status_code": 404
+    }
+    """
     try:
         user_id = get_jwt_identity()
 
@@ -85,7 +155,44 @@ def get_current_user():
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    """Đăng ký tài khoản sinh viên"""
+    """
+    Đăng ký tài khoản sinh viên
+
+    Method: POST
+    Content-Type: application/json
+
+    Request JSON:
+    {
+        "full_name": "Nguyễn Văn A",       # Required: Họ và tên
+        "email": "user@example.com",       # Required: Email (unique)
+        "password": "password123",         # Required: Mật khẩu (ít nhất 6 ký tự)
+        "student_id": "SV001",            # Required: Mã sinh viên (unique)
+        "phone_number": "0123456789"       # Optional: Số điện thoại
+    }
+
+    Response JSON (Success - 201):
+    {
+        "success": true,
+        "message": "Đăng ký thành công",
+        "data": {
+            "user": {
+                "user_id": 1,
+                "full_name": "Nguyễn Văn A",
+                "email": "user@example.com",
+                "student_id": "SV001"
+            }
+        },
+        "status_code": 201
+    }
+
+    Response JSON (Error - 400):
+    {
+        "success": false,
+        "message": "Email đã được sử dụng" | "Mã sinh viên đã được sử dụng" | "full_name là bắt buộc",
+        "data": null,
+        "status_code": 400
+    }
+    """
     try:
         data = request.get_json()
 
@@ -148,8 +255,42 @@ def register():
 @auth_bp.route('/change-password', methods=['PUT'])
 @jwt_required()
 def change_password():
+    """
+    Đổi mật khẩu cho user hiện tại
+
+    Method: PUT
+    Headers:
+        Authorization: Bearer <access_token>
+        Content-Type: application/json
+
+    Request JSON:
+    {
+        "current_password": "oldpassword",     # Required: Mật khẩu hiện tại
+        "new_password": "newpassword123",      # Required: Mật khẩu mới (ít nhất 6 ký tự)
+        "confirm_password": "newpassword123"   # Required: Xác nhận mật khẩu mới
+    }
+
+    Response JSON (Success - 200):
+    {
+        "success": true,
+        "message": "Đổi mật khẩu thành công",
+        "data": null,
+        "status_code": 200
+    }
+
+    Response JSON (Error - 400/404):
+    {
+        "success": false,
+        "message": "Mật khẩu hiện tại không đúng" |
+                  "Mật khẩu mới và xác nhận không khớp" |
+                  "Mật khẩu mới phải có ít nhất 6 ký tự" |
+                  "Mật khẩu mới phải khác mật khẩu hiện tại" |
+                  "User không tồn tại",
+        "data": null,
+        "status_code": 400 | 404
+    }
+    """
     print("Change Password Endpoint")
-    """Đổi mật khẩu cho user hiện tại"""
     try:
         user_id = get_jwt_identity()
         print(f"JWT Identity: {user_id}, type: {type(user_id)}")  # Debug
