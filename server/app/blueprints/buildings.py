@@ -131,7 +131,7 @@ def get_building(building_id):
             return APIResponse.error("Không tìm thấy tòa nhà", 404)
 
         return APIResponse.success(
-            data=building.to_dict(),
+            data={"building": building.to_dict()},
             message="Lấy thông tin tòa nhà thành công"
         )
 
@@ -193,7 +193,7 @@ def create_building():
         building = Building.create_building(data)
         
         return APIResponse.success(
-            data=building.to_dict(),
+            data={"building": building.to_dict()},
             message="Tạo tòa nhà thành công",
             status_code=201
         )
@@ -263,7 +263,7 @@ def update_building(building_id):
         building.update_building(data)
         
         return APIResponse.success(
-            data=building.to_dict(),
+            data={"building": building.to_dict()},
             message="Cập nhật tòa nhà thành công"
         )
         

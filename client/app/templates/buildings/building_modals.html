@@ -1,0 +1,183 @@
+<!-- Building Create/Edit Modal -->
+<div class="modal fade" id="buildingModal" tabindex="-1" aria-labelledby="buildingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="buildingModalLabel">Thêm tòa nhà</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="buildingForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="buildingId" name="building_id" value="">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="buildingName" class="form-label">Tên tòa nhà <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="buildingName" name="building_name" required>
+                                <div class="text-danger small" id="buildingNameError"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Mô tả</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Mô tả chi tiết về tòa nhà..."></textarea>
+                                <div class="text-danger small" id="descriptionError"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="saveBuildingBtn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        <span id="submitText">Lưu</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Building Delete Modal -->
+<div class="modal fade" id="deleteBuildingModal" tabindex="-1" aria-labelledby="deleteBuildingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteBuildingModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger"></i> Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Cảnh báo!</strong> Hành động này không thể hoàn tác.
+                </div>
+                <p>Bạn có chắc chắn muốn xóa tòa nhà <strong id="buildingToDelete"></strong>?</p>
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Lưu ý:</strong> Việc xóa tòa nhà sẽ xóa tất cả các phòng trong tòa nhà đó!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteBuildingForm" method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        <i class="fas fa-trash"></i> Xóa tòa nhà
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Building Details Modal -->
+<div class="modal fade" id="buildingDetailModal" tabindex="-1" aria-labelledby="buildingDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="buildingDetailModalLabel">
+                    <i class="fas fa-info-circle"></i> Chi tiết tòa nhà
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="buildingDetailContent">
+                    <!-- Content will be loaded dynamically -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                {% if current_user.role == 'admin' %}
+                <button type="button" class="btn btn-primary" id="editFromDetailsBtn" style="display: none;">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Building Detail Loading Template -->
+<script type="text/template" id="buildingDetailLoadingTemplate">
+    <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+        <p class="mt-2">Đang tải thông tin tòa nhà...</p>
+    </div>
+</script>
+
+<!-- Building Detail Template -->
+<script type="text/template" id="buildingDetailTemplate">
+{% raw %}
+    <div class="row">
+        <div class="col-md-6">
+            <h6 class="fw-bold text-primary mb-3">
+                <i class="fas fa-info-circle"></i> Thông tin cơ bản
+            </h6>
+            <table class="table table-borderless">
+                <tr>
+                    <td class="fw-bold" style="width: 40%;">ID:</td>
+                    <td>{{building_id}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Tên tòa nhà:</td>
+                    <td><strong>{{building_name}}</strong></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Mô tả:</td>
+                    <td>{{description}}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <h6 class="fw-bold text-success mb-3">
+                <i class="fas fa-chart-bar"></i> Thống kê phòng
+            </h6>
+            <div class="row">
+                <div class="col-6">
+                    <div class="card bg-primary text-white mb-2">
+                        <div class="card-body text-center py-2">
+                            <h4 class="mb-1">{{room_count}}</h4>
+                            <small>Tổng số phòng</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card bg-success text-white mb-2">
+                        <div class="card-body text-center py-2">
+                            <h4 class="mb-1">{{available_rooms}}</h4>
+                            <small>Phòng còn chỗ ở</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endraw %}
+</script>
+
+<!-- Building Detail Error Template -->
+<script type="text/template" id="buildingDetailErrorTemplate">
+{% raw %}
+    <div class="text-center py-4">
+        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+        <h5>Có lỗi xảy ra</h5>
+        <p class="text-muted">{{message}}</p>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Đóng
+        </button>
+    </div>
+{% endraw %}
+</script>
