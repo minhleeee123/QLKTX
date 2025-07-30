@@ -5,16 +5,17 @@ from app.utils.decorators import require_role
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.security import generate_password_hash
-from app.models.room import Building, Room
+from app.models import Room
 from app.models import Contract, MaintenanceRequest, Payment, Registration
+from app.models import Building
 
 
 users_bp = Blueprint("users", __name__)
 
 
 @users_bp.route("/", methods=["GET"])
-# @jwt_required()
-# # @require_role(['admin', 'management'])
+@jwt_required()
+@require_role(["admin", "management"])
 def get_users():
     """
     Lấy danh sách users với phân trang và tìm kiếm

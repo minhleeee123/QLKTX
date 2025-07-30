@@ -1,17 +1,19 @@
 import os
 from datetime import datetime
-from flask import Flask, redirect, url_for, render_template
-from .extensions import session, csrf, login_manager
-from .services.auth_service import auth_service
-from .blueprints import (
+
+from app.blueprints import (
     auth_bp,
-    dashboard_bp,
-    users_bp,
-    rooms_bp,
-    contracts_bp,
     buildings_bp,
+    contracts_bp,
+    dashboard_bp,
     room_types_bp,
+    rooms_bp,
+    users_bp,
 )
+from app.extensions import csrf, login_manager, session
+from app.services.auth_service import auth_service
+from flask import Flask, redirect, render_template, url_for
+
 
 def create_app():
     app = Flask(__name__)
@@ -20,10 +22,12 @@ def create_app():
     config_name = os.environ.get('FLASK_ENV', 'development')
 
     if config_name == 'production':
-        from .config import ProductionConfig
+        from app.config import ProductionConfig
+
         app.config.from_object(ProductionConfig)
     else:
-        from .config import DevelopmentConfig
+        from app.config import DevelopmentConfig
+
         app.config.from_object(DevelopmentConfig)
 
     # Initialize extensions
@@ -35,7 +39,8 @@ def create_app():
     login_manager.login_message_category = 'warning'
 
     # User loader for Flask-Login
-    from .models.user import User
+    from app.models.user import User
+
     @login_manager.user_loader
     def load_user(user_id):
         from flask import session
@@ -108,5 +113,7 @@ def create_app():
     @app.errorhandler(500)
     def internal_error(error):
         return render_template('errors/500.html'), 500
+
+    return app
 
     return app

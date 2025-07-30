@@ -1,7 +1,8 @@
-from flask import Blueprint, json, render_template, request, redirect, url_for, flash, session
-from ..forms.auth_forms import LoginForm, RegisterForm, ChangePasswordForm
-from ..services.auth_service import auth_service
-from ..utils.decorators import anonymous_required, login_required
+from app.forms.auth_forms import ChangePasswordForm, LoginForm, RegisterForm
+from app.services.auth_service import auth_service
+from app.utils.decorators import anonymous_required, login_required
+from flask import (Blueprint, flash, json, redirect, render_template, request,
+                   session, url_for)
 
 auth_bp = Blueprint('auth', __name__)
 
