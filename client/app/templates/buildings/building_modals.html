@@ -19,15 +19,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Mô tả</label>
-                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Mô tả chi tiết về tòa nhà..."></textarea>
-                                <div class="text-danger small" id="descriptionError"></div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -135,10 +126,6 @@
                     <td class="fw-bold">Tên tòa nhà:</td>
                     <td><strong>{{building_name}}</strong></td>
                 </tr>
-                <tr>
-                    <td class="fw-bold">Mô tả:</td>
-                    <td>{{description}}</td>
-                </tr>
             </table>
         </div>
         <div class="col-md-6">
@@ -149,7 +136,7 @@
                 <div class="col-6">
                     <div class="card bg-primary text-white mb-2">
                         <div class="card-body text-center py-2">
-                            <h4 class="mb-1">{{room_count}}</h4>
+                            <h4 class="mb-1">{{total_rooms}}</h4>
                             <small>Tổng số phòng</small>
                         </div>
                     </div>

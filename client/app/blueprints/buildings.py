@@ -22,13 +22,19 @@ buildings_bp = Blueprint("buildings", __name__)
 @login_required
 @admin_required
 def list_buildings():
-    """Display list of all buildings"""
+    """Display list of all buildings or return JSON for AJAX requests"""
     try:
         response = building_service.get_buildings()
         print(f"Response from get_buildings: {json.dumps(response, indent=2)}")
 
         # Check if we got a successful response
         if response.get("success") == False:
+            # For AJAX requests, return JSON error
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return APIResponse.error(
+                    f'Lỗi khi lấy danh sách tòa nhà: {response.get("message", "")}', 400
+                )
+
             flash(
                 f'Lỗi khi tải danh sách tòa nhà: {response.get("message", "")}',
                 "danger",
@@ -37,11 +43,25 @@ def list_buildings():
         else:
             buildings_data = response.get("data", {})
             buildings = buildings_data.get("buildings", [])
+
+            # For AJAX requests, return JSON success
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return APIResponse.success(
+                    data={"buildings": buildings},
+                    message="Lấy danh sách tòa nhà thành công",
+                )
+
     except Exception as e:
         print(f"Error loading buildings: {str(e)}")
+
+        # For AJAX requests, return JSON error
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return APIResponse.error(f"Lỗi khi tải danh sách tòa nhà: {str(e)}", 500)
+
         flash(f"Lỗi khi tải danh sách tòa nhà: {str(e)}", "danger")
         buildings = []
 
+    # Return HTML template for regular page requests
     return render_template(
         "buildings/list.html", buildings=buildings, title="Quản lý tòa nhà"
     )
@@ -163,26 +183,3 @@ def get_building(building_id):
             )
     except Exception as e:
         return APIResponse.error(f"Lỗi khi tải thông tin tòa nhà: {str(e)}", 500)
-
-
-@buildings_bp.route("/api", methods=["GET"])
-@login_required
-@admin_required
-def get_buildings_api():
-    """Get buildings for dropdown - AJAX only"""
-    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
-        return redirect(url_for('buildings.list_buildings'))
-
-    try:
-        response = building_service.get_buildings()
-
-        if response.get("success"):
-            return APIResponse.success(
-                data=response.get("data"), message="Lấy danh sách tòa nhà thành công"
-            )
-        else:
-            return APIResponse.error(
-                f'Lỗi khi lấy danh sách tòa nhà: {response.get("message", "")}', 400
-            )
-    except Exception as e:
-        return APIResponse.error(f"Lỗi khi tải danh sách tòa nhà: {str(e)}", 500)

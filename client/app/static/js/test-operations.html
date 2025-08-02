@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Operations Test</title>
+    <meta name="csrf-token" content="test-token">
+</head>
+<body>
+    <h1>Testing JavaScript Operations</h1>
+    
+    <div id="test-results"></div>
+    
+    <button onclick="testUserOperations()">Test User Operations</button>
+    <button onclick="testRoomOperations()">Test Room Operations</button>
+    <button onclick="testBuildingOperations()">Test Building Operations</button>
+    
+    <!-- Include shared utilities FIRST -->
+    <script src="../shared-utils.js"></script>
+    
+    <!-- Then include specific operation scripts -->
+    <script src="../users/user_operations.js"></script>
+    <script src="../rooms/room_operations.js"></script>
+    <script src="../buildings/building_operations.js"></script>
+    
+    <script>
+        function logResult(test, result) {
+            const div = document.getElementById('test-results');
+            const p = document.createElement('p');
+            p.style.color = result === 'PASS' ? 'green' : 'red';
+            p.textContent = `${test}: ${result}`;
+            div.appendChild(p);
+        }
+        
+        function testUserOperations() {
+            try {
+                // Test that UserOperations module exists
+                if (typeof UserOperations !== 'undefined') {
+                    logResult('UserOperations module exists', 'PASS');
+                } else {
+                    logResult('UserOperations module exists', 'FAIL');
+                    return;
+                }
+                
+                // Test that it's not a constructor
+                if (typeof UserOperations === 'object') {
+                    logResult('UserOperations is object (not constructor)', 'PASS');
+                } else {
+                    logResult('UserOperations is object (not constructor)', 'FAIL');
+                }
+                
+                // Test that methods exist
+                if (typeof UserOperations.init === 'function') {
+                    logResult('UserOperations.init exists', 'PASS');
+                } else {
+                    logResult('UserOperations.init exists', 'FAIL');
+                }
+                
+                // Test global functions exist
+                if (typeof openCreateUserModal === 'function') {
+                    logResult('openCreateUserModal function exists', 'PASS');
+                } else {
+                    logResult('openCreateUserModal function exists', 'FAIL');
+                }
+                
+            } catch (error) {
+                logResult('UserOperations test', `FAIL: ${error.message}`);
+            }
+        }
+        
+        function testRoomOperations() {
+            try {
+                // Test that RoomOperations module exists
+                if (typeof RoomOperations !== 'undefined') {
+                    logResult('RoomOperations module exists', 'PASS');
+                } else {
+                    logResult('RoomOperations module exists', 'FAIL');
+                    return;
+                }
+                
+                // Test that it's not a constructor
+                if (typeof RoomOperations === 'object') {
+                    logResult('RoomOperations is object (not constructor)', 'PASS');
+                } else {
+                    logResult('RoomOperations is object (not constructor)', 'FAIL');
+                }
+                
+                // Test global functions exist
+                if (typeof openCreateRoomModal === 'function') {
+                    logResult('openCreateRoomModal function exists', 'PASS');
+                } else {
+                    logResult('openCreateRoomModal function exists', 'FAIL');
+                }
+                
+            } catch (error) {
+                logResult('RoomOperations test', `FAIL: ${error.message}`);
+            }
+        }
+        
+        function testBuildingOperations() {
+            try {
+                // Test that BuildingOperations module exists
+                if (typeof BuildingOperations !== 'undefined') {
+                    logResult('BuildingOperations module exists', 'PASS');
+                } else {
+                    logResult('BuildingOperations module exists', 'FAIL');
+                    return;
+                }
+                
+                // Test that it's not a constructor
+                if (typeof BuildingOperations === 'object') {
+                    logResult('BuildingOperations is object (not constructor)', 'PASS');
+                } else {
+                    logResult('BuildingOperations is object (not constructor)', 'FAIL');
+                }
+                
+                // Test global functions exist
+                if (typeof openCreateBuildingModal === 'function') {
+                    logResult('openCreateBuildingModal function exists', 'PASS');
+                } else {
+                    logResult('openCreateBuildingModal function exists', 'FAIL');
+                }
+                
+            } catch (error) {
+                logResult('BuildingOperations test', `FAIL: ${error.message}`);
+            }
+        }
+        
+        // Test utilities are loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            logResult('Shared utilities loaded', typeof ModalUtils !== 'undefined' ? 'PASS' : 'FAIL');
+            logResult('APIUtils loaded', typeof APIUtils !== 'undefined' ? 'PASS' : 'FAIL');
+            logResult('CSRFUtils loaded', typeof CSRFUtils !== 'undefined' ? 'PASS' : 'FAIL');
+            logResult('FormUtils loaded', typeof FormUtils !== 'undefined' ? 'PASS' : 'FAIL');
+            logResult('ValidationUtils loaded', typeof ValidationUtils !== 'undefined' ? 'PASS' : 'FAIL');
+            logResult('NotificationUtils loaded', typeof NotificationUtils !== 'undefined' ? 'PASS' : 'FAIL');
+            logResult('TemplateUtils loaded', typeof TemplateUtils !== 'undefined' ? 'PASS' : 'FAIL');
+        });
+    </script>
+</body>
+</html>

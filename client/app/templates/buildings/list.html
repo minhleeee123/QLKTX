@@ -89,9 +89,6 @@
                                     <td>{{ building.building_id }}</td>
                                     <td>
                                         <strong>{{ building.building_name }}</strong>
-                                        {% if building.description %}
-                                        <br><small class="text-muted">{{ building.description }}</small>
-                                        {% endif %}
                                     </td>
                                     <td>
                                         <span class="badge bg-primary">{{ building.total_rooms or 0 }}</span>
@@ -226,6 +223,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<!-- Include Shared Utilities -->
+<script src="{{ url_for('static', filename='js/shared-utils.js') }}"></script>
 <!-- Include Building Operations JavaScript -->
 <script src="{{ url_for('static', filename='js/buildings/building_operations.js') }}"></script>
 <script>

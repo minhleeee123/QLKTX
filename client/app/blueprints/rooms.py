@@ -1,5 +1,7 @@
 from app.forms.room_forms import BuildingForm, RoomForm, RoomSearchForm, RoomTypeForm
+from app.services.building_service import building_service
 from app.services.room_service import room_service
+from app.services.room_type_service import room_type_service
 from app.utils.api_response import APIResponse
 from app.utils.decorators import admin_required, management_required
 from app.utils.form_helpers import (
@@ -7,7 +9,16 @@ from app.utils.form_helpers import (
     populate_room_search_form_choices,
 )
 from app.utils.pagination import Pagination
-from flask import Blueprint, flash, json, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    flash,
+    json,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 
 # Blueprint registration
@@ -192,7 +203,7 @@ def edit_room(room_id):
 @login_required
 @management_required
 def get_buildings():
-    response = room_service.get_buildings()
+    response = building_service.get_buildings()
     return jsonify(response)
 
 
@@ -200,7 +211,7 @@ def get_buildings():
 @login_required
 @management_required
 def get_room_types():
-    response = room_service.get_room_types()
+    response = room_type_service.get_room_types()
     return jsonify(response)
 
 

@@ -201,6 +201,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<!-- Include Shared Utilities -->
+<script src="{{ url_for('static', filename='js/shared-utils.js') }}"></script>
 <!-- Include User Operations JavaScript -->
 <script src="{{ url_for('static', filename='js/users/user_operations.js') }}"></script>
 {% endblock %}

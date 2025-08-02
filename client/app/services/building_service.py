@@ -36,12 +36,6 @@ class BuildingService:
         # Return the complete API response (no data extraction)
         return api_client.delete(f"/buildings/{building_id}")
 
-    @staticmethod
-    def get_buildings_simple() -> Dict[str, Any]:
-        """Get simplified building list for dropdowns"""
-        # Return the complete API response (no data extraction)
-        return api_client.get("/buildings/simple")
-
 
 # Global building service instance
 building_service = BuildingService()

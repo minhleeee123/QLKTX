@@ -194,6 +194,8 @@
 <!-- Include Room Modals -->
 {% include 'rooms/room_modals.html' %}
 
+<!-- Include Shared Utilities -->
+<script src="{{ url_for('static', filename='js/shared-utils.js') }}"></script>
 <!-- Include Room Operations JavaScript -->
 <script src="{{ url_for('static', filename='js/rooms/room_operations.js') }}"></script>
 {% endblock %}
