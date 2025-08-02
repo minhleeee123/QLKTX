@@ -14,7 +14,7 @@ def populate_building_choices(include_all_option: bool = False) -> List[Tuple[in
         List of tuples (building_id, building_name)
     """
     try:
-        buildings_data = room_service.get_buildings()
+        buildings_data = room_service.get_buildings().get("data")
         buildings = buildings_data.get("buildings", [])
         choices = [(b["building_id"], b["building_name"]) for b in buildings]
         
@@ -37,7 +37,7 @@ def populate_room_type_choices(include_all_option: bool = False) -> List[Tuple[i
         List of tuples (room_type_id, type_name)
     """
     try:
-        room_types_data = room_service.get_room_types()
+        room_types_data = room_service.get_room_types().get("data")
         room_types = room_types_data.get("room_types", [])
         choices = [(rt["room_type_id"], rt["type_name"]) for rt in room_types]
         
