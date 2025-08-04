@@ -243,8 +243,30 @@ window.CSRFUtils = {
    * @returns {string|null} CSRF token
    */
   getToken() {
+    // Try meta tag first
     const metaTag = document.querySelector('meta[name="csrf-token"]');
-    return metaTag ? metaTag.getAttribute('content') : null;
+    let token = metaTag ? metaTag.getAttribute("content") : null;
+
+    // If not found in meta tag, try hidden input field
+    if (!token) {
+      const hiddenInput = document.getElementById("csrfToken");
+      token = hiddenInput ? hiddenInput.value : null;
+    }
+
+    // Debug logging (only in development)
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      console.log("CSRFUtils.getToken() - Meta tag found:", !!metaTag);
+      console.log(
+        "CSRFUtils.getToken() - Hidden input found:",
+        !!document.getElementById("csrfToken")
+      );
+      console.log("CSRFUtils.getToken() - Token value:", token);
+    }
+
+    return token;
   },
 
   /**
@@ -254,8 +276,20 @@ window.CSRFUtils = {
   createFormDataWithToken() {
     const formData = new FormData();
     const token = this.getToken();
+
+    // Debug logging (only in development)
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      console.log(
+        "CSRFUtils.createFormDataWithToken() - Token retrieved:",
+        token
+      );
+    }
+
     if (token) {
-      formData.append('csrf_token', token);
+      formData.append("csrf_token", token);
     }
     return formData;
   },

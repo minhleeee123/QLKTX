@@ -1,14 +1,19 @@
 from app.extensions import db
-from app.models import Role, User
+from app.models import (
+    Building,
+    Contract,
+    MaintenanceRequest,
+    Payment,
+    Registration,
+    Role,
+    Room,
+    User,
+)
 from app.utils.api_response import APIResponse
 from app.utils.decorators import require_role
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.security import generate_password_hash
-from app.models import Room
-from app.models import Contract, MaintenanceRequest, Payment, Registration
-from app.models import Building
-
 
 users_bp = Blueprint("users", __name__)
 
@@ -249,6 +254,8 @@ def create_user():
     """
     try:
         data = request.get_json()
+        print("Server received data:", data)
+        print("Content-Type:", request.content_type)
 
         # Validate required fields
         required_fields = ["full_name", "email", "password", "role_name"]
@@ -509,6 +516,11 @@ def delete_user(user_id):
         db.session.delete(user)
         db.session.commit()
 
+        return APIResponse.success(message="Xóa user thành công")
+
+    except Exception as e:
+        db.session.rollback()
+        return APIResponse.error(message=str(e), status_code=500)
         return APIResponse.success(message="Xóa user thành công")
 
     except Exception as e:

@@ -3,13 +3,7 @@ from app.services.auth_service import auth_service
 from app.services.user_service import user_service
 from app.utils.api_response import APIResponse
 from app.utils.decorators import admin_required
-from flask import Blueprint
-from flask import flash
-from flask import json
-from flask import redirect
-from flask import render_template
-from flask import request
-from flask import url_for
+from flask import Blueprint, flash, json, redirect, render_template, request, url_for
 from flask_login import login_required
 
 users_bp = Blueprint("users", __name__)
@@ -70,6 +64,15 @@ def list_users():
 @login_required
 @admin_required
 def create_user():
+    print("=== CREATE USER ROUTE HIT ===")
+    print("Creating user hit")
+    print("Form data received:", dict(request.form))
+    print("Content-Type:", request.content_type)
+    print("X-Requested-With:", request.headers.get("X-Requested-With"))
+    print("Request method:", request.method)
+    print("Request URL:", request.url)
+    print("All headers:", dict(request.headers))
+
     # Handle form data
     user_data = {
         "full_name": request.form.get("full_name"),
@@ -80,6 +83,8 @@ def create_user():
         "is_active": request.form.get("is_active") == "true",
         "password": request.form.get("password"),
     }
+
+    print("Processed user_data:", user_data)
 
     if request.form.get("student_id") == "":
         user_data["student_id"] = None
@@ -103,12 +108,23 @@ def create_user():
     response = user_service.create_user(user_data)
     print(f"Response from create_user: {json.dumps(response, indent=2)}")
 
+    # Check if this is an AJAX request
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        # Return JSON response for AJAX requests
+        if response.get("success"):
+            return APIResponse.success(message="Tạo người dùng thành công!")
+        else:
+            return APIResponse.error(
+                f'Lỗi khi tạo người dùng: {response.get("message", "")}', 400
+            )
+
+    # Handle HTML responses for non-AJAX requests
     if response.get("success"):
-        return APIResponse.success(message="Tạo người dùng thành công!")
+        flash("Tạo người dùng thành công!", "success")
+        return redirect(url_for("users.list_users"))
     else:
-        return APIResponse.error(
-            f'Lỗi khi tạo người dùng: {response.get("message", "")}', 400
-        )
+        flash(f'Lỗi khi tạo người dùng: {response.get("message", "")}', "error")
+        return redirect(url_for("users.list_users"))
 
 
 @users_bp.route("/<int:user_id>")
@@ -119,15 +135,28 @@ def get_user(user_id):
 
     print(f"Response from get_user: {json.dumps(response, indent=2)}")
 
+    # Check if this is an AJAX request
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        # Return JSON response for AJAX requests
+        if response.get("success"):
+            user = response.get("data")
+            return APIResponse.success(
+                data=user, message="Lấy thông tin người dùng thành công"
+            )
+        else:
+            return APIResponse.error(
+                f'Lỗi khi lấy thông tin người dùng: {response.get("message", "")}', 404
+            )
+
+    # Handle HTML responses for non-AJAX requests
     if response.get("success"):
         user = response.get("data")
-        return APIResponse.success(
-            data=user, message="Lấy thông tin người dùng thành công"
-        )
+        return render_template("users/detail.html", user=user)
     else:
-        return APIResponse.error(
-            f'Lỗi khi lấy thông tin người dùng: {response.get("message", "")}', 404
+        flash(
+            f'Lỗi khi lấy thông tin người dùng: {response.get("message", "")}', "error"
         )
+        return redirect(url_for("users.list_users"))
 
 
 @users_bp.route("/<int:user_id>/edit", methods=["POST"])
@@ -151,18 +180,34 @@ def edit_user(user_id):
         errors.append("Vai trò là bắt buộc")
 
     if errors:
-        return APIResponse.error("; ".join(errors), 400)
+        # Check if this is an AJAX request
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return APIResponse.error("; ".join(errors), 400)
+        else:
+            flash("; ".join(errors), "error")
+            return redirect(url_for("users.list_users"))
 
     response = user_service.update_user(user_id, user_data)
 
     print(f"Response from edit_user: {json.dumps(response, indent=2)}")
 
+    # Check if this is an AJAX request
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        # Return JSON response for AJAX requests
+        if response.get("success"):
+            return APIResponse.success(message="Cập nhật người dùng thành công!")
+        else:
+            return APIResponse.error(
+                f'Lỗi khi cập nhật người dùng: {response.get("message", "")}', 400
+            )
+
+    # Handle HTML responses for non-AJAX requests
     if response.get("success"):
-        return APIResponse.success(message="Cập nhật người dùng thành công!")
+        flash("Cập nhật người dùng thành công!", "success")
+        return redirect(url_for("users.list_users"))
     else:
-        return APIResponse.error(
-            f'Lỗi khi cập nhật người dùng: {response.get("message", "")}', 400
-        )
+        flash(f'Lỗi khi cập nhật người dùng: {response.get("message", "")}', "error")
+        return redirect(url_for("users.list_users"))
 
 
 @users_bp.route("/<int:user_id>/delete", methods=["POST"])
@@ -178,13 +223,29 @@ def delete_user(user_id):
         and hasattr(current_user_obj, "id")
         and current_user_obj.id == user_id
     ):
-        return APIResponse.error("Không thể xóa chính mình", 400)
+        # Check if this is an AJAX request
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return APIResponse.error("Không thể xóa chính mình", 400)
+        else:
+            flash("Không thể xóa chính mình", "error")
+            return redirect(url_for("users.list_users"))
 
     response = user_service.delete_user(user_id)
 
+    # Check if this is an AJAX request
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        # Return JSON response for AJAX requests
+        if response.get("success"):
+            return APIResponse.success(message="Xóa người dùng thành công")
+        else:
+            return APIResponse.error(
+                f'Lỗi khi xóa người dùng: {response.get("message", "")}', 400
+            )
+
+    # Handle HTML responses for non-AJAX requests
     if response.get("success"):
-        return APIResponse.success(message="Xóa người dùng thành công")
+        flash("Xóa người dùng thành công", "success")
+        return redirect(url_for("users.list_users"))
     else:
-        return APIResponse.error(
-            f'Lỗi khi xóa người dùng: {response.get("message", "")}', 400
-        )
+        flash(f'Lỗi khi xóa người dùng: {response.get("message", "")}', "error")
+        return redirect(url_for("users.list_users"))

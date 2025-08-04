@@ -160,6 +160,8 @@ const UserOperations = (function () {
   // Submit form data to server
   async function submitForm(url, formData, submitBtn, originalButtonText) {
     try {
+      console.log("Submitting form to URL:", url);
+      console.log("Form data:", Object.fromEntries(formData.entries()));
       const apiResponse = await APIUtils.post(url, formData);
       handleSuccessResponse(apiResponse);
     } catch (error) {
@@ -216,6 +218,17 @@ const UserOperations = (function () {
         submitFormData.append(key, userData[key]);
       }
     });
+
+    // Debug logging (only in development)
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      console.log("FormData contents:");
+      for (let [key, value] of submitFormData.entries()) {
+        console.log(`  ${key}: ${value}`);
+      }
+    }
 
     const url = isEditMode
       ? `${config.baseUrl}/${currentUserId}/edit`
