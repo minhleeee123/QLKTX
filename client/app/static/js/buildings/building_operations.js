@@ -116,6 +116,7 @@ const BuildingOperations = (function () {
 
   // Submit form data to server
   async function submitForm(url, formData, submitBtn, originalButtonText) {
+    console.log("Submitting form to:", url);
     try {
       const apiResponse = await APIUtils.post(url, formData);
       handleSuccessResponse(apiResponse);
@@ -137,8 +138,51 @@ const BuildingOperations = (function () {
       buildingData[key] = value;
     }
 
+    // Get CSRF token with multiple fallback options
+    let csrfToken = null;
+
+    // Try to get from meta tag first
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+      csrfToken = csrfMeta.getAttribute("content");
+    }
+
+    // Fallback 1: try to get from hidden input in building form
+    if (!csrfToken) {
+      const csrfInput = document.querySelector(
+        '#buildingForm input[name="csrf_token"]'
+      );
+      if (csrfInput) {
+        csrfToken = csrfInput.value;
+      }
+    }
+
+    // Fallback 2: try to get from any hidden input with name csrf_token
+    if (!csrfToken) {
+      const csrfInputAny = document.querySelector('input[name="csrf_token"]');
+      if (csrfInputAny) {
+        csrfToken = csrfInputAny.value;
+      }
+    }
+
+    // Fallback 3: try to get from element with id csrfToken
+    if (!csrfToken) {
+      const csrfInputId = document.getElementById("csrfToken");
+      if (csrfInputId) {
+        csrfToken = csrfInputId.value;
+      }
+    }
+
+    console.log("Building form - CSRF Token found:", csrfToken ? "Yes" : "No");
+    console.log("Building form - CSRF Token value:", csrfToken);
+
     // Create FormData object with building data and CSRF token
-    const submitFormData = CSRFUtils.createFormDataWithToken();
+    const submitFormData = new FormData();
+
+    // Add CSRF token if found
+    if (csrfToken) {
+      submitFormData.append("csrf_token", csrfToken);
+    }
 
     // Add building data to form (only building_name exists in server model)
     if (
@@ -179,6 +223,7 @@ const BuildingOperations = (function () {
 
     // Open create building modal
     openCreateModal() {
+      console.log("Opening create building modal...");
       isEditMode = false;
       currentBuildingId = null;
 
@@ -303,6 +348,171 @@ const BuildingOperations = (function () {
     handleErrorResponse: handleErrorResponse,
   };
 })();
+
+// Global functions for building operations
+window.openCreateBuildingModal = function () {
+  BuildingOperations.openCreateModal();
+};
+
+window.openEditBuildingModal = function (buildingId) {
+  BuildingOperations.openEditModal(buildingId);
+};
+
+window.viewBuildingDetails = function (buildingId) {
+  BuildingOperations.viewEntityDetails(buildingId);
+};
+
+window.openDeleteBuildingModal = function (button) {
+  const buildingId = button.getAttribute("data-building-id");
+  const buildingName = button.getAttribute("data-building-name");
+
+  document.getElementById("buildingToDelete").textContent = buildingName;
+
+  // Store the building ID for the delete function instead of setting form action
+  document
+    .getElementById("deleteBuildingForm")
+    .setAttribute("data-building-id", buildingId);
+};
+
+// Function to handle building deletion via AJAX
+async function performDeleteBuilding(buildingId) {
+  console.log("Attempting to delete building with ID:", buildingId);
+
+  try {
+    // Get CSRF token with multiple fallback options
+    let csrfToken = null;
+
+    // Try to get from meta tag first
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+      csrfToken = csrfMeta.getAttribute("content");
+    }
+
+    // Fallback 1: try to get from hidden input in delete form
+    if (!csrfToken) {
+      const csrfInput = document.querySelector(
+        '#deleteBuildingForm input[name="csrf_token"]'
+      );
+      if (csrfInput) {
+        csrfToken = csrfInput.value;
+      }
+    }
+
+    // Fallback 2: try to get from any hidden input with name csrf_token
+    if (!csrfToken) {
+      const csrfInputAny = document.querySelector('input[name="csrf_token"]');
+      if (csrfInputAny) {
+        csrfToken = csrfInputAny.value;
+      }
+    }
+
+    // Fallback 3: try to get from element with id csrfToken
+    if (!csrfToken) {
+      const csrfInputId = document.getElementById("csrfToken");
+      if (csrfInputId) {
+        csrfToken = csrfInputId.value;
+      }
+    }
+
+    console.log(
+      "Building delete - CSRF Token found:",
+      csrfToken ? "Yes" : "No"
+    );
+    console.log("Building delete - CSRF Token value:", csrfToken);
+
+    // Prepare form data with CSRF token
+    const formData = new FormData();
+    if (csrfToken) {
+      formData.append("csrf_token", csrfToken);
+    }
+
+    const headers = {
+      "X-Requested-With": "XMLHttpRequest",
+    };
+
+    const response = await fetch(`/buildings/${buildingId}/delete`, {
+      method: "POST",
+      headers: headers,
+      body: formData,
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response headers:", response.headers.get("content-type"));
+
+    // Check if response is JSON
+    const contentType = response.headers.get("content-type");
+    let data;
+
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      // If not JSON, get as text to see what the server returned
+      const textResponse = await response.text();
+      console.log("Non-JSON response:", textResponse);
+      throw new Error(
+        `Server returned HTML instead of JSON. Status: ${response.status}`
+      );
+    }
+
+    if (response.ok && data.success) {
+      // Hide the modal first
+      const deleteModal = bootstrap.Modal.getInstance(
+        document.getElementById("deleteBuildingModal")
+      );
+      if (deleteModal) {
+        deleteModal.hide();
+      }
+
+      // Show success notification
+      if (typeof window.showNotification === "function") {
+        window.showNotification(
+          "success",
+          data.message || "Xóa tòa nhà thành công"
+        );
+      } else {
+        console.log("SUCCESS: " + (data.message || "Xóa tòa nhà thành công"));
+      }
+
+      // Reload page to refresh data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      if (typeof window.showNotification === "function") {
+        window.showNotification(
+          "danger",
+          data.message || "Không thể xóa tòa nhà"
+        );
+      } else {
+        alert(data.message || "Không thể xóa tòa nhà");
+      }
+    }
+  } catch (error) {
+    console.error("Error deleting building:", error);
+    if (typeof window.showNotification === "function") {
+      window.showNotification("danger", "Lỗi kết nối. Vui lòng thử lại.");
+    } else {
+      alert("Lỗi kết nối. Vui lòng thử lại.");
+    }
+  }
+}
+
+// Initialize when DOM is ready
+document.addEventListener("DOMContentLoaded", function () {
+  BuildingOperations.init();
+
+  // Handle delete form submission
+  const deleteForm = document.getElementById("deleteBuildingForm");
+  if (deleteForm) {
+    deleteForm.addEventListener("submit", function (e) {
+      e.preventDefault(); // Prevent default form submission
+      const buildingId = this.getAttribute("data-building-id");
+      if (buildingId) {
+        performDeleteBuilding(buildingId);
+      }
+    });
+  }
+});
 
 // Export to global scope for backward compatibility
 window.BuildingOperations = BuildingOperations;
