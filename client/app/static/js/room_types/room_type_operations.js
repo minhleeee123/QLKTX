@@ -511,7 +511,7 @@ function calculateUsageRate(total, available, occupied) {
   const occupiedRooms =
     occupied !== undefined ? occupied : total - (available || 0);
   const rate = ((occupiedRooms / total) * 100).toFixed(1);
-k
+
   // Determine color class based on usage rate
   let colorClass = "success";
   if (rate >= 90) {
