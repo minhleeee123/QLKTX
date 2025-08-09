@@ -425,6 +425,78 @@ window.viewUserDetails = function (userId) {
   UserOperations.viewEntityDetails(userId);
 };
 
+window.deleteUser = function (userId, userName) {
+  if (
+    confirm(
+      `Bạn có chắc chắn muốn xóa người dùng "${userName}"?\n\nLưu ý: Hành động này không thể hoàn tác!`
+    )
+  ) {
+    performDeleteUser(userId);
+  }
+};
+
+// Perform user deletion
+async function performDeleteUser(userId) {
+  console.log("Attempting to delete user with ID:", userId);
+
+  try {
+    // Get CSRF token using the shared utility
+    const csrfToken = CSRFUtils.getToken();
+    console.log("CSRF Token found:", csrfToken ? "Yes" : "No");
+
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    };
+
+    // Only add CSRF token if we found one
+    if (csrfToken) {
+      headers["X-CSRFToken"] = csrfToken;
+    }
+
+    const response = await fetch(`/users/${userId}/delete`, {
+      method: "POST",
+      headers: headers,
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      if (typeof window.showNotification === "function") {
+        window.showNotification(
+          "success",
+          data.message || "Xóa người dùng thành công"
+        );
+      } else {
+        console.log(
+          "SUCCESS: " + (data.message || "Xóa người dùng thành công")
+        );
+      }
+
+      // Reload page to refresh data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      if (typeof window.showNotification === "function") {
+        window.showNotification(
+          "danger",
+          data.message || "Không thể xóa người dùng"
+        );
+      } else {
+        alert(data.message || "Không thể xóa người dùng");
+      }
+    }
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    if (typeof window.showNotification === "function") {
+      window.showNotification("danger", "Lỗi kết nối. Vui lòng thử lại.");
+    } else {
+      alert("Lỗi kết nối. Vui lòng thử lại.");
+    }
+  }
+}
+
 // Initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", function () {
   UserOperations.init();
