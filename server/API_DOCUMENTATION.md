@@ -105,6 +105,29 @@ Tạo phòng mới (Admin/Management only)
 ### PUT /api/rooms/{room_id}
 Cập nhật thông tin phòng (Admin/Management only)
 
+### DELETE /api/rooms/{room_id}
+Xóa phòng (Admin only)
+
+**Response Success:**
+```json
+{
+  "success": true,
+  "message": "Xóa phòng thành công",
+  "data": null,
+  "status_code": 200
+}
+```
+
+**Response Error (Room in use):**
+```json
+{
+  "success": false,
+  "message": "Không thể xóa phòng đang được sử dụng",
+  "data": null,
+  "status_code": 400
+}
+```
+
 ### GET /api/rooms/buildings
 Lấy danh sách tòa nhà
 

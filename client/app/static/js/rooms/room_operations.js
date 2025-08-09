@@ -479,10 +479,142 @@ function openDeleteRoomModal(button) {
   const roomNumber = button.getAttribute("data-room-number");
 
   document.getElementById("roomToDelete").textContent = roomNumber;
-  document.getElementById("deleteRoomForm").action = `/rooms/${roomId}/delete`;
+
+  // Store the room ID for the delete function instead of setting form action
+  document
+    .getElementById("deleteRoomForm")
+    .setAttribute("data-room-id", roomId);
+}
+
+// Function to handle room deletion via AJAX
+async function performDeleteRoom(roomId) {
+  console.log("Attempting to delete room with ID:", roomId);
+
+  try {
+    // Get CSRF token with multiple fallback options
+    let csrfToken = null;
+    
+    // Try to get from meta tag first
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+      csrfToken = csrfMeta.getAttribute("content");
+    }
+    
+    // Fallback 1: try to get from hidden input in delete form
+    if (!csrfToken) {
+      const csrfInput = document.querySelector('#deleteRoomForm input[name="csrf_token"]');
+      if (csrfInput) {
+        csrfToken = csrfInput.value;
+      }
+    }
+    
+    // Fallback 2: try to get from any hidden input with name csrf_token
+    if (!csrfToken) {
+      const csrfInputAny = document.querySelector('input[name="csrf_token"]');
+      if (csrfInputAny) {
+        csrfToken = csrfInputAny.value;
+      }
+    }
+    
+    // Fallback 3: try to get from element with id csrfToken
+    if (!csrfToken) {
+      const csrfInputId = document.getElementById("csrfToken");
+      if (csrfInputId) {
+        csrfToken = csrfInputId.value;
+      }
+    }
+    
+    console.log("CSRF Token found:", csrfToken ? "Yes" : "No");
+    console.log("CSRF Token value:", csrfToken);
+
+    // Prepare form data with CSRF token
+    const formData = new FormData();
+    if (csrfToken) {
+      formData.append("csrf_token", csrfToken);
+    }
+
+    const headers = {
+      "X-Requested-With": "XMLHttpRequest",
+    };
+
+    const response = await fetch(`/rooms/${roomId}/delete`, {
+      method: "POST",
+      headers: headers,
+      body: formData
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response headers:", response.headers.get("content-type"));
+
+    // Check if response is JSON
+    const contentType = response.headers.get("content-type");
+    let data;
+    
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      // If not JSON, get as text to see what the server returned
+      const textResponse = await response.text();
+      console.log("Non-JSON response:", textResponse);
+      throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
+    }
+
+    if (response.ok && data.success) {
+      // Hide the modal first
+      const deleteModal = bootstrap.Modal.getInstance(
+        document.getElementById("deleteRoomModal")
+      );
+      if (deleteModal) {
+        deleteModal.hide();
+      }
+
+      // Show success notification
+      if (typeof window.showNotification === "function") {
+        window.showNotification(
+          "success",
+          data.message || "Xóa phòng thành công"
+        );
+      } else {
+        console.log("SUCCESS: " + (data.message || "Xóa phòng thành công"));
+      }
+
+      // Reload page to refresh data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      if (typeof window.showNotification === "function") {
+        window.showNotification(
+          "danger",
+          data.message || "Không thể xóa phòng"
+        );
+      } else {
+        alert(data.message || "Không thể xóa phòng");
+      }
+    }
+  } catch (error) {
+    console.error("Error deleting room:", error);
+    if (typeof window.showNotification === "function") {
+      window.showNotification("danger", "Lỗi kết nối. Vui lòng thử lại.");
+    } else {
+      alert("Lỗi kết nối. Vui lòng thử lại.");
+    }
+  }
 }
 
 // Handle form submission when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   RoomOperations.init();
+
+  // Handle delete form submission
+  const deleteForm = document.getElementById("deleteRoomForm");
+  if (deleteForm) {
+    deleteForm.addEventListener("submit", function (e) {
+      e.preventDefault(); // Prevent default form submission
+      const roomId = this.getAttribute("data-room-id");
+      if (roomId) {
+        performDeleteRoom(roomId);
+      }
+    });
+  }
 });

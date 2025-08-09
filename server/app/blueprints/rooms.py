@@ -369,3 +369,106 @@ def update_room(room_id):
     except Exception as e:
         db.session.rollback()
         return APIResponse.error(message=str(e), status_code=500)
+
+
+@rooms_bp.route("/<int:room_id>", methods=["DELETE"])
+@jwt_required()
+@require_role(["admin"])
+def delete_room(room_id):
+    """
+    Xóa phòng
+
+    Method: DELETE
+    URL: /rooms/{room_id}
+    Headers: Authorization: Bearer <token>
+
+    Example: DELETE /rooms/1
+
+    Response JSON (Success - 200):
+    {
+        "success": true,
+        "message": "Xóa phòng thành công",
+        "data": null,
+        "status_code": 200
+    }
+
+    Response JSON (Error - 404):
+    {
+        "success": false,
+        "message": "Phòng không tồn tại",
+        "data": null,
+        "status_code": 404
+    }
+
+    Response JSON (Error - 400):
+    {
+        "success": false,
+        "message": "Không thể xóa phòng đang được sử dụng",
+        "data": null,
+        "status_code": 400
+    }
+    """
+
+    try:
+        room = Room.query.get(room_id)
+        if not room:
+            return APIResponse.error(message="Phòng không tồn tại", status_code=404)
+
+        # Check if room is currently occupied
+        if room.current_occupancy > 0:
+            return APIResponse.error(
+                message="Không thể xóa phòng đang được sử dụng", status_code=400
+            )
+
+        # Check if room has any registrations (pending, approved, rejected)
+        from app.models import Registration
+
+        registrations_count = Registration.query.filter_by(room_id=room_id).count()
+        if registrations_count > 0:
+            return APIResponse.error(
+                message="Không thể xóa phòng có đơn đăng ký liên quan", status_code=400
+            )
+
+        # Check if room has any active contracts through registrations
+        from app.models import Contract
+
+        active_contracts = (
+            db.session.query(Contract)
+            .join(Registration)
+            .filter(
+                Registration.room_id == room_id,
+                Contract.start_date <= db.func.current_date(),
+                Contract.end_date >= db.func.current_date(),
+            )
+            .count()
+        )
+
+        if active_contracts > 0:
+            return APIResponse.error(
+                message="Không thể xóa phòng có hợp đồng đang hoạt động",
+                status_code=400,
+            )
+
+        # Check if room has any pending maintenance requests
+        from app.models import MaintenanceRequest
+
+        pending_maintenance = MaintenanceRequest.query.filter(
+            MaintenanceRequest.room_id == room_id,
+            MaintenanceRequest.status.in_(["pending", "assigned", "in_progress"]),
+        ).count()
+
+        if pending_maintenance > 0:
+            return APIResponse.error(
+                message="Không thể xóa phòng có yêu cầu bảo trì đang xử lý",
+                status_code=400,
+            )
+
+        # Safe to delete room - all related data has been checked
+        db.session.delete(room)
+        db.session.commit()
+
+        return APIResponse.success(message="Xóa phòng thành công")
+
+    except Exception as e:
+        db.session.rollback()
+        return APIResponse.error(message=str(e), status_code=500)
