@@ -1,11 +1,30 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
-from app.models import User, Contract, Registration
-from app.utils.decorators import require_role
+from app.models import Contract, ContractHistory, Payment, Registration, User
 from app.utils.api_response import APIResponse
+from app.utils.decorators import require_role
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 contracts_bp = Blueprint('contracts', __name__)
+
+
+def create_contract_history(
+    contract_id, user_id, action, old_value=None, new_value=None, notes=None
+):
+    """Helper function to create contract history record"""
+    import json
+
+    history = ContractHistory(
+        contract_id=contract_id,
+        user_id=user_id,
+        action=action,
+        old_value=json.dumps(old_value) if old_value else None,
+        new_value=json.dumps(new_value) if new_value else None,
+        notes=notes,
+    )
+    db.session.add(history)
+    return history
+
 
 @contracts_bp.route('/', methods=['GET'])
 @jwt_required()
@@ -167,8 +186,20 @@ def update_contract(contract_id):
         # Cập nhật ngày kết thúc
         if 'end_date' in data:
             from datetime import datetime
+            old_end_date = contract.end_date
             try:
-                contract.end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+                new_end_date = datetime.strptime(data["end_date"], "%Y-%m-%d").date()
+                contract.end_date = new_end_date
+
+                # Tạo lịch sử
+                create_contract_history(
+                    contract_id=contract.contract_id,
+                    user_id=get_jwt_identity(),
+                    action="updated",
+                    old_value={"end_date": old_end_date.isoformat()},
+                    new_value={"end_date": new_end_date.isoformat()},
+                    notes="Cập nhật ngày kết thúc hợp đồng",
+                )
             except ValueError:
                 return APIResponse.error(
                     message="Định dạng ngày không hợp lệ (YYYY-MM-DD)", status_code=400
@@ -194,13 +225,343 @@ def update_contract(contract_id):
         db.session.rollback()
         return APIResponse.error(message=str(e), status_code=500)
 
+
+@contracts_bp.route("/<int:contract_id>/renew", methods=["POST"])
+@jwt_required()
+@require_role(["admin", "management"])
+def renew_contract(contract_id):
+    """Gia hạn hợp đồng"""
+    try:
+        contract = Contract.query.get(contract_id)
+        if not contract:
+            return APIResponse.error(message="Hợp đồng không tồn tại", status_code=404)
+
+        data = request.get_json()
+        renewal_months = data.get("renewal_months", 12)  # Mặc định 12 tháng
+
+        if not isinstance(renewal_months, int) or renewal_months <= 0:
+            return APIResponse.error(
+                message="Số tháng gia hạn phải là số nguyên dương", status_code=400
+            )
+
+        from calendar import monthrange
+        from datetime import datetime, timedelta
+
+        # Tính ngày kết thúc mới bằng cách thêm tháng
+        if contract.is_expired:
+            # Nếu hợp đồng đã hết hạn, gia hạn từ hôm nay
+            current_date = datetime.now().date()
+            new_year = current_date.year
+            new_month = current_date.month + renewal_months
+
+            # Xử lý khi tháng vượt quá 12
+            while new_month > 12:
+                new_year += 1
+                new_month -= 12
+
+            # Xử lý ngày cuối tháng
+            max_day = monthrange(new_year, new_month)[1]
+            new_day = min(current_date.day, max_day)
+            new_end_date = datetime(new_year, new_month, new_day).date()
+        else:
+            # Nếu hợp đồng còn hiệu lực, gia hạn từ ngày kết thúc hiện tại
+            current_end = contract.end_date
+            new_year = current_end.year
+            new_month = current_end.month + renewal_months
+
+            # Xử lý khi tháng vượt quá 12
+            while new_month > 12:
+                new_year += 1
+                new_month -= 12
+
+            # Xử lý ngày cuối tháng
+            max_day = monthrange(new_year, new_month)[1]
+            new_day = min(current_end.day, max_day)
+            new_end_date = datetime(new_year, new_month, new_day).date()
+
+        # Cập nhật ngày kết thúc
+        old_end_date = contract.end_date
+        contract.end_date = new_end_date
+
+        # Tạo lịch sử
+        create_contract_history(
+            contract_id=contract.contract_id,
+            user_id=get_jwt_identity(),
+            action="renewed",
+            old_value={"end_date": old_end_date.isoformat()},
+            new_value={
+                "end_date": new_end_date.isoformat(),
+                "renewal_months": renewal_months,
+            },
+            notes=f"Gia hạn thêm {renewal_months} tháng",
+        )
+
+        db.session.commit()
+
+        contract_data = {
+            "contract": {
+                "contract_id": contract.contract_id,
+                "contract_code": contract.contract_code,
+                "old_end_date": old_end_date.isoformat(),
+                "new_end_date": contract.end_date.isoformat(),
+                "renewal_months": renewal_months,
+                "is_active": contract.is_active,
+                "days_remaining": contract.days_remaining,
+            }
+        }
+
+        return APIResponse.success(
+            data=contract_data,
+            message=f"Gia hạn hợp đồng thành công thêm {renewal_months} tháng",
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        return APIResponse.error(message=str(e), status_code=500)
+
+
+@contracts_bp.route("/<int:contract_id>/terminate", methods=["POST"])
+@jwt_required()
+@require_role(["admin", "management"])
+def terminate_contract(contract_id):
+    """Chấm dứt hợp đồng trước thời hạn"""
+    try:
+        contract = Contract.query.get(contract_id)
+        if not contract:
+            return APIResponse.error(message="Hợp đồng không tồn tại", status_code=404)
+
+        if contract.is_expired:
+            return APIResponse.error(message="Hợp đồng đã hết hạn", status_code=400)
+
+        data = request.get_json()
+        termination_reason = data.get("reason", "")
+
+        from datetime import date
+
+        # Cập nhật ngày kết thúc thành hôm nay
+        old_end_date = contract.end_date
+        contract.end_date = date.today()
+
+        # Cập nhật trạng thái phòng - giảm số người ở
+        room = contract.registration.room
+        if room.current_occupancy > 0:
+            room.current_occupancy -= 1
+            if room.current_occupancy < room.room_type.capacity:
+                room.status = "available"
+
+        # Tạo lịch sử
+        create_contract_history(
+            contract_id=contract.contract_id,
+            user_id=get_jwt_identity(),
+            action="terminated",
+            old_value={"end_date": old_end_date.isoformat(), "status": "active"},
+            new_value={
+                "end_date": contract.end_date.isoformat(),
+                "status": "terminated",
+            },
+            notes=termination_reason,
+        )
+
+        db.session.commit()
+
+        contract_data = {
+            "contract": {
+                "contract_id": contract.contract_id,
+                "contract_code": contract.contract_code,
+                "old_end_date": old_end_date.isoformat(),
+                "terminated_date": contract.end_date.isoformat(),
+                "termination_reason": termination_reason,
+                "is_active": contract.is_active,
+            }
+        }
+
+        return APIResponse.success(
+            data=contract_data, message="Chấm dứt hợp đồng thành công"
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        return APIResponse.error(message=str(e), status_code=500)
+
+
+@contracts_bp.route("/expiring-soon", methods=["GET"])
+@jwt_required()
+@require_role(["admin", "management"])
+def get_expiring_contracts():
+    """Lấy danh sách hợp đồng sắp hết hạn"""
+    try:
+        from datetime import date, timedelta
+
+        days_threshold = request.args.get("days", 30, type=int)
+        threshold_date = date.today() + timedelta(days=days_threshold)
+
+        contracts = (
+            Contract.query.filter(
+                Contract.end_date <= threshold_date, Contract.end_date >= date.today()
+            )
+            .order_by(Contract.end_date.asc())
+            .all()
+        )
+
+        contracts_data = {
+            "contracts": [
+                {
+                    "contract_id": contract.contract_id,
+                    "contract_code": contract.contract_code,
+                    "student": {
+                        "user_id": contract.registration.student.user_id,
+                        "full_name": contract.registration.student.full_name,
+                        "student_id": contract.registration.student.student_id,
+                        "email": contract.registration.student.email,
+                        "phone_number": contract.registration.student.phone_number,
+                    },
+                    "room": {
+                        "room_id": contract.registration.room.room_id,
+                        "room_number": contract.registration.room.room_number,
+                        "building_name": contract.registration.room.building.building_name,
+                    },
+                    "end_date": contract.end_date.isoformat(),
+                    "days_remaining": contract.days_remaining,
+                }
+                for contract in contracts
+            ],
+            "total_count": len(contracts),
+            "days_threshold": days_threshold,
+        }
+
+        return APIResponse.success(
+            data=contracts_data,
+            message=f"Lấy danh sách {len(contracts)} hợp đồng sắp hết hạn thành công",
+        )
+
+    except Exception as e:
+        return APIResponse.error(message=str(e), status_code=500)
+
+
+@contracts_bp.route("/export", methods=["GET"])
+@jwt_required()
+@require_role(["admin", "management"])
+def export_contracts():
+    """Xuất báo cáo hợp đồng ra Excel"""
+    try:
+        from app.services.contract_report_service import (
+            XLSXWRITER_AVAILABLE,
+            ContractReportService,
+        )
+
+        if not XLSXWRITER_AVAILABLE:
+            return APIResponse.error(
+                message="Tính năng xuất Excel chưa được cài đặt. Vui lòng liên hệ quản trị viên.",
+                status_code=503,
+            )
+
+        return ContractReportService.generate_contracts_excel_report()
+
+    except Exception as e:
+        return APIResponse.error(
+            message=f"Lỗi khi xuất báo cáo: {str(e)}", status_code=500
+        )
+
+
+@contracts_bp.route("/<int:contract_id>/export-history", methods=["GET"])
+@jwt_required()
+@require_role(["admin", "management"])
+def export_contract_history(contract_id):
+    """Xuất lịch sử hợp đồng ra Excel"""
+    try:
+        from app.services.contract_report_service import (
+            XLSXWRITER_AVAILABLE,
+            ContractReportService,
+        )
+
+        if not XLSXWRITER_AVAILABLE:
+            return APIResponse.error(
+                message="Tính năng xuất Excel chưa được cài đặt. Vui lòng liên hệ quản trị viên.",
+                status_code=503,
+            )
+
+        result = ContractReportService.generate_contract_history_report(contract_id)
+        if result:
+            return result
+        else:
+            return APIResponse.error(message="Hợp đồng không tồn tại", status_code=404)
+
+    except Exception as e:
+        return APIResponse.error(
+            message=f"Lỗi khi xuất lịch sử: {str(e)}", status_code=500
+        )
+
+
+@contracts_bp.route("/<int:contract_id>/history", methods=["GET"])
+@jwt_required()
+@require_role(["admin", "management"])
+def get_contract_history(contract_id):
+    """Lấy lịch sử thay đổi của hợp đồng"""
+    try:
+        contract = Contract.query.get(contract_id)
+        if not contract:
+            return APIResponse.error(message="Hợp đồng không tồn tại", status_code=404)
+
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 20, type=int)
+
+        history_query = ContractHistory.query.filter_by(
+            contract_id=contract_id
+        ).order_by(ContractHistory.created_at.desc())
+
+        history_pagination = history_query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+
+        import json
+
+        history_data = {
+            "history": [
+                {
+                    "history_id": history.history_id,
+                    "action": history.action,
+                    "action_display": history.action_display,
+                    "old_value": (
+                        json.loads(history.old_value) if history.old_value else None
+                    ),
+                    "new_value": (
+                        json.loads(history.new_value) if history.new_value else None
+                    ),
+                    "notes": history.notes,
+                    "created_at": history.created_at.isoformat(),
+                    "user": {
+                        "user_id": history.user.user_id,
+                        "full_name": history.user.full_name,
+                        "role": history.user.role.role_name,
+                    },
+                }
+                for history in history_pagination.items
+            ],
+            "pagination": {
+                "page": history_pagination.page,
+                "pages": history_pagination.pages,
+                "per_page": history_pagination.per_page,
+                "total": history_pagination.total,
+                "has_next": history_pagination.has_next,
+                "has_prev": history_pagination.has_prev,
+            },
+        }
+
+        return APIResponse.success(
+            data=history_data, message="Lấy lịch sử hợp đồng thành công"
+        )
+
+    except Exception as e:
+        return APIResponse.error(message=str(e), status_code=500)
+
+
 @contracts_bp.route('/statistics', methods=['GET'])
 @jwt_required()
 @require_role(['admin', 'management'])
 def get_contract_statistics():
     """Thống kê hợp đồng"""
     try:
-        from datetime import date
+        from datetime import date, timedelta
 
         total_contracts = Contract.query.count()
         active_contracts = Contract.query.filter(
@@ -211,18 +572,36 @@ def get_contract_statistics():
             Contract.end_date < date.today()
         ).count()
 
-        # Tính tổng doanh thu
-        total_revenue = db.session.query(db.func.sum(Contract.total_paid)).scalar() or 0
+        # Hợp đồng sắp hết hạn (trong 30 ngày)
+        expiring_soon = Contract.query.filter(
+            Contract.end_date <= date.today() + timedelta(days=30),
+            Contract.end_date >= date.today(),
+        ).count()
+
+        # Tính tổng doanh thu từ các thanh toán đã xác nhận
+        total_revenue = (
+            db.session.query(db.func.sum(Payment.amount))
+            .filter(Payment.status == "confirmed")
+            .scalar()
+            or 0
+        )
 
         statistics_data = {
             "statistics": {
                 "total_contracts": total_contracts,
                 "active_contracts": active_contracts,
                 "expired_contracts": expired_contracts,
+                "expiring_soon": expiring_soon,
                 "total_revenue": float(total_revenue),
             }
         }
 
+        return APIResponse.success(
+            data=statistics_data, message="Lấy thống kê hợp đồng thành công"
+        )
+
+    except Exception as e:
+        return APIResponse.error(message=str(e), status_code=500)
         return APIResponse.success(
             data=statistics_data, message="Lấy thống kê hợp đồng thành công"
         )

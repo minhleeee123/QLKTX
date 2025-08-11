@@ -1,6 +1,7 @@
 from app.blueprints.auth import auth_bp
 from app.blueprints.buildings import buildings_bp
 from app.blueprints.contracts import contracts_bp
+from app.blueprints.dashboard import dashboard_bp
 from app.blueprints.maintenance import maintenance_bp
 from app.blueprints.payments import payments_bp
 from app.blueprints.registrations import registrations_bp
@@ -18,4 +19,5 @@ __all__ = [
     "contracts_bp",
     "payments_bp",
     "maintenance_bp",
+    "dashboard_bp",
 ]

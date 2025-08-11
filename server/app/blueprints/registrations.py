@@ -1,10 +1,11 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from datetime import date, datetime
+
 from app.extensions import db
-from app.models import User, Registration, Room, Contract
-from datetime import datetime, date
-from app.utils.decorators import require_role
+from app.models import Contract, ContractHistory, Registration, Room, User
 from app.utils.api_response import APIResponse
+from app.utils.decorators import require_role
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 registrations_bp = Blueprint('registrations', __name__)
 
@@ -106,10 +107,11 @@ def create_registration():
             )
 
         # Kiểm tra sinh viên đã có đơn đăng ký pending/approved chưa
-        existing_registration = Registration.query.filter_by(
-            student_id=current_user_id,
-            status=['pending', 'approved']
-        ).first()
+        existing_registration = (
+            Registration.query.filter_by(student_id=current_user_id)
+            .filter(Registration.status.in_(["pending", "approved"]))
+            .first()
+        )
         if existing_registration:
             return APIResponse.error(
                 message="Bạn đã có đơn đăng ký đang chờ xử lý hoặc đã được duyệt",
@@ -190,6 +192,27 @@ def approve_registration(registration_id):
         )
 
         db.session.add(contract)
+        db.session.flush()  # To get the contract ID
+
+        # Tạo lịch sử hợp đồng
+        import json
+
+        history = ContractHistory(
+            contract_id=contract.contract_id,
+            user_id=get_jwt_identity(),
+            action="created",
+            new_value=json.dumps(
+                {
+                    "contract_code": contract_code,
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "registration_id": registration.registration_id,
+                }
+            ),
+            notes=f"Hợp đồng được tạo tự động khi duyệt đơn đăng ký #{registration.registration_id}",
+        )
+        db.session.add(history)
+
         db.session.commit()
 
         registration_data = {
@@ -277,4 +300,5 @@ def cancel_registration(registration_id):
 
     except Exception as e:
         db.session.rollback()
+        return APIResponse.error(message=str(e), status_code=500)
         return APIResponse.error(message=str(e), status_code=500)

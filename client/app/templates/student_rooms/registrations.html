@@ -1,0 +1,236 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ title }} - Quản lý ký túc xá{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-2">
+            <i class="fas fa-list"></i> {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('student_rooms.browse_rooms') }}">Chọn phòng</a></li>
+                <li class="breadcrumb-item active">Đơn đăng ký</li>
+            </ol>
+        </nav>
+    </div>
+    <div>
+        <a href="{{ url_for('student_rooms.browse_rooms') }}" class="btn btn-outline-primary">
+            <i class="fas fa-bed"></i> Chọn phòng mới
+        </a>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('student_rooms.my_registrations') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label">Trạng thái</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Chờ duyệt</option>
+                    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Đã duyệt</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Bị từ chối</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Registrations List -->
+{% if registrations %}
+<div class="row">
+    {% for registration in registrations %}
+    <div class="col-lg-6 mb-4">
+        <div class="card registration-card h-100 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-door-open"></i> 
+                    Phòng {{ registration.room.room_number }}
+                </h5>
+                {% if registration.status == 'pending' %}
+                <span class="badge bg-warning">
+                    <i class="fas fa-clock"></i> Chờ duyệt
+                </span>
+                {% elif registration.status == 'approved' %}
+                <span class="badge bg-success">
+                    <i class="fas fa-check-circle"></i> Đã duyệt
+                </span>
+                {% elif registration.status == 'rejected' %}
+                <span class="badge bg-danger">
+                    <i class="fas fa-times-circle"></i> Bị từ chối
+                </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="registration-info mb-3">
+                    <div class="info-row">
+                        <i class="fas fa-building text-muted"></i>
+                        <strong>Tòa:</strong> {{ registration.room.building_name }}
+                    </div>
+                    <div class="info-row">
+                        <i class="fas fa-users text-muted"></i>
+                        <strong>Loại phòng:</strong> {{ registration.room.room_type }}
+                    </div>
+                    <div class="info-row">
+                        <i class="fas fa-money-bill-wave text-muted"></i>
+                        <strong>Giá:</strong> {{ '{:,.0f}'.format(registration.room.price) }} VNĐ/tháng
+                    </div>
+                    <div class="info-row">
+                        <i class="fas fa-calendar text-muted"></i>
+                        <strong>Ngày đăng ký:</strong> {{ registration.registration_date|datetime }}
+                    </div>
+                    {% if registration.has_contract %}
+                    <div class="info-row">
+                        <i class="fas fa-file-contract text-success"></i>
+                        <strong>Hợp đồng:</strong> <span class="text-success">Đã có</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer">
+                {% if registration.status == 'pending' %}
+                <button class="btn btn-outline-danger btn-sm w-100" 
+                        data-action="cancel-registration"
+                        data-registration-id="{{ registration.registration_id }}"
+                        data-room-number="{{ registration.room.room_number }}">
+                    <i class="fas fa-times"></i> Hủy đăng ký
+                </button>
+                {% elif registration.status == 'approved' and registration.has_contract %}
+                <a href="#" class="btn btn-outline-info btn-sm w-100">
+                    <i class="fas fa-file-contract"></i> Xem hợp đồng
+                </a>
+                {% elif registration.status == 'rejected' %}
+                <a href="{{ url_for('student_rooms.browse_rooms') }}" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-bed"></i> Đăng ký phòng khác
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if pagination and pagination.pages and pagination.pages > 1 %}
+<nav aria-label="Registration pagination">
+    <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ pagination.page - 1 }}&status={{ status_filter or '' }}">
+                <i class="fas fa-chevron-left"></i> Trước
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for page_num in range(1, pagination.pages + 1) %}
+            {% if page_num == pagination.page %}
+            <li class="page-item active">
+                <span class="page-link">{{ page_num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_num }}&status={{ status_filter or '' }}">
+                    {{ page_num }}
+                </a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ pagination.page + 1 }}&status={{ status_filter or '' }}">
+                Sau <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-list fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">Chưa có đơn đăng ký nào</h4>
+    <p class="text-muted">Hãy chọn phòng để bắt đầu đăng ký</p>
+    <a href="{{ url_for('student_rooms.browse_rooms') }}" class="btn btn-primary">
+        <i class="fas fa-bed"></i> Chọn phòng ngay
+    </a>
+</div>
+{% endif %}
+
+<!-- Cancel Registration Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">
+                    <i class="fas fa-times"></i> Xác nhận hủy đăng ký
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn hủy đăng ký phòng <strong id="roomNumberToCancel"></strong>?</p>
+                <p class="text-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Hành động này không thể hoàn tác.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Không</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtn">
+                    <i class="fas fa-times"></i> Hủy đăng ký
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.registration-card {
+    transition: transform 0.2s;
+}
+
+.registration-card:hover {
+    transform: translateY(-2px);
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.info-row i {
+    width: 20px;
+    margin-right: 8px;
+}
+
+.badge {
+    font-size: 0.9em;
+}
+
+.pagination {
+    margin-top: 2rem;
+}
+
+.text-warning {
+    color: #f0ad4e !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/student_rooms/registrations.js') }}"></script>
+{% endblock %}

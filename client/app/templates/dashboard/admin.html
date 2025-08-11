@@ -2,6 +2,9 @@
 
 {% block title %}Dashboard Admin - Quản lý ký túc xá{% endblock %}
 
+{% block extra_css %}
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -14,14 +17,23 @@
 </div>
 
 <!-- Statistics Cards -->
-<div class="row mb-4">
+<div class="row mb-4" id="statisticsCards">
     <div class="col-md-3">
-        <div class="card bg-primary text-white">
+        <div class="card bg-primary text-white stats-card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Tổng số phòng</h6>
-                        <h2 class="mb-0">120</h2>
+                        <h2 class="stats-number" id="totalRooms">
+                            {{ stats.room_stats.total_rooms if stats and stats.room_stats else 0 }}
+                        </h2>
+                        <small class="occupancy-rate">
+                            {% if stats and stats.room_stats and stats.room_stats.occupancy_rate %}
+                            Tỷ lệ sử dụng: {{ stats.room_stats.occupancy_rate }}%
+                            {% else %}
+                            Đang tải dữ liệu...
+                            {% endif %}
+                        </small>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-bed fa-2x"></i>
@@ -32,12 +44,21 @@
     </div>
     
     <div class="col-md-3">
-        <div class="card bg-success text-white">
+        <div class="card bg-success text-white stats-card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Phòng đã thuê</h6>
-                        <h2 class="mb-0">85</h2>
+                        <h2 class="stats-number" id="occupiedRooms">
+                            {{ stats.room_stats.occupied_rooms if stats and stats.room_stats else 0 }}
+                        </h2>
+                        <small class="occupancy-rate">
+                            {% if stats and stats.contract_stats and stats.contract_stats.active_contracts %}
+                            {{ stats.contract_stats.active_contracts }} hợp đồng hiệu lực
+                            {% else %}
+                            Đang tải dữ liệu...
+                            {% endif %}
+                        </small>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-check-circle fa-2x"></i>
@@ -48,12 +69,21 @@
     </div>
     
     <div class="col-md-3">
-        <div class="card bg-warning text-white">
+        <div class="card bg-warning text-white stats-card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Phòng trống</h6>
-                        <h2 class="mb-0">35</h2>
+                        <h2 class="stats-number" id="availableRooms">
+                            {{ stats.room_stats.available_rooms if stats and stats.room_stats else 0 }}
+                        </h2>
+                        <small class="occupancy-rate">
+                            {% if stats and stats.room_stats and stats.room_stats.maintenance_rooms %}
+                            {{ stats.room_stats.maintenance_rooms }} phòng bảo trì
+                            {% else %}
+                            Sẵn sàng sử dụng
+                            {% endif %}
+                        </small>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-door-open fa-2x"></i>
@@ -64,17 +94,87 @@
     </div>
     
     <div class="col-md-3">
-        <div class="card bg-info text-white">
+        <div class="card bg-info text-white stats-card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Tổng sinh viên</h6>
-                        <h2 class="mb-0">156</h2>
+                        <h2 class="stats-number" id="totalStudents">
+                            {{ stats.user_stats.total_students if stats and stats.user_stats else 0 }}
+                        </h2>
+                        <small class="occupancy-rate">
+                            {% if stats and stats.registration_stats and stats.registration_stats.pending_registrations %}
+                            {{ stats.registration_stats.pending_registrations }} đơn chờ duyệt
+                            {% else %}
+                            Đã đăng ký
+                            {% endif %}
+                        </small>
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-users fa-2x"></i>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Statistics Row -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-gradient-primary text-white stats-card">
+            <div class="card-body text-center">
+                <h6 class="card-title">Tổng doanh thu</h6>
+                <h3 class="stats-number">
+                    {% if stats and stats.payment_stats and stats.payment_stats.total_revenue is not none %}
+                    {{ "{:,.0f}".format(stats.payment_stats.total_revenue) }}đ
+                    {% else %}
+                    0đ
+                    {% endif %}
+                </h3>
+                <small>
+                    {{ stats.payment_stats.confirmed_payments if stats and stats.payment_stats else 0 }} thanh toán đã
+                    xác nhận
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-gradient-warning text-white stats-card">
+            <div class="card-body text-center">
+                <h6 class="card-title">Hợp đồng sắp hết hạn</h6>
+                <h3 class="stats-number text-warning" style="color: #fff !important;">
+                    {{ stats.contract_stats.expiring_soon if stats and stats.contract_stats else 0 }}
+                </h3>
+                <small>Trong 30 ngày tới</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-gradient-danger text-white stats-card">
+            <div class="card-body text-center">
+                <h6 class="card-title">Bảo trì chờ xử lý</h6>
+                <h3 class="stats-number">
+                    {{ stats.maintenance_stats.pending_maintenance if stats and stats.maintenance_stats else 0 }}
+                </h3>
+                <small>
+                    {{ stats.maintenance_stats.in_progress_maintenance if stats and stats.maintenance_stats else 0 }}
+                    đang thực hiện
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-gradient-success text-white stats-card">
+            <div class="card-body text-center">
+                <h6 class="card-title">Thanh toán chờ duyệt</h6>
+                <h3 class="stats-number">
+                    {{ stats.payment_stats.pending_payments if stats and stats.payment_stats else 0 }}
+                </h3>
+                <small>Cần xác nhận</small>
             </div>
         </div>
     </div>
@@ -90,21 +190,21 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-2 mb-2">
-                        <a href="#" class="btn btn-outline-primary w-100">
+                        <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-primary w-100">
                             <i class="fas fa-user-plus"></i><br>
-                            Thêm người dùng
+                            Quản lý người dùng
                         </a>
                     </div>
                     <div class="col-md-2 mb-2">
-                        <a href="#" class="btn btn-outline-success w-100">
+                        <a href="{{ url_for('rooms.list_rooms') }}" class="btn btn-outline-success w-100">
                             <i class="fas fa-bed"></i><br>
-                            Thêm phòng
+                            Quản lý phòng
                         </a>
                     </div>
                     <div class="col-md-2 mb-2">
-                        <a href="#" class="btn btn-outline-info w-100">
+                        <a href="{{ url_for('contracts.list_contracts') }}" class="btn btn-outline-info w-100">
                             <i class="fas fa-file-contract"></i><br>
-                            Tạo hợp đồng
+                            Hợp đồng
                         </a>
                     </div>
                     <div class="col-md-2 mb-2">
@@ -114,15 +214,15 @@
                         </a>
                     </div>
                     <div class="col-md-2 mb-2">
-                        <a href="#" class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-chart-bar"></i><br>
-                            Báo cáo
+                        <a href="{{ url_for('contracts.list_expiring_contracts') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-exclamation-triangle"></i><br>
+                            Sắp hết hạn
                         </a>
                     </div>
                     <div class="col-md-2 mb-2">
                         <a href="#" class="btn btn-outline-dark w-100">
-                            <i class="fas fa-cog"></i><br>
-                            Cài đặt
+                            <i class="fas fa-chart-bar"></i><br>
+                            Báo cáo
                         </a>
                     </div>
                 </div>
@@ -135,32 +235,38 @@
 <div class="row">
     <div class="col-md-8">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5><i class="fas fa-clock"></i> Hoạt động gần đây</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="refreshActivities()">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
             </div>
             <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-user-plus text-success"></i>
-                            Sinh viên Nguyễn Văn A đã đăng ký phòng 101
+                <div id="activitiesList">
+                    {% if recent_activities %}
+                    {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                    <i class="{{ activity.icon }} text-{{ activity.color }}"></i>
+                                    <span class="ms-2">{{ activity.message }}</span>
+                                    {% if activity.status %}
+                                    <span class="badge bg-{{ activity.color }} ms-2">{{ activity.status }}</span>
+                                    {% endif %}
+                                    </div>
+                                <small class="text-muted">{{ activity.relative_time }}</small>
+                                </div>
                         </div>
-                        <small class="text-muted">2 phút trước</small>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">Chưa có hoạt động gần đây</p>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-credit-card text-primary"></i>
-                            Thanh toán tiền phòng tháng 7 đã được xác nhận
-                        </div>
-                        <small class="text-muted">15 phút trước</small>
+                    {% endif %}
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-tools text-warning"></i>
-                            Yêu cầu sửa chữa điều hòa phòng 205
-                        </div>
-                        <small class="text-muted">1 giờ trước</small>
-                    </div>
+                <div class="loading-spinner" id="activitiesLoading">
+                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
                 </div>
             </div>
         </div>
@@ -172,17 +278,114 @@
                 <h5><i class="fas fa-exclamation-triangle"></i> Cần chú ý</h5>
             </div>
             <div class="card-body">
-                <div class="alert alert-warning">
-                    <strong>3</strong> yêu cầu bảo trì chờ xử lý
+                <div id="alertsList">
+                    {% if alerts %}
+                    {% for alert in alerts %}
+                    <div class="alert alert-{{ alert.type }} alert-item"
+                        {% if alert.action_url %}onclick="window.location.href='{{ alert.action_url }}'" {% endif %}>
+                        <div class="d-flex align-items-center">
+                            <i class="{{ alert.icon }} me-2"></i>
+                            <div>
+                                <strong>{{ alert.count }}</strong> {{ alert.title }}
+                                <br><small>{{ alert.message }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Tất cả ổn định!</strong>
+                        <br><small>Không có vấn đề cần chú ý</small>
+                    </div>
+                    {% endif %}
                 </div>
-                <div class="alert alert-info">
-                    <strong>5</strong> hợp đồng sắp hết hạn
                 </div>
-                <div class="alert alert-danger">
-                    <strong>2</strong> thanh toán quá hạn
+                </div>
+                </div>
+</div>
+<div class="loading-spinner" id="mainLoading">
+    <i class="fas fa-spinner fa-spin fa-3x"></i>
+    <p class="mt-3">Đang tải dữ liệu...</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Refresh activities function
+    function refreshActivities() {
+        const activitiesList = document.getElementById('activitiesList');
+        const activitiesLoading = document.getElementById('activitiesLoading');
+
+        // Show loading spinner
+        activitiesLoading.style.display = 'block';
+        activitiesList.style.opacity = '0.5';
+
+        fetch('{{ url_for("dashboard.recent_activities") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.activities) {
+                    updateActivitiesList(data.activities);
+                } else {
+                    console.error('Failed to fetch activities:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching activities:', error);
+            })
+            .finally(() => {
+                // Hide loading spinner
+                activitiesLoading.style.display = 'none';
+                activitiesList.style.opacity = '1';
+            });
+    }
+
+    function updateActivitiesList(activities) {
+        const activitiesList = document.getElementById('activitiesList');
+
+        if (!activities || activities.length === 0) {
+            activitiesList.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">Chưa có hoạt động gần đây</p>
+                </div>
+            `;
+            return;
+        }
+
+        const activitiesHtml = activities.map(activity => `
+            <div class="activity-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="${activity.icon} text-${activity.color}"></i>
+                        <span class="ms-2">${activity.message}</span>
+                        ${activity.status ? `<span class="badge bg-${activity.color} ms-2">${activity.status}</span>` : ''}
+                    </div>
+                    <small class="text-muted">${activity.relative_time}</small>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        `).join('');
+
+                activitiesList.innerHTML = activitiesHtml;
+            }
+
+            // Auto-refresh activities every 5 minutes
+            setInterval(refreshActivities, 5 * 60 * 1000);
+
+            // Initialize dashboard
+            document.addEventListener('DOMContentLoaded', function () {
+                // Hide main loading spinner
+                const mainLoading = document.getElementById('mainLoading');
+                if (mainLoading) {
+                    mainLoading.style.display = 'none';
+                }
+
+                // Add hover effects to alert items
+                document.querySelectorAll('.alert-item').forEach(item => {
+                    if (item.onclick) {
+                        item.style.cursor = 'pointer';
+                    }
+                });
+            });
+        </script>
 {% endblock %}

@@ -1,0 +1,319 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .expiring-header {
+        background: linear-gradient(135deg, #ff7b7b 0%, #d67d7d 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .contract-card {
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .contract-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .urgency-badge {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 12px;
+    }
+    
+    .urgency-critical {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .urgency-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .urgency-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .filter-tabs {
+        margin-bottom: 2rem;
+    }
+    
+    .filter-tabs .nav-link {
+        color: #495057;
+        border: none;
+        background: transparent;
+        font-weight: 500;
+    }
+    
+    .filter-tabs .nav-link.active {
+        color: #dc3545;
+        border-bottom: 2px solid #dc3545;
+        background: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="expiring-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-2">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Hợp đồng sắp hết hạn
+                </h2>
+                <p class="mb-0">
+                    Có {{ total_count }} hợp đồng sẽ hết hạn trong {{ days_threshold }} ngày tới
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{{ url_for('contracts.list_contracts') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại danh sách
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link {% if days_threshold == 7 %}active{% endif %}" 
+                   href="{{ url_for('contracts.list_expiring_contracts', days=7) }}">
+                    7 ngày (Khẩn cấp)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if days_threshold == 15 %}active{% endif %}" 
+                   href="{{ url_for('contracts.list_expiring_contracts', days=15) }}">
+                    15 ngày
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if days_threshold == 30 %}active{% endif %}" 
+                   href="{{ url_for('contracts.list_expiring_contracts', days=30) }}">
+                    30 ngày
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if days_threshold == 60 %}active{% endif %}" 
+                   href="{{ url_for('contracts.list_expiring_contracts', days=60) }}">
+                    60 ngày
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Contracts List -->
+    {% if contracts %}
+        <div class="row">
+            {% for contract in contracts %}
+            <div class="col-lg-6 col-xl-4 mb-3">
+                <div class="card contract-card">
+                    <div class="card-body">
+                        <!-- Header with urgency badge -->
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="card-title mb-0">{{ contract.contract_code }}</h6>
+                            {% set days_remaining = contract.days_remaining %}
+                            <span class="urgency-badge 
+                                {% if days_remaining <= 7 %}urgency-critical
+                                {% elif days_remaining <= 15 %}urgency-warning
+                                {% else %}urgency-info
+                                {% endif %}">
+                                {{ days_remaining }} ngày
+                            </span>
+                        </div>
+
+                        <!-- Student Info -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-1">
+                                {{ contract.student.full_name }}
+                            </h6>
+                            <small class="text-muted">
+                                {{ contract.student.student_id }} • {{ contract.student.email }}
+                            </small>
+                        </div>
+
+                        <!-- Room Info -->
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Phòng:</small><br>
+                                    <strong>{{ contract.room.room_number }}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Tòa:</small><br>
+                                    <strong>{{ contract.room.building_name }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expiry Date -->
+                        <div class="mb-3">
+                            <small class="text-muted">Ngày hết hạn:</small><br>
+                            <strong class="text-danger">{{ contract.end_date }}</strong>
+                        </div>
+
+                        <!-- Contact Info -->
+                        <div class="mb-3">
+                            <small class="text-muted">Liên hệ:</small><br>
+                            <a href="tel:{{ contract.student.phone_number }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-phone"></i> {{ contract.student.phone_number }}
+                            </a>
+                        </div>
+
+                        <!-- Actions -->
+                        {% if current_user.is_admin %}
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-warning" 
+                                    onclick="renewContract({{ contract.contract_id }})" 
+                                    title="Gia hạn hợp đồng">
+                                <i class="fas fa-calendar-plus"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" 
+                                    onclick="viewContractDetails({{ contract.contract_id }})" 
+                                    title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="mailto:{{ contract.student.email }}" 
+                               class="btn btn-sm btn-outline-secondary" 
+                               title="Gửi email nhắc nhở">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-check fa-3x text-success mb-3"></i>
+            <h4>Không có hợp đồng nào sắp hết hạn</h4>
+            <p class="text-muted">Tất cả hợp đồng đều còn thời hạn dài.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Include contract modals -->
+{% include 'contracts/modals.html' %}
+
+<!-- Renewal Modal -->
+<div class="modal fade" id="renewalModal" tabindex="-1" aria-labelledby="renewalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="renewalModalLabel">
+                    <i class="fas fa-calendar-plus me-2"></i>Gia hạn hợp đồng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="renewalForm">
+                <div class="modal-body">
+                    <input type="hidden" id="renewalContractId">
+                    
+                    <div class="mb-3">
+                        <label for="renewalMonths" class="form-label">Số tháng gia hạn <span class="text-danger">*</span></label>
+                        <select class="form-select" id="renewalMonths" required>
+                            <option value="">Chọn thời gian gia hạn</option>
+                            <option value="3">3 tháng</option>
+                            <option value="6">6 tháng</option>
+                            <option value="12" selected>12 tháng</option>
+                            <option value="24">24 tháng</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="renewalNotes" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="renewalNotes" rows="3" placeholder="Nhập ghi chú về việc gia hạn..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-calendar-plus me-1"></i>Gia hạn
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/contracts/contract_operations.js') }}"></script>
+<script>
+// Contract renewal function
+function renewContract(contractId) {
+    document.getElementById('renewalContractId').value = contractId;
+    const modal = new bootstrap.Modal(document.getElementById('renewalModal'));
+    modal.show();
+}
+
+// Handle renewal form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const renewalForm = document.getElementById('renewalForm');
+    if (renewalForm) {
+        renewalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const contractId = document.getElementById('renewalContractId').value;
+            const renewalMonths = document.getElementById('renewalMonths').value;
+            const notes = document.getElementById('renewalNotes').value;
+            
+            if (!renewalMonths) {
+                alert('Vui lòng chọn số tháng gia hạn');
+                return;
+            }
+            
+            // Disable submit button
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            
+            fetch(`/contracts/${contractId}/renew`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    renewal_months: parseInt(renewalMonths),
+                    notes: notes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Gia hạn hợp đồng thành công');
+                    location.reload();
+                } else {
+                    alert('Lỗi: ' + (data.message || 'Không thể gia hạn hợp đồng'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi gia hạn hợp đồng');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

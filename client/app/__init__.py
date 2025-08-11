@@ -1,15 +1,6 @@
 import os
 from datetime import datetime
 
-from app.blueprints import (
-    auth_bp,
-    buildings_bp,
-    contracts_bp,
-    dashboard_bp,
-    room_types_bp,
-    rooms_bp,
-    users_bp,
-)
 from app.extensions import csrf, login_manager, session
 from app.services.auth_service import auth_service
 from flask import Flask, redirect, render_template, url_for
@@ -55,6 +46,17 @@ def create_app():
             return User(user_data)
         return None
 
+    # Import blueprints
+    from app.blueprints.auth import auth_bp
+    from app.blueprints.buildings import buildings_bp
+    from app.blueprints.contracts import contracts_bp
+    from app.blueprints.dashboard import dashboard_bp
+    from app.blueprints.registrations import registrations_bp
+    from app.blueprints.room_types import room_types_bp
+    from app.blueprints.rooms import rooms_bp
+    from app.blueprints.student_rooms import student_rooms_bp
+    from app.blueprints.users import users_bp
+
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
@@ -63,6 +65,8 @@ def create_app():
     app.register_blueprint(contracts_bp, url_prefix='/contracts')
     app.register_blueprint(buildings_bp, url_prefix="/buildings")
     app.register_blueprint(room_types_bp, url_prefix="/room-types")
+    app.register_blueprint(student_rooms_bp)
+    app.register_blueprint(registrations_bp)
 
     # Global template context processor
     @app.context_processor

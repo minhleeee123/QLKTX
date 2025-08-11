@@ -1,13 +1,8 @@
-from flask import Flask
-
-from app.config import DevelopmentConfig, ProductionConfig
-from app.extensions import db, jwt, migrate
-from flask import request
-
 from app.blueprints import (
     auth_bp,
     buildings_bp,
     contracts_bp,
+    dashboard_bp,
     maintenance_bp,
     payments_bp,
     registrations_bp,
@@ -15,6 +10,9 @@ from app.blueprints import (
     rooms_bp,
     users_bp,
 )
+from app.config import DevelopmentConfig, ProductionConfig
+from app.extensions import db, jwt, migrate
+from flask import Flask, request
 
 
 def create_app():
@@ -37,6 +35,7 @@ def create_app():
     app.register_blueprint(contracts_bp, url_prefix="/api/contracts")
     app.register_blueprint(payments_bp, url_prefix="/api/payments")
     app.register_blueprint(maintenance_bp, url_prefix="/api/maintenance")
+    app.register_blueprint(dashboard_bp, url_prefix="/api/dashboard")
 
     # Home page route to display all API endpoints
     @app.route("/")

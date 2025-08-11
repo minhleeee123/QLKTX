@@ -4,6 +4,7 @@ from app.blueprints.contracts import contracts_bp
 from app.blueprints.dashboard import dashboard_bp
 from app.blueprints.room_types import room_types_bp
 from app.blueprints.rooms import rooms_bp
+from app.blueprints.student_rooms import student_rooms_bp
 from app.blueprints.users import users_bp
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "contracts_bp",
     "buildings_bp",
     "room_types_bp",
+    "student_rooms_bp",
 ]

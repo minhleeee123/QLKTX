@@ -1,4 +1,9 @@
-from app.forms.contract_forms import ContractSearchForm, ContractUpdateForm
+from app.forms.contract_forms import (
+    ContractRenewalForm,
+    ContractSearchForm,
+    ContractTerminationForm,
+    ContractUpdateForm,
+)
 from app.services.contract_service import ContractService
 from app.utils.decorators import admin_required, management_required
 from app.utils.pagination import Pagination
@@ -67,11 +72,42 @@ def list_contracts():
 @contracts_bp.route("/<int:contract_id>")
 @login_required
 @management_required
+def view_contract(contract_id):
+    """View contract details page"""
+    try:
+        contract_data = ContractService.get_contract(contract_id)
+
+        if contract_data.get("success"):
+            contract = contract_data.get("data", {}).get("contract")
+            if not contract:
+                flash("Không tìm thấy thông tin hợp đồng", "danger")
+                return redirect(url_for("contracts.list_contracts"))
+
+            return render_template(
+                "contracts/detail.html",
+                contract=contract,
+                title=f"Hợp đồng {contract.get('contract_code', '#'+str(contract_id))}",
+            )
+        else:
+            flash(
+                f"Lỗi khi lấy thông tin hợp đồng: {contract_data.get('message', 'Lỗi không xác định')}",
+                "danger",
+            )
+            return redirect(url_for("contracts.list_contracts"))
+
+    except Exception as e:
+        flash(f"Lỗi khi lấy thông tin hợp đồng: {str(e)}", "danger")
+        return redirect(url_for("contracts.list_contracts"))
+
+
+@contracts_bp.route("/<int:contract_id>/ajax")
+@login_required
+@management_required
 def get_contract(contract_id):
     """Get contract details - AJAX only"""
     if request.headers.get("X-Requested-With") != "XMLHttpRequest":
-        # Non-AJAX requests should redirect to list
-        return redirect(url_for("contracts.list_contracts"))
+        # Non-AJAX requests should redirect to detail page
+        return redirect(url_for("contracts.view_contract", contract_id=contract_id))
 
     try:
         contract_data = ContractService.get_contract(contract_id)
@@ -150,6 +186,146 @@ def update_contract_ajax(contract_id):
         )
 
 
+@contracts_bp.route("/<int:contract_id>/renew", methods=["POST"])
+@login_required
+@admin_required
+def renew_contract_ajax(contract_id):
+    """Renew contract - AJAX only"""
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        return redirect(url_for("contracts.list_contracts"))
+
+    try:
+        data = request.get_json()
+
+        # Validate required fields
+        renewal_months = data.get("renewal_months", 12)
+        if not isinstance(renewal_months, int) or renewal_months <= 0:
+            return (
+                jsonify({"success": False, "message": "Số tháng gia hạn không hợp lệ"}),
+                400,
+            )
+
+        result = ContractService.renew_contract(contract_id, renewal_months)
+
+        if result.get("success"):
+            return jsonify(
+                {
+                    "success": True,
+                    "message": result.get("message", "Gia hạn hợp đồng thành công"),
+                    "contract": result.get("contract"),
+                }
+            )
+        else:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": result.get("error", "Lỗi không xác định"),
+                    }
+                ),
+                400,
+            )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {"success": False, "message": f"Lỗi khi gia hạn hợp đồng: {str(e)}"}
+            ),
+            500,
+        )
+
+
+@contracts_bp.route("/<int:contract_id>/terminate", methods=["POST"])
+@login_required
+@admin_required
+def terminate_contract_ajax(contract_id):
+    """Terminate contract - AJAX only"""
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        return redirect(url_for("contracts.list_contracts"))
+
+    try:
+        data = request.get_json()
+
+        # Validate required fields
+        reason = data.get("reason", "").strip()
+        if not reason:
+            return (
+                jsonify({"success": False, "message": "Lý do chấm dứt là bắt buộc"}),
+                400,
+            )
+
+        result = ContractService.terminate_contract(contract_id, reason)
+
+        if result.get("success"):
+            return jsonify(
+                {
+                    "success": True,
+                    "message": result.get("message", "Chấm dứt hợp đồng thành công"),
+                    "contract": result.get("contract"),
+                }
+            )
+        else:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": result.get("error", "Lỗi không xác định"),
+                    }
+                ),
+                400,
+            )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {"success": False, "message": f"Lỗi khi chấm dứt hợp đồng: {str(e)}"}
+            ),
+            500,
+        )
+
+
+@contracts_bp.route("/expiring-soon")
+@login_required
+@management_required
+def list_expiring_contracts():
+    """Display expiring contracts page"""
+    try:
+        days = request.args.get("days", 30, type=int)
+        result = ContractService.get_expiring_contracts(days)
+
+        if result.get("success"):
+            data = result.get("data", {})
+            contracts = data.get("contracts", [])
+            total_count = data.get("total_count", 0)
+            return render_template(
+                "contracts/expiring.html",
+                contracts=contracts,
+                total_count=total_count,
+                days_threshold=days,
+                title="Hợp đồng sắp hết hạn",
+            )
+        else:
+            flash(f"Lỗi khi tải danh sách hợp đồng sắp hết hạn: {result.get('message', 'Lỗi không xác định')}", "danger")
+            contracts = []
+            return render_template(
+                "contracts/expiring.html",
+                contracts=contracts,
+                total_count=0,
+                days_threshold=days,
+                title="Hợp đồng sắp hết hạn",
+            )
+
+    except Exception as e:
+        flash(f"Lỗi khi tải danh sách hợp đồng sắp hết hạn: {str(e)}", "danger")
+        return render_template(
+            "contracts/expiring.html",
+            contracts=[],
+            total_count=0,
+            days_threshold=30,
+            title="Hợp đồng sắp hết hạn",
+        )
+
+
 @contracts_bp.route("/statistics")
 @login_required
 @management_required
@@ -162,13 +338,13 @@ def get_statistics_ajax():
         result = ContractService.get_contract_statistics()
 
         if result.get("success"):
-            return jsonify({"success": True, "statistics": result.get("statistics")})
+            return jsonify({"success": True, "statistics": result.get("data", {}).get("statistics", {})})
         else:
             return (
                 jsonify(
                     {
                         "success": False,
-                        "message": result.get("error", "Lỗi không xác định"),
+                        "message": result.get("message", "Lỗi không xác định"),
                     }
                 ),
                 500,
@@ -176,6 +352,8 @@ def get_statistics_ajax():
 
     except Exception as e:
         return (
-            jsonify({"success": False, "message": f"Lỗi khi lấy thống kê: {str(e)}"}),
+            jsonify(
+                {"success": False, "message": f"Lỗi khi lấy thống kê: {str(e)}"}
+            ),
             500,
         )

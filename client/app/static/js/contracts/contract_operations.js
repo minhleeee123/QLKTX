@@ -91,40 +91,149 @@ function viewContractDetails(contractId) {
     });
 }
 
+// Function to renew contract
+function renewContract(contractId) {
+  const months = prompt("Nhập số tháng muốn gia hạn (1-60):", "12");
+  if (!months || isNaN(months) || months < 1 || months > 60) {
+    if (months !== null) {
+      alert("Số tháng phải từ 1 đến 60");
+    }
+    return;
+  }
+
+  if (!confirm(`Bạn có chắc chắn muốn gia hạn hợp đồng thêm ${months} tháng?`)) {
+    return;
+  }
+
+  fetch(`/contracts/${contractId}/renew`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({
+      renewal_months: parseInt(months)
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        alert(data.message || "Gia hạn hợp đồng thành công");
+        location.reload();
+      } else {
+        alert("Lỗi: " + (data.message || "Không thể gia hạn hợp đồng"));
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Có lỗi xảy ra khi gia hạn hợp đồng");
+    });
+}
+
+// Function to terminate contract
+function terminateContract(contractId) {
+  const reason = prompt("Nhập lý do chấm dứt hợp đồng:");
+  if (!reason || reason.trim() === "") {
+    if (reason !== null) {
+      alert("Lý do chấm dứt là bắt buộc");
+    }
+    return;
+  }
+
+  if (!confirm("Bạn có chắc chắn muốn chấm dứt hợp đồng này? Hành động này không thể hoàn tác.")) {
+    return;
+  }
+
+  fetch(`/contracts/${contractId}/terminate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({
+      reason: reason.trim()
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        alert(data.message || "Chấm dứt hợp đồng thành công");
+        location.reload();
+      } else {
+        alert("Lỗi: " + (data.message || "Không thể chấm dứt hợp đồng"));
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Có lỗi xảy ra khi chấm dứt hợp đồng");
+    });
+}
+
 // Function to approve contract
 function approveContract(contractId) {
-  if (confirm("Bạn có chắc chắn muốn duyệt hợp đồng này?")) {
-    const formData = new FormData();
-    const csrfToken =
-      document
-        .querySelector('meta[name="csrf-token"]')
-        ?.getAttribute("content") || "";
-    if (csrfToken) {
-      formData.append("csrf_token", csrfToken);
-    }
-
-    fetch(`/contracts/${contractId}/approve`, {
-      method: "POST",
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          showNotification("success", data.message);
-          setTimeout(() => {
-            location.reload();
-          }, 1000);
-        } else {
-          showNotification("error", "Lỗi: " + data.message);
-        }
-      })
-      .catch((error) => {
-        showNotification("error", "Có lỗi xảy ra: " + error.message);
-      });
+  if (!confirm("Bạn có chắc chắn muốn duyệt hợp đồng này?")) {
+    return;
   }
+
+  fetch(`/contracts/${contractId}/approve`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        alert(data.message || "Duyệt hợp đồng thành công");
+        location.reload();
+      } else {
+        alert("Lỗi: " + (data.message || "Không thể duyệt hợp đồng"));
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Có lỗi xảy ra khi duyệt hợp đồng");
+    });
+}
+
+// Function to terminate contract
+function terminateContract(contractId) {
+  const reason = prompt("Nhập lý do chấm dứt hợp đồng:");
+  if (!reason || reason.trim() === "") {
+    if (reason !== null) {
+      alert("Lý do chấm dứt là bắt buộc");
+    }
+    return;
+  }
+
+  if (!confirm("Bạn có chắc chắn muốn chấm dứt hợp đồng này? Hành động này không thể hoàn tác.")) {
+    return;
+  }
+
+  fetch(`/contracts/${contractId}/terminate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({
+      reason: reason.trim()
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        alert(data.message || "Chấm dứt hợp đồng thành công");
+        location.reload();
+      } else {
+        alert("Lỗi: " + (data.message || "Không thể chấm dứt hợp đồng"));
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Có lỗi xảy ra khi chấm dứt hợp đồng");
+    });
 }
 
 // Function to terminate contract
