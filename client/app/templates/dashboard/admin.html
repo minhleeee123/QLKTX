@@ -3,13 +3,37 @@
 {% block title %}Dashboard Admin - Quản lý ký túc xá{% endblock %}
 
 {% block extra_css %}
+<style>
+    .chart-container {
+        height: 400px;
+        position: relative;
+    }
+
+    .small-chart-container {
+        height: 250px;
+        position: relative;
+    }
+
+    .chart-container canvas,
+    .small-chart-container canvas {
+        max-height: 100%;
+    }
+
+    .stats-card {
+        transition: transform 0.2s;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">
-            <i class="fas fa-tachometer-alt"></i> 
+            <i class="fas fa-tachometer-alt"></i>
             Dashboard Admin
             <small class="text-muted">Chào mừng, {{ user.full_name }}!</small>
         </h1>
@@ -42,7 +66,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3">
         <div class="card bg-success text-white stats-card">
             <div class="card-body">
@@ -67,7 +91,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3">
         <div class="card bg-warning text-white stats-card">
             <div class="card-body">
@@ -92,7 +116,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3">
         <div class="card bg-info text-white stats-card">
             <div class="card-body">
@@ -180,6 +204,67 @@
     </div>
 </div>
 
+<!-- Charts and Analytics Section -->
+<div class="row mb-4">
+    <!-- Revenue Line Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Doanh thu theo tháng</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Occupancy Pie Chart -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Tình trạng phòng</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="roomStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Contract Status Bar Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Trạng thái hợp đồng</h5>
+            </div>
+            <div class="card-body">
+                <div class="small-chart-container">
+                    <canvas id="contractChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Distribution Doughnut Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-users"></i> Phân bố người dùng</h5>
+            </div>
+            <div class="card-body">
+                <div class="small-chart-container">
+                    <canvas id="userChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Quick Actions -->
 <div class="row mb-4">
     <div class="col-12">
@@ -214,7 +299,8 @@
                         </a>
                     </div>
                     <div class="col-md-2 mb-2">
-                        <a href="{{ url_for('contracts.list_expiring_contracts') }}" class="btn btn-outline-secondary w-100">
+                        <a href="{{ url_for('contracts.list_expiring_contracts') }}"
+                            class="btn btn-outline-secondary w-100">
                             <i class="fas fa-exclamation-triangle"></i><br>
                             Sắp hết hạn
                         </a>
@@ -248,30 +334,30 @@
                     <div class="activity-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                    <i class="{{ activity.icon }} text-{{ activity.color }}"></i>
-                                    <span class="ms-2">{{ activity.message }}</span>
-                                    {% if activity.status %}
-                                    <span class="badge bg-{{ activity.color }} ms-2">{{ activity.status }}</span>
-                                    {% endif %}
-                                    </div>
-                                <small class="text-muted">{{ activity.relative_time }}</small>
-                                </div>
+                                <i class="{{ activity.icon }} text-{{ activity.color }}"></i>
+                                <span class="ms-2">{{ activity.message }}</span>
+                                {% if activity.status %}
+                                <span class="badge bg-{{ activity.color }} ms-2">{{ activity.status }}</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ activity.relative_time }}</small>
                         </div>
-                        {% endfor %}
-                        {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
-                            <p class="text-muted">Chưa có hoạt động gần đây</p>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Chưa có hoạt động gần đây</p>
                     </div>
                     {% endif %}
-                    </div>
+                </div>
                 <div class="loading-spinner" id="activitiesLoading">
                     <i class="fas fa-spinner fa-spin"></i> Đang tải...
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
@@ -300,9 +386,9 @@
                     </div>
                     {% endif %}
                 </div>
-                </div>
-                </div>
-                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <div class="loading-spinner" id="mainLoading">
     <i class="fas fa-spinner fa-spin fa-3x"></i>
@@ -310,82 +396,24 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block extra_scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Dashboard Admin JavaScript -->
+<script src="{{ url_for('static', filename='js/dashboard-admin.js') }}"></script>
+
 <script>
-    // Refresh activities function
-    function refreshActivities() {
-        const activitiesList = document.getElementById('activitiesList');
-        const activitiesLoading = document.getElementById('activitiesLoading');
+    // Set up global variables for the dashboard
+    window.dashboardUrls = {
+        recent_activities: '{{ url_for("dashboard.recent_activities") }}'
+    };
 
-        // Show loading spinner
-        activitiesLoading.style.display = 'block';
-        activitiesList.style.opacity = '0.5';
-
-        fetch('{{ url_for("dashboard.recent_activities") }}')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.activities) {
-                    updateActivitiesList(data.activities);
-                } else {
-                    console.error('Failed to fetch activities:', data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching activities:', error);
-            })
-            .finally(() => {
-                // Hide loading spinner
-                activitiesLoading.style.display = 'none';
-                activitiesList.style.opacity = '1';
-            });
-    }
-
-    function updateActivitiesList(activities) {
-        const activitiesList = document.getElementById('activitiesList');
-
-        if (!activities || activities.length === 0) {
-            activitiesList.innerHTML = `
-                <div class="text-center py-4">
-                    <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
-                    <p class="text-muted">Chưa có hoạt động gần đây</p>
-                </div>
-            `;
-            return;
-        }
-
-        const activitiesHtml = activities.map(activity => `
-            <div class="activity-item">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="${activity.icon} text-${activity.color}"></i>
-                        <span class="ms-2">${activity.message}</span>
-                        ${activity.status ? `<span class="badge bg-${activity.color} ms-2">${activity.status}</span>` : ''}
-                    </div>
-                    <small class="text-muted">${activity.relative_time}</small>
-                </div>
-            </div>
-        `).join('');
-
-                activitiesList.innerHTML = activitiesHtml;
-            }
-
-            // Auto-refresh activities every 5 minutes
-            setInterval(refreshActivities, 5 * 60 * 1000);
-
-            // Initialize dashboard
-            document.addEventListener('DOMContentLoaded', function () {
-                // Hide main loading spinner
-                const mainLoading = document.getElementById('mainLoading');
-                if (mainLoading) {
-                    mainLoading.style.display = 'none';
-                }
-
-                // Add hover effects to alert items
-                document.querySelectorAll('.alert-item').forEach(item => {
-                    if (item.onclick) {
-                        item.style.cursor = 'pointer';
-                    }
-                });
-            });
-        </script>
+    // Initialize dashboard when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        const backendData = {{ stats | tojson | safe if stats else '{}'
+    }};
+    initializeDashboard(backendData);
+});
+</script>
 {% endblock %}
