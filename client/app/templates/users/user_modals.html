@@ -33,6 +33,20 @@
                                 <div class="text-danger small" id="phoneNumberError"></div>
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="gender" class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="male">Nam</option>
+                                    <option value="female">Nữ</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                                <div class="text-danger small" id="genderError"></div>
+                            </div>
+                        </div>
+                        </div>
+                        <div class="row">
                         <div class="col-md-6" id="studentIdField" style="display: none;">
                             <div class="mb-3">
                                 <label for="studentId" class="form-label">Mã sinh viên</label>
@@ -135,6 +149,10 @@
             <div class="mb-3">
                 <strong>Số điện thoại:</strong> 
                 <span class="text-muted">{% raw %}{{phone_number}}{% endraw %}</span>
+            </div>
+            <div class="mb-3">
+                <strong>Giới tính:</strong>
+                <span class="text-muted">{% raw %}{{gender}}{% endraw %}</span>
             </div>
         </div>
         <div class="col-md-6">

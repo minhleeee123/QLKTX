@@ -55,6 +55,7 @@ def register():
             "full_name": form.full_name.data,
             "email": form.email.data,
             "phone": form.phone.data,
+            "gender": form.gender.data,
             "student_id": form.student_id.data if form.role.data == "student" else None,
             "password": form.password.data,
             "role": form.role.data,

@@ -54,6 +54,7 @@ const UserOperations = (function () {
       fullName: user.full_name,
       email: user.email,
       phoneNumber: user.phone_number,
+      gender: user.gender,
       studentId: user.student_id,
       role: user.role,
       isActive: user.is_active ? "true" : "false",
@@ -87,6 +88,12 @@ const UserOperations = (function () {
       full_name: user.full_name || "N/A",
       email: user.email || "N/A",
       phone_number: user.phone_number || "Chưa có",
+      gender:
+        user.gender === "male"
+          ? "Nam"
+          : user.gender === "female"
+          ? "Nữ"
+          : "Khác",
       student_id: user.student_id || "Chưa có",
       role_badge_class: getRoleBadgeClass(user.role),
       role_text: getRoleText(user.role),

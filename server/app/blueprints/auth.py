@@ -105,6 +105,7 @@ def get_current_user():
                 "email": "user@example.com",
                 "phone_number": "0123456789",
                 "student_id": "SV001",
+                "gender": "male",
                 "role": "student",
                 "created_at": "2024-01-01T00:00:00",
                 "is_active": true
@@ -140,6 +141,7 @@ def get_current_user():
                 "email": user.email,
                 "phone_number": user.phone_number,
                 "student_id": user.student_id,
+                "gender": user.gender,
                 "role": user.role.role_name,
                 "created_at": user.created_at.isoformat(),
                 "is_active": user.is_active,
@@ -167,7 +169,8 @@ def register():
         "email": "user@example.com",       # Required: Email (unique)
         "password": "password123",         # Required: Mật khẩu (ít nhất 6 ký tự)
         "student_id": "SV001",            # Required: Mã sinh viên (unique)
-        "phone_number": "0123456789"       # Optional: Số điện thoại
+        "phone_number": "0123456789",      # Optional: Số điện thoại
+        "gender": "male"                   # Optional: Giới tính - 'male', 'female', 'other' (default: 'other')
     }
 
     Response JSON (Success - 201):
@@ -224,12 +227,13 @@ def register():
         # Tạo user mới
         user = User(
             role_id=student_role.role_id,
-            full_name=data['full_name'],
-            email=data['email'],
-            password_hash=generate_password_hash(data['password']),
-            phone_number=data.get('phone_number'),
-            student_id=data['student_id'],
-            is_active=True
+            full_name=data["full_name"],
+            email=data["email"],
+            password_hash=generate_password_hash(data["password"]),
+            phone_number=data.get("phone_number"),
+            student_id=data["student_id"],
+            gender=data.get("gender", "other"),
+            is_active=True,
         )
 
         db.session.add(user)

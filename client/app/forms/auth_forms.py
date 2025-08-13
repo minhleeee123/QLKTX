@@ -1,7 +1,9 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField, BooleanField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 import re
+
+from flask_wtf import FlaskForm
+from wtforms import BooleanField, PasswordField, SelectField, StringField, SubmitField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
+
 
 class LoginForm(FlaskForm):
     """Login form"""
@@ -29,8 +31,15 @@ class RegisterForm(FlaskForm):
         DataRequired(message='Số điện thoại là bắt buộc'),
         Length(min=10, max=11, message='Số điện thoại phải từ 10-11 số')
     ])
+
+    gender = SelectField(
+        "Giới tính",
+        choices=[("male", "Nam"), ("female", "Nữ"), ("other", "Khác")],
+        validators=[DataRequired(message="Giới tính là bắt buộc")],
+    )
+
     student_id = StringField('Mã sinh viên')
-    
+
     password = PasswordField('Mật khẩu', validators=[
         DataRequired(message='Mật khẩu là bắt buộc'),
         Length(min=6, message='Mật khẩu phải ít nhất 6 ký tự')
@@ -39,19 +48,19 @@ class RegisterForm(FlaskForm):
         DataRequired(message='Xác nhận mật khẩu là bắt buộc'),
         EqualTo('password', message='Mật khẩu xác nhận không khớp')
     ])
-    
+
     role = SelectField('Vai trò', choices=[
         ('student', 'Sinh viên'),
         ('staff', 'Nhân viên')
     ], default='student')
-    
+
     submit = SubmitField('Đăng ký')
-    
+
     def validate_phone(self, phone):
         """Validate phone number format"""
         if not re.match(r'^[0-9]{10,11}$', phone.data):
             raise ValidationError('Số điện thoại chỉ được chứa số và có 10-11 chữ số')
-    
+
     def validate_student_id(self, student_id):
         """Validate student ID for student role"""
         if self.role.data == 'student' and not student_id.data:

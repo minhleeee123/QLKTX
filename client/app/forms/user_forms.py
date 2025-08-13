@@ -20,11 +20,6 @@ from wtforms.validators import (
 
 
 class UserForm(FlaskForm):
-    gender = SelectField(
-        "Giới tính",
-        choices=[("male", "Nam"), ("female", "Nữ"), ("other", "Khác")],
-        validators=[DataRequired(message="Giới tính là bắt buộc")],
-    )
     """Form for creating/editing users"""
     full_name = StringField('Họ và tên', validators=[
         DataRequired(message='Họ và tên là bắt buộc'),
@@ -40,6 +35,12 @@ class UserForm(FlaskForm):
         Optional(),
         Length(min=10, max=11, message='Số điện thoại phải từ 10-11 số')
     ])
+
+    gender = SelectField(
+        "Giới tính",
+        choices=[("male", "Nam"), ("female", "Nữ"), ("other", "Khác")],
+        validators=[DataRequired(message="Giới tính là bắt buộc")],
+    )
 
     student_id = StringField('Mã sinh viên', validators=[
         Optional(),
