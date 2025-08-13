@@ -1,7 +1,7 @@
 from app.extensions import db
 from app.models import Role, User
 from app.utils.api_response import APIResponse
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, json, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -198,6 +198,8 @@ def register():
     """
     try:
         data = request.get_json()
+
+        print(json.dumps(data, indent=2, ensure_ascii=False))  # Debug
 
         # Validate required fields
         required_fields = ['full_name', 'email', 'password', 'student_id']

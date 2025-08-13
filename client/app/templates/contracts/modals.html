@@ -52,6 +52,7 @@
 
 <!-- Contract Detail Template -->
 <template id="contractDetailTemplate">
+    {% raw %}
     <div class="row">
         <!-- Contract Information -->
         <div class="col-md-6">
@@ -193,10 +194,12 @@
             <i class="fas fa-money-bill-wave me-1"></i>Quản lý thanh toán
         </button>
     </div>
+    {% endraw %}
 </template>
 
 <!-- Contract Edit Template -->
 <template id="contractEditTemplate">
+    {% raw %}
     <form id="contractEditForm">
         <input type="hidden" id="contractId" value="{{contract_id}}">
         
@@ -250,4 +253,5 @@
             <i class="fas fa-save me-1"></i>Lưu thay đổi
         </button>
     </div>
+    {% endraw %}
 </template>
