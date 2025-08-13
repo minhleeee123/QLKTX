@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
 from app.extensions import db
-from app.models import Contract, Registration, Room, User
+from app.models import Contract, Payment, Registration, Room, User
 from app.utils.api_response import APIResponse
 from app.utils.decorators import require_role
 from flask import Blueprint, jsonify, request
@@ -233,6 +233,17 @@ def approve_registration(registration_id):
 
         db.session.add(contract)
         db.session.flush()  # To get the contract ID
+
+        # Tạo khoản thanh toán đầu tiên (pending) cho tháng đầu
+        room_price = registration.room.room_type.price
+        initial_payment = Payment(
+            contract_id=contract.contract_id,
+            amount=room_price,
+            payment_method="bank_transfer",  # Mặc định
+            status="pending",  # Chờ sinh viên thanh toán
+        )
+
+        db.session.add(initial_payment)
 
         db.session.commit()
 

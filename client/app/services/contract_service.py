@@ -134,6 +134,25 @@ class ContractService:
         return "/contracts/export"  # Return URL for download
 
     @staticmethod
+    def pay_contract(contract_id: int) -> Dict[str, Any]:
+        """Process payment for a contract"""
+        response = api_client.post(f"/contracts/{contract_id}/pay", {})
+
+        if response.get("success") and response.get("data"):
+            server_data = response["data"]
+            return {
+                "success": True,
+                "message": server_data.get("message", "Thanh toán thành công"),
+                "contract": server_data.get("contract"),
+                "payment": server_data.get("payment"),
+            }
+        else:
+            return {
+                "success": False,
+                "error": response.get("message", "Thanh toán thất bại"),
+            }
+
+    @staticmethod
     def get_contract_statistics() -> Dict[str, Any]:
         """Get contract statistics"""
         response = api_client.get("/contracts/statistics")

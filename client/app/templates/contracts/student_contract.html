@@ -145,10 +145,21 @@
                                 </div>
                                 
                                 {% if contract.pending_payments_count > 0 %}
-                                <div class="alert alert-warning mt-3">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    Bạn có {{ contract.pending_payments_count }} khoản thanh toán chưa hoàn tất. 
-                                    Vui lòng liên hệ ban quản lý hoặc thanh toán online.
+                                <div class="payment-notice mt-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                            <strong>Bạn có {{ contract.pending_payments_count }} khoản thanh toán chưa hoàn tất.</strong>
+                                        </div>
+                                        <button class="btn btn-success payment-btn" id="payNowBtn" data-contract-id="{{ contract.contract_id }}">
+                                            <i class="fas fa-credit-card"></i> Thanh toán ngay
+                                        </button>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="payment-complete mt-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Tất cả các khoản thanh toán đã được hoàn tất.</strong>
                                 </div>
                                 {% endif %}
                             </div>
@@ -176,10 +187,17 @@
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="#" class="btn btn-outline-success w-100">
+                        {% if contract.pending_payments_count > 0 %}
+                        <button class="btn btn-success w-100 payment-btn" data-contract-id="{{ contract.contract_id }}">
                             <i class="fas fa-credit-card"></i><br>
+                            Thanh toán ({{ "{:,.0f}".format(contract.room.price) }} VNĐ)
+                        </button>
+                        {% else %}
+                        <a href="#" class="btn btn-outline-success w-100">
+                            <i class="fas fa-history"></i><br>
                             Lịch sử thanh toán
                         </a>
+                        {% endif %}
                     </div>
                     <div class="col-md-3">
                         <a href="#" class="btn btn-outline-warning w-100">
@@ -223,6 +241,70 @@
     </div>
 </div>
 {% endif %}
+<!-- Payment Confirmation Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="paymentModalLabel">
+                    <i class="fas fa-credit-card"></i> Xác nhận thanh toán
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-money-bill-wave fa-3x text-success mb-3"></i>
+                    <h6>Bạn có chắc chắn muốn thanh toán?</h6>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Hợp đồng:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ contract.contract_code if contract else '' }}
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <strong>Số tiền:</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-success fw-bold">
+                            {{ "{:,.0f}".format(contract.room.price) if contract else '0' }} VNĐ
+                        </span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <strong>Phương thức:</strong>
+                    </div>
+                    <div class="col-6">
+                        Chuyển khoản ngân hàng
+                    </div>
+                </div>
+                <hr>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Thanh toán sẽ được xử lý ngay lập tức và không thể hoàn tác.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <button type="button" class="btn btn-success" id="confirmPaymentBtn">
+                    <i class="fas fa-check"></i> Xác nhận thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/contracts/student-payment.js') }}"></script>
 {% endblock %}
 
 {% block extra_css %}
@@ -243,6 +325,29 @@
 .btn i {
     display: block;
     margin-bottom: 0.25rem;
+}
+
+/* Custom payment notice styling - persistent and non-dismissible */
+.payment-notice {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    color: #856404;
+}
+
+.payment-complete {
+    background-color: #d1edff;
+    border: 1px solid #b8daff;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    color: #155724;
+}
+
+/* Hover effect for payment notice */
+.payment-notice:hover {
+    background-color: #ffecb3;
+    border-color: #ffe082;
 }
 </style>
 {% endblock %}

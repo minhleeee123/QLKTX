@@ -355,6 +355,50 @@ def list_expiring_contracts():
         )
 
 
+@contracts_bp.route("/<int:contract_id>/pay", methods=["POST"])
+@login_required
+@student_required
+def pay_contract(contract_id):
+    """Process contract payment"""
+    try:
+        print(f"Paying contract {contract_id}")
+        result = ContractService.pay_contract(contract_id)
+
+        if result.get("success"):
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": result.get("message", "Thanh toán thành công"),
+                    }
+                )
+            else:
+                flash(result.get("message", "Thanh toán thành công"), "success")
+                return redirect(url_for("contracts.my_contract"))
+        else:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": result.get("error", "Thanh toán thất bại"),
+                        }
+                    ),
+                    400,
+                )
+            else:
+                flash(result.get("error", "Thanh toán thất bại"), "error")
+                return redirect(url_for("contracts.my_contract"))
+
+    except Exception as e:
+        error_message = f"Lỗi khi thanh toán: {str(e)}"
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "message": error_message}), 500
+        else:
+            flash(error_message, "error")
+            return redirect(url_for("contracts.my_contract"))
+
+
 @contracts_bp.route("/statistics")
 @login_required
 @management_required

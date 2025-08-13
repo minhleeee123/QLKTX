@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.extensions import db
 from app.models import Contract, Payment, Registration, User
 from app.utils.api_response import APIResponse
@@ -457,9 +459,74 @@ def get_contract_statistics():
 
     except Exception as e:
         return APIResponse.error(message=str(e), status_code=500)
+
+
+@contracts_bp.route("/<int:contract_id>/pay", methods=["POST"])
+@jwt_required()
+def pay_contract(contract_id):
+    """Thanh toán ngay hợp đồng (sinh viên)"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user = User.query.get(current_user_id)
+
+        # Chỉ sinh viên mới được thanh toán
+        if current_user.role.role_name != "student":
+            return APIResponse.error(
+                message="Chỉ sinh viên mới được thanh toán", status_code=403
+            )
+
+        # Kiểm tra hợp đồng tồn tại và thuộc về sinh viên này
+        contract = Contract.query.get(contract_id)
+        if not contract:
+            return APIResponse.error(message="Hợp đồng không tồn tại", status_code=404)
+
+        if contract.registration.student_id != current_user_id:
+            return APIResponse.error(
+                message="Hợp đồng không thuộc về bạn", status_code=403
+            )
+
+        # Kiểm tra còn khoản thanh toán nào pending không
+        if contract.pending_payments_count == 0:
+            return APIResponse.error(
+                message="Hợp đồng không có khoản thanh toán nào cần thanh toán",
+                status_code=400,
+            )
+
+        # Lấy khoản thanh toán pending đầu tiên và cập nhật thành confirmed
+        pending_payment = next(
+            (p for p in contract.payments if p.status == "pending"), None
+        )
+
+        if not pending_payment:
+            return APIResponse.error(
+                message="Không tìm thấy khoản thanh toán đang chờ xử lý",
+                status_code=400,
+            )
+
+        # Cập nhật trạng thái payment thành confirmed
+        pending_payment.status = "confirmed"
+        pending_payment.payment_date = datetime.utcnow()
+        pending_payment.payment_method = (
+            "bank_transfer"  # Cập nhật phương thức thanh toán
+        )
+        # Cập nhật phương thức thanh toán
+
+        db.session.commit()
+
+        payment_data = {
+            "payment_id": pending_payment.payment_id,
+            "amount": float(pending_payment.amount),
+            "payment_method": pending_payment.payment_method,
+            "status": pending_payment.status,
+            "payment_date": pending_payment.payment_date.isoformat(),
+            "contract_code": contract.contract_code,
+        }
+
         return APIResponse.success(
-            data=statistics_data, message="Lấy thống kê hợp đồng thành công"
+            data={"payment": payment_data},
+            message="Thanh toán thành công",
         )
 
     except Exception as e:
+        db.session.rollback()
         return APIResponse.error(message=str(e), status_code=500)

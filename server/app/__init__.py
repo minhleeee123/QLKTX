@@ -20,6 +20,33 @@ def create_app():
     # Chọn config theo environment
     app.config.from_object(DevelopmentConfig)
 
+    # Enable CORS for cross-origin requests from client (port 5001 to port 5000)
+    @app.after_request
+    def after_request(response):
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5001")
+        response.headers.add(
+            "Access-Control-Allow-Headers", "Content-Type,Authorization"
+        )
+        response.headers.add(
+            "Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS"
+        )
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response
+
+    # Handle preflight requests
+    @app.before_request
+    def before_request():
+        if request.method == "OPTIONS":
+            response = Flask.response_class()
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5001")
+            response.headers.add(
+                "Access-Control-Allow-Headers", "Content-Type,Authorization"
+            )
+            response.headers.add(
+                "Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS"
+            )
+            return response
+
     # Khởi tạo extension
     db.init_app(app)
     migrate.init_app(app, db)
