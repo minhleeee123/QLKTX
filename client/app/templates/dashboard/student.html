@@ -42,9 +42,16 @@
                         {% if dashboard_data.contract %}
                         <p class="mb-1"><i class="fas fa-file-contract"></i> Hợp đồng: {{ dashboard_data.contract.contract_code }}</p>
                         {% endif %}
-                        <a href="{{ url_for('student_rooms.my_registrations') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-eye"></i> Xem chi tiết
-                        </a>
+                        <div class="mt-2">
+                            <a href="{{ url_for('student_rooms.my_registrations') }}" class="btn btn-outline-primary btn-sm me-2">
+                                <i class="fas fa-eye"></i> Xem chi tiết
+                            </a>
+                            {% if dashboard_data.contract %}
+                            <a href="{{ url_for('contracts.my_contract') }}" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-file-contract"></i> Xem hợp đồng
+                            </a>
+                            {% endif %}
+                            </div>
                     </div>
                 </div>
                 {% else %}
@@ -114,15 +121,32 @@
     </div>
     
     <div class="col-md-3">
-        <div class="card {% if dashboard_data.contract %}bg-primary{% else %}bg-secondary{% endif %} text-white">
-            <div class="card-body text-center">
-                <h6 class="mb-0">{% if dashboard_data.contract %}{{ dashboard_data.contract.status|title }}{% else %}Chưa có{% endif %}
-                </h6>
+        {% if dashboard_data.contract %}
+        <a href="{{ url_for('contracts.my_contract') }}" class="text-decoration-none card-clickable">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6 class="mb-0">{{ dashboard_data.contract.status|title if dashboard_data.contract.status else 'Có hiệu lực' }}</h6>
+                    <small>{{ dashboard_data.contract.contract_code if dashboard_data.contract.contract_code else 'Hợp đồng' }}</small>
+                    <i class="fas fa-file-contract fa-2x mt-2"></i>
+                    <div class="mt-2">
+                        <small class="badge bg-light text-primary">Nhấn để xem</small>
+                    </div>
+                    </div>
+                    </div>
+                    </a>
+                    {% else %}
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body text-center">
+                            <h6 class="mb-0">Chưa có</h6>
                 <small>Hợp đồng</small>
                 <i class="fas fa-file-contract fa-2x mt-2"></i>
-            </div>
+                <div class="mt-2">
+                    <small class="text-muted">Sau khi được duyệt</small>
+                </div>
+                </div>
+                </div>
+        {% endif %}
         </div>
-    </div>
 </div>
 
 <!-- Quick Actions -->
@@ -159,10 +183,17 @@
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <a href="#" class="btn btn-outline-primary w-100">
+                        {% if dashboard_data.contract %}
+                        <a href="{{ url_for('contracts.my_contract') }}" class="btn btn-outline-primary w-100">
                             <i class="fas fa-file-contract"></i><br>
                             Xem hợp đồng
                         </a>
+                        {% else %}
+                        <a href="{{ url_for('student_rooms.my_registrations') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-file-contract"></i><br>
+                            Chờ hợp đồng
+                        </a>
+                        {% endif %}
                     </div>
                     <div class="col-md-3 mb-2">
                         <a href="#" class="btn btn-outline-info w-100">
@@ -229,4 +260,31 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-clickable {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+
+    .card-clickable:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-clickable:hover .card {
+        box-shadow: none;
+    }
+
+    /* Make the entire contract card clickable */
+    a:has(.card) {
+        display: block;
+    }
+
+    a .card:hover {
+        transform: none;
+    }
+</style>
 {% endblock %}

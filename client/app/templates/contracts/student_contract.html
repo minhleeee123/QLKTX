@@ -1,0 +1,248 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ title }} - Quản lý ký túc xá{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-2">
+            <i class="fas fa-file-contract"></i> {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Hợp đồng của tôi</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+{% if contract %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-contract"></i> 
+                        Hợp đồng {{ contract.contract_code }}
+                    </h5>
+                    <div>
+                        {% if contract.is_active %}
+                            <span class="badge bg-success">Đang hiệu lực</span>
+                        {% elif contract.is_expired %}
+                            <span class="badge bg-danger">Đã hết hạn</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Không hoạt động</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Contract Information -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin hợp đồng</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Mã hợp đồng:</strong></td>
+                                        <td>{{ contract.contract_code }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Ngày ký:</strong></td>
+                                        <td>{{ contract.created_at[:10] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Ngày bắt đầu:</strong></td>
+                                        <td>{{ contract.start_date[:10] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Ngày kết thúc:</strong></td>
+                                        <td>{{ contract.end_date[:10] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Thời hạn:</strong></td>
+                                        <td>{{ contract.duration_months }} tháng</td>
+                                    </tr>
+                                    {% if contract.days_remaining is not none %}
+                                    <tr>
+                                        <td><strong>Còn lại:</strong></td>
+                                        <td>
+                                            {% if contract.days_remaining > 0 %}
+                                                {{ contract.days_remaining }} ngày
+                                            {% else %}
+                                                <span class="text-danger">Đã hết hạn</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Room Information -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-bed"></i> Thông tin phòng</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Số phòng:</strong></td>
+                                        <td>{{ contract.room.room_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tòa nhà:</strong></td>
+                                        <td>{{ contract.room.building_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Loại phòng:</strong></td>
+                                        <td>{{ contract.room.room_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Giá phòng:</strong></td>
+                                        <td><strong class="text-success">{{ "{:,.0f}".format(contract.room.price) }} VNĐ/tháng</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Information -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-money-bill-wave"></i> Thông tin thanh toán</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <h4 class="text-success">{{ "{:,.0f}".format(contract.total_paid) }} VNĐ</h4>
+                                            <p class="text-muted mb-0">Tổng đã thanh toán</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <h4 class="text-info">{{ contract.payment_count }}</h4>
+                                            <p class="text-muted mb-0">Số lần thanh toán</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <h4 class="text-warning">{{ contract.pending_payments_count }}</h4>
+                                            <p class="text-muted mb-0">Thanh toán chờ xử lý</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if contract.pending_payments_count > 0 %}
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Bạn có {{ contract.pending_payments_count }} khoản thanh toán chưa hoàn tất. 
+                                    Vui lòng liên hệ ban quản lý hoặc thanh toán online.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-cogs"></i> Thao tác</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('student_rooms.my_registrations') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-list"></i><br>
+                            Xem đăng ký phòng
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="#" class="btn btn-outline-success w-100">
+                            <i class="fas fa-credit-card"></i><br>
+                            Lịch sử thanh toán
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="#" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-download"></i><br>
+                            Tải hợp đồng (PDF)
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-home"></i><br>
+                            Về Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- No Contract -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-file-contract fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted mb-3">Chưa có hợp đồng</h4>
+                <p class="text-muted mb-4">
+                    Bạn chưa có hợp đồng ký túc xá nào. Hợp đồng sẽ được tạo tự động sau khi đăng ký phòng được duyệt.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{{ url_for('student_rooms.browse_rooms') }}" class="btn btn-primary">
+                        <i class="fas fa-bed"></i> Đăng ký phòng ở
+                    </a>
+                    <a href="{{ url_for('student_rooms.my_registrations') }}" class="btn btn-outline-info">
+                        <i class="fas fa-list"></i> Xem đơn đăng ký
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table-borderless td {
+    border: none;
+    padding: 0.5rem 0;
+}
+
+.badge {
+    font-size: 0.875em;
+}
+
+.btn i {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+</style>
+{% endblock %}

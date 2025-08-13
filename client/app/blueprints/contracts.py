@@ -5,12 +5,41 @@ from app.forms.contract_forms import (
     ContractUpdateForm,
 )
 from app.services.contract_service import ContractService
-from app.utils.decorators import admin_required, management_required
+from app.utils.decorators import admin_required, management_required, student_required
 from app.utils.pagination import Pagination
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 contracts_bp = Blueprint("contracts", __name__)
+
+
+@contracts_bp.route("/my-contract")
+@login_required
+@student_required
+def my_contract():
+    """Display student's contract"""
+    try:
+        result = ContractService.get_contracts(page=1)
+
+        if result.get("success") and result.get("data", {}).get("contracts"):
+            contract = result["data"]["contracts"][
+                0
+            ]  # Student should only have one active contract
+            return render_template(
+                "contracts/student_contract.html",
+                contract=contract,
+                title="Hợp đồng của tôi",
+            )
+        else:
+            flash("Bạn chưa có hợp đồng nào.", "info")
+            return render_template(
+                "contracts/student_contract.html",
+                contract=None,
+                title="Hợp đồng của tôi",
+            )
+    except Exception as e:
+        flash(f"Lỗi khi tải thông tin hợp đồng: {str(e)}", "error")
+        return redirect(url_for("dashboard.index"))
 
 
 @contracts_bp.route("/")

@@ -14,32 +14,32 @@ class DashboardService:
     def get_admin_dashboard_stats() -> Dict[str, Any]:
         """Get comprehensive dashboard statistics for admin"""
         response = api_client.get("/dashboard/admin-stats")
-        
+
         if response.get("success") and response.get("data"):
             return APIResponse.success_dict(data=response["data"])
         else:
             return APIResponse.error_dict(
                 message=response.get("message", "Không thể lấy thống kê dashboard")
             )
-    
+
     @staticmethod
     def get_recent_activities(limit: int = 10) -> Dict[str, Any]:
         """Get recent activities for dashboard"""
         params = {'limit': limit}
         response = api_client.get("/dashboard/recent-activities", params)
-        
+
         if response.get("success") and response.get("data"):
             return APIResponse.success_dict(data=response["data"])
         else:
             return APIResponse.error_dict(
                 message=response.get("message", "Không thể lấy hoạt động gần đây")
             )
-    
+
     @staticmethod
     def get_dashboard_alerts() -> Dict[str, Any]:
         """Get important alerts for dashboard"""
         response = api_client.get("/dashboard/alerts")
-        
+
         if response.get("success") and response.get("data"):
             return APIResponse.success_dict(data=response["data"])
         else:
@@ -84,9 +84,16 @@ class DashboardService:
             contracts_data = contracts_response['data']
             if 'contracts' in contracts_data and contracts_data['contracts']:
                 # Get the most recent active contract
-                active_contracts = [c for c in contracts_data['contracts'] if c.get('status') == 'active']
+                active_contracts = [
+                    c
+                    for c in contracts_data["contracts"]
+                    if c.get("is_active") == True and c.get("is_expired") == False
+                ]
                 if active_contracts:
                     dashboard_data['contract'] = active_contracts[0]
+                elif contracts_data["contracts"]:
+                    # If no active contracts, get the most recent one
+                    dashboard_data["contract"] = contracts_data["contracts"][0]
 
         # Get payment information (this would need a payment service)
         # For now, we'll simulate this based on contract data
@@ -104,19 +111,22 @@ class DashboardService:
     def _get_mock_payment_data(contract: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate mock payment data based on contract info"""
         # This is temporary until we have a proper payment service
+        # Get the room price from the contract's room data
+        room_price = contract.get("room", {}).get("price", 2500000)
+
         return [
             {
-                'month': '7/2025',
-                'amount': contract.get('monthly_rent', 2500000),
-                'status': 'paid',
-                'paid_date': '2025-07-05'
+                "month": "7/2025",
+                "amount": room_price,
+                "status": "paid",
+                "paid_date": "2025-07-05",
             },
             {
-                'month': '8/2025',
-                'amount': contract.get('monthly_rent', 2500000),
-                'status': 'pending',
-                'due_date': '2025-08-15'
-            }
+                "month": "8/2025",
+                "amount": room_price,
+                "status": "pending",
+                "due_date": "2025-08-15",
+            },
         ]
 
     @staticmethod
@@ -209,7 +219,7 @@ class DashboardService:
                     dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
                 else:
                     dt = datetime.strptime(date_str[:10], '%Y-%m-%d')
-                
+
                 # Calculate relative time
                 now = datetime.now()
                 if dt.date() == now.date():
