@@ -178,10 +178,10 @@
                         </td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm" role="group">
-                                <a href="{{ url_for('registrations.get_registration', registration_id=reg.registration_id) }}"
-                                   class="btn btn-outline-info" title="Xem chi tiết">
+                                <button class="btn btn-outline-info" title="Xem chi tiết" data-action="view"
+                                    data-registration-id="{{ reg.registration_id }}">
                                     <i class="fas fa-eye"></i>
-                                </a>
+                                </button>
                                 {% if reg.status == 'pending' %}
                                     <button class="btn btn-success" 
                                             title="Duyệt đơn"

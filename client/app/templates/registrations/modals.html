@@ -54,7 +54,7 @@
                         </tr>
                         <tr>
                             <td><strong>Trạng thái:</strong></td>
-                            <td id="regDetailStatus"></td>
+                            <td><span id="regDetailStatus" class="badge"></span></td>
                         </tr>
                     </table>
                 </div>
@@ -109,6 +109,24 @@
             </div>
         </div>
     </div>
+    <!-- Action buttons for pending registrations -->
+    <div class="row mt-3" id="regDetailActions" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="card-title mb-3">
+                        <i class="fas fa-cogs me-2"></i>Hành động
+                    </h6>
+                    <button class="btn btn-success me-2" id="regDetailApproveBtn" title="Duyệt đơn">
+                        <i class="fas fa-check me-1"></i> Duyệt đơn
+                    </button>
+                    <button class="btn btn-danger" id="regDetailRejectBtn" title="Từ chối đơn">
+                        <i class="fas fa-times me-1"></i> Từ chối
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <!-- Approve Registration Modal -->
@@ -122,10 +140,69 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-success" role="alert">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Bạn có chắc chắn muốn <strong>duyệt</strong> đăng ký phòng của sinh viên <strong id="approveStudentName"></strong> 
-                    cho phòng số <strong id="approveRoomNumber"></strong>?
+                <div class="mb-3">
+                    <h6 class="text-success">
+                        <i class="fas fa-check-circle me-2"></i>Xác nhận duyệt đăng ký
+                    </h6>
+                    <p class="text-muted mb-3">Bạn có chắc chắn muốn duyệt đăng ký này?</p>
+                </div>
+                
+                <div class="card border-success">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Thông tin đăng ký
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <strong>Sinh viên:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="approveStudentName"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Mã sinh viên:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="approveStudentId"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Số phòng:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="approveRoomNumber"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Tòa nhà:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="approveBuildingName"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Loại phòng:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="approveRoomType"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Giá phòng:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span class="text-success fw-bold" id="approveRoomPrice"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -149,10 +226,69 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Bạn có chắc chắn muốn <strong>từ chối</strong> đăng ký phòng của sinh viên <strong id="rejectStudentName"></strong> 
-                    cho phòng số <strong id="rejectRoomNumber"></strong>?
+                <div class="mb-3">
+                    <h6 class="text-danger">
+                        <i class="fas fa-times-circle me-2"></i>Xác nhận từ chối đăng ký
+                    </h6>
+                    <p class="text-muted mb-3">Bạn có chắc chắn muốn từ chối đăng ký này?</p>
+                </div>
+                
+                <div class="card border-danger">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Thông tin đăng ký
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <strong>Sinh viên:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="rejectStudentName"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Mã sinh viên:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="rejectStudentId"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Số phòng:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="rejectRoomNumber"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Tòa nhà:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="rejectBuildingName"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Loại phòng:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span id="rejectRoomType"></span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Giá phòng:</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <span class="text-success fw-bold" id="rejectRoomPrice"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

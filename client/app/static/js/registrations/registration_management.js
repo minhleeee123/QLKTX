@@ -70,10 +70,10 @@ function initializeRegistrationManagement() {
 
     switch (action) {
       case "approve":
-        showApproveModal(registrationId, studentName, roomNumber);
+        showApproveModalFromList(registrationId, studentName, roomNumber);
         break;
       case "reject":
-        showRejectModal(registrationId, studentName, roomNumber);
+        showRejectModalFromList(registrationId, studentName, roomNumber);
         break;
       case "view":
         showRegistrationDetailModal(registrationId);
@@ -121,8 +121,32 @@ function initializeRegistrationManagement() {
         registration.registration_id;
       document.getElementById("regDetailDate").textContent =
         registration.registration_date;
-      document.getElementById("regDetailStatus").textContent =
-        registration.status;
+
+      // Set status with appropriate badge styling
+      const statusElement = document.getElementById("regDetailStatus");
+      statusElement.className = "badge"; // Reset classes
+      statusElement.textContent = registration.status;
+
+      switch (registration.status) {
+        case "pending":
+          statusElement.classList.add("bg-warning", "text-dark");
+          statusElement.innerHTML =
+            '<i class="fas fa-clock me-1"></i>Chờ duyệt';
+          break;
+        case "approved":
+          statusElement.classList.add("bg-success");
+          statusElement.innerHTML =
+            '<i class="fas fa-check-circle me-1"></i>Đã duyệt';
+          break;
+        case "rejected":
+          statusElement.classList.add("bg-danger");
+          statusElement.innerHTML =
+            '<i class="fas fa-times-circle me-1"></i>Đã từ chối';
+          break;
+        default:
+          statusElement.classList.add("bg-secondary");
+          statusElement.textContent = registration.status;
+      }
       document.getElementById("regDetailStudentName").textContent =
         registration.student.full_name;
       document.getElementById("regDetailStudentId").textContent =
@@ -137,6 +161,38 @@ function initializeRegistrationManagement() {
         registration.room.room_type;
       document.getElementById("regDetailRoomPrice").textContent =
         registration.room.price;
+
+      // Show/hide action buttons based on registration status
+      const actionButtons = document.getElementById("regDetailActions");
+      if (registration.status === "pending" && actionButtons) {
+        actionButtons.style.display = "block";
+
+        // Set up approve button
+        const approveBtn = document.getElementById("regDetailApproveBtn");
+        if (approveBtn) {
+          approveBtn.onclick = () => {
+            // Close detail modal and show approve modal
+            bootstrap.Modal.getInstance(modalElement).hide();
+            setTimeout(() => {
+              showApproveModal(registration);
+            }, 300);
+          };
+        }
+
+        // Set up reject button
+        const rejectBtn = document.getElementById("regDetailRejectBtn");
+        if (rejectBtn) {
+          rejectBtn.onclick = () => {
+            // Close detail modal and show reject modal
+            bootstrap.Modal.getInstance(modalElement).hide();
+            setTimeout(() => {
+              showRejectModal(registration);
+            }, 300);
+          };
+        }
+      } else if (actionButtons) {
+        actionButtons.style.display = "none";
+      }
     } catch (error) {
       modalContent.innerHTML = document.getElementById(
         "registrationDetailErrorTemplate"
@@ -150,18 +206,147 @@ function initializeRegistrationManagement() {
 }
 
 /**
+ * Wrapper functions to fetch registration data before showing modals from list
+ */
+async function showApproveModalFromList(
+  registrationId,
+  studentName,
+  roomNumber
+) {
+  try {
+    const response = await fetch(`/registrations/${registrationId}`, {
+      method: "GET",
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch registration data");
+      // Fallback to simple modal with limited data
+      showSimpleApproveModal(registrationId, studentName, roomNumber);
+      return;
+    }
+
+    const data = await response.json();
+    if (data.success && data.data && data.data.registration) {
+      showApproveModal(data.data.registration);
+    } else {
+      console.error("Failed to get registration data");
+      showSimpleApproveModal(registrationId, studentName, roomNumber);
+    }
+  } catch (error) {
+    console.error("Error fetching registration data:", error);
+    showSimpleApproveModal(registrationId, studentName, roomNumber);
+  }
+}
+
+async function showRejectModalFromList(
+  registrationId,
+  studentName,
+  roomNumber
+) {
+  try {
+    const response = await fetch(`/registrations/${registrationId}`, {
+      method: "GET",
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch registration data");
+      // Fallback to simple modal with limited data
+      showSimpleRejectModal(registrationId, studentName, roomNumber);
+      return;
+    }
+
+    const data = await response.json();
+    if (data.success && data.data && data.data.registration) {
+      showRejectModal(data.data.registration);
+    } else {
+      console.error("Failed to get registration data");
+      showSimpleRejectModal(registrationId, studentName, roomNumber);
+    }
+  } catch (error) {
+    console.error("Error fetching registration data:", error);
+    showSimpleRejectModal(registrationId, studentName, roomNumber);
+  }
+}
+
+/**
+ * Fallback functions with limited data
+ */
+function showSimpleApproveModal(registrationId, studentName, roomNumber) {
+  selectedRegistrationId = registrationId;
+
+  const studentNameElement = document.getElementById("approveStudentName");
+  const roomNumberElement = document.getElementById("approveRoomNumber");
+
+  if (studentNameElement) studentNameElement.textContent = studentName;
+  if (roomNumberElement) roomNumberElement.textContent = roomNumber;
+
+  // Clear other fields
+  const studentIdElement = document.getElementById("approveStudentId");
+  const buildingNameElement = document.getElementById("approveBuildingName");
+  const roomTypeElement = document.getElementById("approveRoomType");
+  const roomPriceElement = document.getElementById("approveRoomPrice");
+
+  if (studentIdElement) studentIdElement.textContent = "N/A";
+  if (buildingNameElement) buildingNameElement.textContent = "N/A";
+  if (roomTypeElement) roomTypeElement.textContent = "N/A";
+  if (roomPriceElement) roomPriceElement.textContent = "N/A";
+
+  const modalElement = document.getElementById("approveModal");
+  if (modalElement) {
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+  }
+}
+
+function showSimpleRejectModal(registrationId, studentName, roomNumber) {
+  selectedRegistrationId = registrationId;
+
+  const studentNameElement = document.getElementById("rejectStudentName");
+  const roomNumberElement = document.getElementById("rejectRoomNumber");
+
+  if (studentNameElement) studentNameElement.textContent = studentName;
+  if (roomNumberElement) roomNumberElement.textContent = roomNumber;
+
+  // Clear other fields
+  const studentIdElement = document.getElementById("rejectStudentId");
+  const buildingNameElement = document.getElementById("rejectBuildingName");
+  const roomTypeElement = document.getElementById("rejectRoomType");
+  const roomPriceElement = document.getElementById("rejectRoomPrice");
+
+  if (studentIdElement) studentIdElement.textContent = "N/A";
+  if (buildingNameElement) buildingNameElement.textContent = "N/A";
+  if (roomTypeElement) roomTypeElement.textContent = "N/A";
+  if (roomPriceElement) roomPriceElement.textContent = "N/A";
+
+  const modalElement = document.getElementById("rejectModal");
+  if (modalElement) {
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+  }
+}
+
+/**
  * Show approve confirmation modal
  */
-function showApproveModal(registrationId, studentName, roomNumber) {
-  console.log("Showing approve modal for registration:", registrationId);
+function showApproveModal(registration) {
+  console.log(
+    "Showing approve modal for registration:",
+    registration.registration_id
+  );
 
-  selectedRegistrationId = registrationId;
+  selectedRegistrationId = registration.registration_id;
 
   // Wait a bit for any template includes to be processed
   setTimeout(() => {
     // Check if elements exist before trying to access them
     const studentNameElement = document.getElementById("approveStudentName");
+    const studentIdElement = document.getElementById("approveStudentId");
     const roomNumberElement = document.getElementById("approveRoomNumber");
+    const buildingNameElement = document.getElementById("approveBuildingName");
+    const roomTypeElement = document.getElementById("approveRoomType");
+    const roomPriceElement = document.getElementById("approveRoomPrice");
 
     if (!studentNameElement) {
       console.error("Element with ID 'approveStudentName' not found");
@@ -174,14 +359,20 @@ function showApproveModal(registrationId, studentName, roomNumber) {
       return;
     }
 
-    if (!roomNumberElement) {
-      console.error("Element with ID 'approveRoomNumber' not found");
-      return;
-    }
-
-    // Update modal content
-    studentNameElement.textContent = studentName;
-    roomNumberElement.textContent = roomNumber;
+    // Update modal content with all registration details
+    studentNameElement.textContent = registration.student.full_name;
+    if (studentIdElement)
+      studentIdElement.textContent = registration.student.student_id;
+    if (roomNumberElement)
+      roomNumberElement.textContent = registration.room.room_number;
+    if (buildingNameElement)
+      buildingNameElement.textContent = registration.room.building_name;
+    if (roomTypeElement)
+      roomTypeElement.textContent = registration.room.room_type;
+    if (roomPriceElement)
+      roomPriceElement.textContent = `${new Intl.NumberFormat("vi-VN").format(
+        registration.room.price
+      )} VNĐ/tháng`;
 
     // Show modal
     const modalElement = document.getElementById("approveModal");
@@ -193,49 +384,59 @@ function showApproveModal(registrationId, studentName, roomNumber) {
       console.error("Approve modal element not found");
     }
   }, 100); // Small delay to ensure DOM is ready
-
-  // Show modal
-  const modalElement = document.getElementById("approveModal");
-  if (modalElement) {
-    const modal = new bootstrap.Modal(modalElement);
-    modal.show();
-    console.log("Approve modal shown");
-  }
 }
 
 /**
  * Show reject confirmation modal
  */
-function showRejectModal(registrationId, studentName, roomNumber) {
-  console.log("Showing reject modal for registration:", registrationId);
+function showRejectModal(registration) {
+  console.log(
+    "Showing reject modal for registration:",
+    registration.registration_id
+  );
 
-  selectedRegistrationId = registrationId;
+  selectedRegistrationId = registration.registration_id;
 
-  // Check if elements exist before trying to access them
-  const studentNameElement = document.getElementById("rejectStudentName");
-  const roomNumberElement = document.getElementById("rejectRoomNumber");
+  // Wait a bit for any template includes to be processed
+  setTimeout(() => {
+    // Check if elements exist before trying to access them
+    const studentNameElement = document.getElementById("rejectStudentName");
+    const studentIdElement = document.getElementById("rejectStudentId");
+    const roomNumberElement = document.getElementById("rejectRoomNumber");
+    const buildingNameElement = document.getElementById("rejectBuildingName");
+    const roomTypeElement = document.getElementById("rejectRoomType");
+    const roomPriceElement = document.getElementById("rejectRoomPrice");
 
-  if (!studentNameElement) {
-    console.error("Element with ID 'rejectStudentName' not found");
-    return;
-  }
+    if (!studentNameElement) {
+      console.error("Element with ID 'rejectStudentName' not found");
+      return;
+    }
 
-  if (!roomNumberElement) {
-    console.error("Element with ID 'rejectRoomNumber' not found");
-    return;
-  }
+    // Update modal content with all registration details
+    studentNameElement.textContent = registration.student.full_name;
+    if (studentIdElement)
+      studentIdElement.textContent = registration.student.student_id;
+    if (roomNumberElement)
+      roomNumberElement.textContent = registration.room.room_number;
+    if (buildingNameElement)
+      buildingNameElement.textContent = registration.room.building_name;
+    if (roomTypeElement)
+      roomTypeElement.textContent = registration.room.room_type;
+    if (roomPriceElement)
+      roomPriceElement.textContent = `${new Intl.NumberFormat("vi-VN").format(
+        registration.room.price
+      )} VNĐ/tháng`;
 
-  // Update modal content
-  studentNameElement.textContent = studentName;
-  roomNumberElement.textContent = roomNumber;
-
-  // Show modal
-  const modalElement = document.getElementById("rejectModal");
-  if (modalElement) {
-    const modal = new bootstrap.Modal(modalElement);
-    modal.show();
-    console.log("Reject modal shown");
-  }
+    // Show modal
+    const modalElement = document.getElementById("rejectModal");
+    if (modalElement) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+      console.log("Reject modal shown");
+    } else {
+      console.error("Reject modal element not found");
+    }
+  }, 100); // Small delay to ensure DOM is ready
 }
 
 /**
