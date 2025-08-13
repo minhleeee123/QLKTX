@@ -1,29 +1,11 @@
 from app.extensions import db
-from app.models import Contract, ContractHistory, Payment, Registration, User
+from app.models import Contract, Payment, Registration, User
 from app.utils.api_response import APIResponse
 from app.utils.decorators import require_role
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 contracts_bp = Blueprint('contracts', __name__)
-
-
-def create_contract_history(
-    contract_id, user_id, action, old_value=None, new_value=None, notes=None
-):
-    """Helper function to create contract history record"""
-    import json
-
-    history = ContractHistory(
-        contract_id=contract_id,
-        user_id=user_id,
-        action=action,
-        old_value=json.dumps(old_value) if old_value else None,
-        new_value=json.dumps(new_value) if new_value else None,
-        notes=notes,
-    )
-    db.session.add(history)
-    return history
 
 
 @contracts_bp.route('/', methods=['GET'])
@@ -191,15 +173,6 @@ def update_contract(contract_id):
                 new_end_date = datetime.strptime(data["end_date"], "%Y-%m-%d").date()
                 contract.end_date = new_end_date
 
-                # Tạo lịch sử
-                create_contract_history(
-                    contract_id=contract.contract_id,
-                    user_id=get_jwt_identity(),
-                    action="updated",
-                    old_value={"end_date": old_end_date.isoformat()},
-                    new_value={"end_date": new_end_date.isoformat()},
-                    notes="Cập nhật ngày kết thúc hợp đồng",
-                )
             except ValueError:
                 return APIResponse.error(
                     message="Định dạng ngày không hợp lệ (YYYY-MM-DD)", status_code=400
@@ -283,19 +256,6 @@ def renew_contract(contract_id):
         old_end_date = contract.end_date
         contract.end_date = new_end_date
 
-        # Tạo lịch sử
-        create_contract_history(
-            contract_id=contract.contract_id,
-            user_id=get_jwt_identity(),
-            action="renewed",
-            old_value={"end_date": old_end_date.isoformat()},
-            new_value={
-                "end_date": new_end_date.isoformat(),
-                "renewal_months": renewal_months,
-            },
-            notes=f"Gia hạn thêm {renewal_months} tháng",
-        )
-
         db.session.commit()
 
         contract_data = {
@@ -348,19 +308,6 @@ def terminate_contract(contract_id):
             room.current_occupancy -= 1
             if room.current_occupancy < room.room_type.capacity:
                 room.status = "available"
-
-        # Tạo lịch sử
-        create_contract_history(
-            contract_id=contract.contract_id,
-            user_id=get_jwt_identity(),
-            action="terminated",
-            old_value={"end_date": old_end_date.isoformat(), "status": "active"},
-            new_value={
-                "end_date": contract.end_date.isoformat(),
-                "status": "terminated",
-            },
-            notes=termination_reason,
-        )
 
         db.session.commit()
 
@@ -461,98 +408,6 @@ def export_contracts():
         return APIResponse.error(
             message=f"Lỗi khi xuất báo cáo: {str(e)}", status_code=500
         )
-
-
-@contracts_bp.route("/<int:contract_id>/export-history", methods=["GET"])
-@jwt_required()
-@require_role(["admin", "management"])
-def export_contract_history(contract_id):
-    """Xuất lịch sử hợp đồng ra Excel"""
-    try:
-        from app.services.contract_report_service import (
-            XLSXWRITER_AVAILABLE,
-            ContractReportService,
-        )
-
-        if not XLSXWRITER_AVAILABLE:
-            return APIResponse.error(
-                message="Tính năng xuất Excel chưa được cài đặt. Vui lòng liên hệ quản trị viên.",
-                status_code=503,
-            )
-
-        result = ContractReportService.generate_contract_history_report(contract_id)
-        if result:
-            return result
-        else:
-            return APIResponse.error(message="Hợp đồng không tồn tại", status_code=404)
-
-    except Exception as e:
-        return APIResponse.error(
-            message=f"Lỗi khi xuất lịch sử: {str(e)}", status_code=500
-        )
-
-
-@contracts_bp.route("/<int:contract_id>/history", methods=["GET"])
-@jwt_required()
-@require_role(["admin", "management"])
-def get_contract_history(contract_id):
-    """Lấy lịch sử thay đổi của hợp đồng"""
-    try:
-        contract = Contract.query.get(contract_id)
-        if not contract:
-            return APIResponse.error(message="Hợp đồng không tồn tại", status_code=404)
-
-        page = request.args.get("page", 1, type=int)
-        per_page = request.args.get("per_page", 20, type=int)
-
-        history_query = ContractHistory.query.filter_by(
-            contract_id=contract_id
-        ).order_by(ContractHistory.created_at.desc())
-
-        history_pagination = history_query.paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-
-        import json
-
-        history_data = {
-            "history": [
-                {
-                    "history_id": history.history_id,
-                    "action": history.action,
-                    "action_display": history.action_display,
-                    "old_value": (
-                        json.loads(history.old_value) if history.old_value else None
-                    ),
-                    "new_value": (
-                        json.loads(history.new_value) if history.new_value else None
-                    ),
-                    "notes": history.notes,
-                    "created_at": history.created_at.isoformat(),
-                    "user": {
-                        "user_id": history.user.user_id,
-                        "full_name": history.user.full_name,
-                        "role": history.user.role.role_name,
-                    },
-                }
-                for history in history_pagination.items
-            ],
-            "pagination": {
-                "page": history_pagination.page,
-                "pages": history_pagination.pages,
-                "per_page": history_pagination.per_page,
-                "total": history_pagination.total,
-                "has_next": history_pagination.has_next,
-                "has_prev": history_pagination.has_prev,
-            },
-        }
-
-        return APIResponse.success(
-            data=history_data, message="Lấy lịch sử hợp đồng thành công"
-        )
-
-    except Exception as e:
-        return APIResponse.error(message=str(e), status_code=500)
 
 
 @contracts_bp.route('/statistics', methods=['GET'])

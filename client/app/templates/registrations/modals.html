@@ -1,0 +1,166 @@
+
+<!-- Registration Detail Modal -->
+<div class="modal fade" id="registrationDetailModal" tabindex="-1" aria-labelledby="registrationDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registrationDetailModalLabel">
+                    <i class="fas fa-clipboard-list me-2"></i>Chi tiết đăng ký
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="registrationDetailContent">
+                <!-- Content will be loaded here by JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Template -->
+<template id="registrationDetailLoadingTemplate">
+    <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+        <p class="mt-3 mb-0">Đang tải thông tin đăng ký...</p>
+    </div>
+</template>
+
+<!-- Error Template -->
+<template id="registrationDetailErrorTemplate">
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Lỗi!</strong> <span id="registrationDetailErrorMsg"></span>
+    </div>
+</template>
+
+<!-- Registration Detail Template -->
+<template id="registrationDetailTemplate">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-1"></i>Thông tin đăng ký</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Mã đăng ký:</strong></td>
+                            <td id="regDetailId"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ngày đăng ký:</strong></td>
+                            <td id="regDetailDate"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Trạng thái:</strong></td>
+                            <td id="regDetailStatus"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-user me-1"></i>Thông tin sinh viên</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Họ tên:</strong></td>
+                            <td id="regDetailStudentName"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mã SV:</strong></td>
+                            <td id="regDetailStudentId"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td id="regDetailStudentEmail"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-bed me-1"></i>Thông tin phòng</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Số phòng:</strong></td>
+                            <td id="regDetailRoomNumber"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tòa nhà:</strong></td>
+                            <td id="regDetailBuildingName"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Loại phòng:</strong></td>
+                            <td id="regDetailRoomType"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Giá:</strong></td>
+                            <td id="regDetailRoomPrice"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Approve Registration Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approveModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Duyệt đăng ký
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-success" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Bạn có chắc chắn muốn <strong>duyệt</strong> đăng ký phòng của sinh viên <strong id="approveStudentName"></strong> 
+                    cho phòng số <strong id="approveRoomNumber"></strong>?
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" id="confirmApproveBtn">
+                    <i class="fas fa-check me-1"></i> Duyệt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Registration Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">
+                    <i class="fas fa-times-circle me-2"></i>Từ chối đăng ký
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Bạn có chắc chắn muốn <strong>từ chối</strong> đăng ký phòng của sinh viên <strong id="rejectStudentName"></strong> 
+                    cho phòng số <strong id="rejectRoomNumber"></strong>?
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmRejectBtn">
+                    <i class="fas fa-times me-1"></i> Từ chối
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

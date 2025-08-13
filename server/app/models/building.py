@@ -6,6 +6,7 @@ class Building(db.Model):
 
     building_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     building_name = db.Column(db.String(100), nullable=False, unique=True)
+    gender = db.Column(db.String(10), nullable=False)  # 'male', 'female', 'all'
 
     # Relationship với Room
     rooms = db.relationship(
@@ -20,6 +21,7 @@ class Building(db.Model):
         return {
             "building_id": self.building_id,
             "building_name": self.building_name,
+            "gender": self.gender,
             "total_rooms": len(self.rooms),
             "available_rooms": self.available_rooms_count,
             "occupied_rooms": self.occupied_rooms_count,
@@ -27,12 +29,18 @@ class Building(db.Model):
 
     def to_dict_simple(self):
         """Convert building object to simple dictionary for dropdowns"""
-        return {"building_id": self.building_id, "building_name": self.building_name}
+        return {
+            "building_id": self.building_id,
+            "building_name": self.building_name,
+            "gender": self.gender,
+        }
 
     @classmethod
     def create_building(cls, data):
         """Create a new building"""
-        building = cls(building_name=data.get("building_name"))
+        building = cls(
+            building_name=data.get("building_name"), gender=data.get("gender", "all")
+        )
         db.session.add(building)
         db.session.commit()
         return building

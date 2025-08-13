@@ -37,7 +37,7 @@ def login():
             else:
                 return redirect(url_for("dashboard.index"))
         else:
-            error_msg = response.get("error", {})
+            error_msg = response.get("message", {})
             flash(error_msg, "error")
             return redirect(url_for("auth.login"))
 

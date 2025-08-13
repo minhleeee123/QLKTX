@@ -134,24 +134,6 @@ class ContractService:
         return "/contracts/export"  # Return URL for download
 
     @staticmethod
-    def get_contract_history(contract_id: int, page: int = 1) -> Dict[str, Any]:
-        """Get contract history"""
-        params = {'page': page, 'per_page': 20}
-        response = api_client.get(f"/contracts/{contract_id}/history", params)
-
-        if response.get("success") and response.get("data"):
-            return APIResponse.success_dict(data=response["data"])
-        else:
-            return APIResponse.error_dict(
-                message=response.get("message", "Không thể lấy lịch sử hợp đồng")
-            )
-
-    @staticmethod
-    def export_contract_history(contract_id: int) -> str:
-        """Export contract history to Excel"""
-        return f"/contracts/{contract_id}/export-history"  # Return URL for download
-
-    @staticmethod
     def get_contract_statistics() -> Dict[str, Any]:
         """Get contract statistics"""
         response = api_client.get("/contracts/statistics")

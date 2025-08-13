@@ -1,6 +1,5 @@
 from app.models.building import Building
 from app.models.contract import Contract
-from app.models.contract_history import ContractHistory
 from app.models.maintenance import MaintenanceRequest
 from app.models.payment import Payment
 from app.models.registration import Registration
@@ -16,7 +15,6 @@ __all__ = [
     "Room",
     "Registration",
     "Contract",
-    "ContractHistory",
     "Payment",
     "MaintenanceRequest",
 ]

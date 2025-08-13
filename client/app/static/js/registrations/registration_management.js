@@ -11,95 +11,231 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function initializeRegistrationManagement() {
-    console.log("Initializing registration management...");
-    
-    // Initialize modals
-    const approveModal = document.getElementById("approveModal");
-    const rejectModal = document.getElementById("rejectModal");
+  console.log("Initializing registration management...");
 
-    // Set up confirm approve handler
-    const confirmApproveBtn = document.getElementById("confirmApproveBtn");
-    if (confirmApproveBtn) {
-        confirmApproveBtn.addEventListener("click", confirmApproveRegistration);
-        console.log("Confirm approve button handler attached");
+  // Initialize modals
+  const approveModal = document.getElementById("approveModal");
+  const rejectModal = document.getElementById("rejectModal");
+
+  // Debug: Check if modals exist
+  console.log("Approve modal found:", !!approveModal);
+  console.log("Reject modal found:", !!rejectModal);
+
+  // Debug: Check if modal content elements exist
+  const approveStudentNameEl = document.getElementById("approveStudentName");
+  const approveRoomNumberEl = document.getElementById("approveRoomNumber");
+  const rejectStudentNameEl = document.getElementById("rejectStudentName");
+  const rejectRoomNumberEl = document.getElementById("rejectRoomNumber");
+
+  console.log("Approve student name element found:", !!approveStudentNameEl);
+  console.log("Approve room number element found:", !!approveRoomNumberEl);
+  console.log("Reject student name element found:", !!rejectStudentNameEl);
+  console.log("Reject room number element found:", !!rejectRoomNumberEl);
+
+  // Set up confirm approve handler
+  const confirmApproveBtn = document.getElementById("confirmApproveBtn");
+  if (confirmApproveBtn) {
+    confirmApproveBtn.addEventListener("click", confirmApproveRegistration);
+    console.log("Confirm approve button handler attached");
+  }
+
+  // Set up confirm reject handler
+  const confirmRejectBtn = document.getElementById("confirmRejectBtn");
+  if (confirmRejectBtn) {
+    confirmRejectBtn.addEventListener("click", confirmRejectRegistration);
+    console.log("Confirm reject button handler attached");
+  }
+
+  // Set up event delegation for approve/reject/view buttons
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+
+    event.preventDefault();
+
+    const action = button.getAttribute("data-action");
+    const registrationId = parseInt(
+      button.getAttribute("data-registration-id")
+    );
+    const studentName = button.getAttribute("data-student-name");
+    const roomNumber = button.getAttribute("data-room-number");
+
+    console.log(
+      "Button clicked:",
+      action,
+      registrationId,
+      studentName,
+      roomNumber
+    );
+
+    switch (action) {
+      case "approve":
+        showApproveModal(registrationId, studentName, roomNumber);
+        break;
+      case "reject":
+        showRejectModal(registrationId, studentName, roomNumber);
+        break;
+      case "view":
+        showRegistrationDetailModal(registrationId);
+        break;
+      default:
+        console.warn("Unknown action:", action);
     }
+  });
+  /**
+   * Show registration detail modal via AJAX
+   */
+  async function showRegistrationDetailModal(registrationId) {
+    const modalElement = document.getElementById("registrationDetailModal");
+    const modalContent = document.getElementById("registrationDetailContent");
+    if (!modalElement || !modalContent) return;
 
-    // Set up confirm reject handler
-    const confirmRejectBtn = document.getElementById("confirmRejectBtn");
-    if (confirmRejectBtn) {
-        confirmRejectBtn.addEventListener("click", confirmRejectRegistration);
-        console.log("Confirm reject button handler attached");
+    // Show loading template
+    modalContent.innerHTML = document.getElementById(
+      "registrationDetailLoadingTemplate"
+    ).innerHTML;
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+
+    try {
+      const response = await fetch(`/registrations/${registrationId}`, {
+        method: "GET",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      if (!response.ok) throw new Error("Không thể tải thông tin đăng ký");
+      const data = await response.json();
+      if (!data.success || !data.data)
+        throw new Error(data.message || "Không tìm thấy đăng ký");
+
+      // The registration data is in data.data.registration based on our route
+      const registration = data.data.registration;
+      if (!registration) throw new Error("Không tìm thấy thông tin đăng ký");
+
+      // Fill template with registration data
+      const template = document.getElementById(
+        "registrationDetailTemplate"
+      ).innerHTML;
+      modalContent.innerHTML = template;
+      // Fill fields
+      document.getElementById("regDetailId").textContent =
+        registration.registration_id;
+      document.getElementById("regDetailDate").textContent =
+        registration.registration_date;
+      document.getElementById("regDetailStatus").textContent =
+        registration.status;
+      document.getElementById("regDetailStudentName").textContent =
+        registration.student.full_name;
+      document.getElementById("regDetailStudentId").textContent =
+        registration.student.student_id;
+      document.getElementById("regDetailStudentEmail").textContent =
+        registration.student.email;
+      document.getElementById("regDetailRoomNumber").textContent =
+        registration.room.room_number;
+      document.getElementById("regDetailBuildingName").textContent =
+        registration.room.building_name;
+      document.getElementById("regDetailRoomType").textContent =
+        registration.room.room_type;
+      document.getElementById("regDetailRoomPrice").textContent =
+        registration.room.price;
+    } catch (error) {
+      modalContent.innerHTML = document.getElementById(
+        "registrationDetailErrorTemplate"
+      ).innerHTML;
+      document.getElementById("registrationDetailErrorMsg").textContent =
+        error.message;
     }
+  }
 
-    // Set up event delegation for approve/reject buttons
-    document.addEventListener("click", function(event) {
-        const button = event.target.closest("[data-action]");
-        if (!button) return;
-
-        event.preventDefault();
-        
-        const action = button.getAttribute("data-action");
-        const registrationId = parseInt(button.getAttribute("data-registration-id"));
-        const studentName = button.getAttribute("data-student-name");
-        const roomNumber = button.getAttribute("data-room-number");
-        
-        console.log("Button clicked:", action, registrationId, studentName, roomNumber);
-        
-        switch(action) {
-            case "approve":
-                showApproveModal(registrationId, studentName, roomNumber);
-                break;
-            case "reject":
-                showRejectModal(registrationId, studentName, roomNumber);
-                break;
-            default:
-                console.warn("Unknown action:", action);
-        }
-    });
-
-    console.log("Registration management initialized successfully");
+  console.log("Registration management initialized successfully");
 }
 
 /**
  * Show approve confirmation modal
  */
 function showApproveModal(registrationId, studentName, roomNumber) {
-    console.log("Showing approve modal for registration:", registrationId);
-    
-    selectedRegistrationId = registrationId;
-    
+  console.log("Showing approve modal for registration:", registrationId);
+
+  selectedRegistrationId = registrationId;
+
+  // Wait a bit for any template includes to be processed
+  setTimeout(() => {
+    // Check if elements exist before trying to access them
+    const studentNameElement = document.getElementById("approveStudentName");
+    const roomNumberElement = document.getElementById("approveRoomNumber");
+
+    if (!studentNameElement) {
+      console.error("Element with ID 'approveStudentName' not found");
+      console.error(
+        "Available elements with 'approve' in ID:",
+        Array.from(document.querySelectorAll('[id*="approve"]')).map(
+          (el) => el.id
+        )
+      );
+      return;
+    }
+
+    if (!roomNumberElement) {
+      console.error("Element with ID 'approveRoomNumber' not found");
+      return;
+    }
+
     // Update modal content
-    document.getElementById("approveStudentName").textContent = studentName;
-    document.getElementById("approveRoomNumber").textContent = roomNumber;
-    
+    studentNameElement.textContent = studentName;
+    roomNumberElement.textContent = roomNumber;
+
     // Show modal
     const modalElement = document.getElementById("approveModal");
     if (modalElement) {
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-        console.log("Approve modal shown");
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+      console.log("Approve modal shown");
+    } else {
+      console.error("Approve modal element not found");
     }
+  }, 100); // Small delay to ensure DOM is ready
+
+  // Show modal
+  const modalElement = document.getElementById("approveModal");
+  if (modalElement) {
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    console.log("Approve modal shown");
+  }
 }
 
 /**
  * Show reject confirmation modal
  */
 function showRejectModal(registrationId, studentName, roomNumber) {
-    console.log("Showing reject modal for registration:", registrationId);
-    
-    selectedRegistrationId = registrationId;
-    
-    // Update modal content
-    document.getElementById("rejectStudentName").textContent = studentName;
-    document.getElementById("rejectRoomNumber").textContent = roomNumber;
-    
-    // Show modal
-    const modalElement = document.getElementById("rejectModal");
-    if (modalElement) {
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-        console.log("Reject modal shown");
-    }
+  console.log("Showing reject modal for registration:", registrationId);
+
+  selectedRegistrationId = registrationId;
+
+  // Check if elements exist before trying to access them
+  const studentNameElement = document.getElementById("rejectStudentName");
+  const roomNumberElement = document.getElementById("rejectRoomNumber");
+
+  if (!studentNameElement) {
+    console.error("Element with ID 'rejectStudentName' not found");
+    return;
+  }
+
+  if (!roomNumberElement) {
+    console.error("Element with ID 'rejectRoomNumber' not found");
+    return;
+  }
+
+  // Update modal content
+  studentNameElement.textContent = studentName;
+  roomNumberElement.textContent = roomNumber;
+
+  // Show modal
+  const modalElement = document.getElementById("rejectModal");
+  if (modalElement) {
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    console.log("Reject modal shown");
+  }
 }
 
 /**

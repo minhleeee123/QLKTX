@@ -65,6 +65,7 @@
                                     <th>ID</th>
                                     <th>Họ và tên</th>
                                     <th>Email</th>
+                                    <th>Giới tính</th>
                                     <th>Vai trò</th>
                                     <th>Mã sinh viên</th>
                                     <th>Trạng thái</th>
@@ -84,6 +85,15 @@
                                     </td>
                                     <td>{{ user.email }}</td>
                                     <td>
+                                        {% if user.gender == 'male' %}
+                                        <span class="badge bg-primary">Nam</span>
+                                        {% elif user.gender == 'female' %}
+                                        <span class="badge bg-pink">Nữ</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Khác</span>
+                                        {% endif %}
+                                        </td>
+                                        <td>
                                         {% if user.role == 'admin' %}
                                             <span class="badge bg-danger">Quản trị viên</span>
                                         {% elif user.role == 'management' %}

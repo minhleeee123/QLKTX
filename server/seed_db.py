@@ -1,10 +1,21 @@
 # trong một script seed.py hoặc trong flask shell
+import random
+from datetime import date, datetime, timedelta
+
 from app import create_app
 from app.extensions import db
-from app.models import Role, User, Building, RoomType, Room, Registration, Contract, Payment, MaintenanceRequest
+from app.models import (
+    Building,
+    Contract,
+    MaintenanceRequest,
+    Payment,
+    Registration,
+    Role,
+    Room,
+    RoomType,
+    User,
+)
 from werkzeug.security import generate_password_hash
-from datetime import datetime, date, timedelta
-import random
 
 app = create_app()
 with app.app_context():
@@ -29,184 +40,197 @@ with app.app_context():
     users_data = [
         # Admin users
         {
-            'role': admin_role,
-            'full_name': 'Nguyễn Văn Admin',
-            'email': 'admin@qlktx.edu.vn',
-            'password': 'admin123',
-            'phone_number': '0901234567',
-            'student_id': None
+            "role": admin_role,
+            "full_name": "Nguyễn Văn Admin",
+            "email": "admin@qlktx.edu.vn",
+            "password": "admin123",
+            "phone_number": "0901234567",
+            "student_id": None,
+            "gender": "male",
         },
-        
         # Management users
         {
-            'role': management_role,
-            'full_name': 'Trần Thị Quản Lý',
-            'email': 'quanly@qlktx.edu.vn',
-            'password': 'quanly123',
-            'phone_number': '0901234568',
-            'student_id': None
+            "role": management_role,
+            "full_name": "Trần Thị Quản Lý",
+            "email": "quanly@qlktx.edu.vn",
+            "password": "quanly123",
+            "phone_number": "0901234568",
+            "student_id": None,
+            "gender": "female",
         },
         {
-            'role': management_role,
-            'full_name': 'Lê Văn Giám Đốc',
-            'email': 'giamdoc@qlktx.edu.vn',
-            'password': 'giamdoc123',
-            'phone_number': '0901234569',
-            'student_id': None
+            "role": management_role,
+            "full_name": "Lê Văn Giám Đốc",
+            "email": "giamdoc@qlktx.edu.vn",
+            "password": "giamdoc123",
+            "phone_number": "0901234569",
+            "student_id": None,
+            "gender": "male",
         },
-        
         # Maintenance Staff
         {
-            'role': maintenance_role,
-            'full_name': 'Phạm Văn Sửa Chữa',
-            'email': 'baotri1@qlktx.edu.vn',
-            'password': 'baotri123',
-            'phone_number': '0901234570',
-            'student_id': None
+            "role": maintenance_role,
+            "full_name": "Phạm Văn Sửa Chữa",
+            "email": "baotri1@qlktx.edu.vn",
+            "password": "baotri123",
+            "phone_number": "0901234570",
+            "student_id": None,
+            "gender": "male",
         },
         {
-            'role': maintenance_role,
-            'full_name': 'Hoàng Thị Bảo Trì',
-            'email': 'baotri2@qlktx.edu.vn',
-            'password': 'baotri123',
-            'phone_number': '0901234571',
-            'student_id': None
+            "role": maintenance_role,
+            "full_name": "Hoàng Thị Bảo Trì",
+            "email": "baotri2@qlktx.edu.vn",
+            "password": "baotri123",
+            "phone_number": "0901234571",
+            "student_id": None,
+            "gender": "female",
         },
-        
         # Students - Extended list
         {
-            'role': student_role,
-            'full_name': 'Nguyễn Văn Sinh Viên',
-            'email': 'sinhvien1@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234572',
-            'student_id': 'SV001'
+            "role": student_role,
+            "full_name": "Nguyễn Văn Sinh Viên",
+            "email": "sinhvien1@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234572",
+            "student_id": "SV001",
+            "gender": "male",
         },
         {
-            'role': student_role,
-            'full_name': 'Trần Thị Học Sinh',
-            'email': 'sinhvien2@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234573',
-            'student_id': 'SV002'
+            "role": student_role,
+            "full_name": "Trần Thị Học Sinh",
+            "email": "sinhvien2@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234573",
+            "student_id": "SV002",
+            "gender": "female",
         },
         {
-            'role': student_role,
-            'full_name': 'Lê Minh Đức',
-            'email': 'sinhvien3@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234574',
-            'student_id': 'SV003'
+            "role": student_role,
+            "full_name": "Lê Minh Đức",
+            "email": "sinhvien3@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234574",
+            "student_id": "SV003",
+            "gender": "male",
         },
         {
-            'role': student_role,
-            'full_name': 'Phạm Thị Mai',
-            'email': 'sinhvien4@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234575',
-            'student_id': 'SV004'
+            "role": student_role,
+            "full_name": "Phạm Thị Mai",
+            "email": "sinhvien4@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234575",
+            "student_id": "SV004",
+            "gender": "female",
         },
         {
-            'role': student_role,
-            'full_name': 'Vũ Văn Nam',
-            'email': 'sinhvien5@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234576',
-            'student_id': 'SV005'
+            "role": student_role,
+            "full_name": "Vũ Văn Nam",
+            "email": "sinhvien5@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234576",
+            "student_id": "SV005",
+            "gender": "male",
         },
         {
-            'role': student_role,
-            'full_name': 'Hoàng Thị Lan',
-            'email': 'sinhvien6@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234577',
-            'student_id': 'SV006'
+            "role": student_role,
+            "full_name": "Hoàng Thị Lan",
+            "email": "sinhvien6@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234577",
+            "student_id": "SV006",
+            "gender": "female",
         },
         {
-            'role': student_role,
-            'full_name': 'Đinh Văn Hùng',
-            'email': 'sinhvien7@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234578',
-            'student_id': 'SV007'
+            "role": student_role,
+            "full_name": "Đinh Văn Hùng",
+            "email": "sinhvien7@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234578",
+            "student_id": "SV007",
+            "gender": "male",
         },
         {
-            'role': student_role,
-            'full_name': 'Bùi Thị Hương',
-            'email': 'sinhvien8@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234579',
-            'student_id': 'SV008'
+            "role": student_role,
+            "full_name": "Bùi Thị Hương",
+            "email": "sinhvien8@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234579",
+            "student_id": "SV008",
+            "gender": "female",
         },
         {
-            'role': student_role,
-            'full_name': 'Đặng Văn Quân',
-            'email': 'sinhvien9@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234580',
-            'student_id': 'SV009'
+            "role": student_role,
+            "full_name": "Đặng Văn Quân",
+            "email": "sinhvien9@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234580",
+            "student_id": "SV009",
+            "gender": "male",
         },
         {
-            'role': student_role,
-            'full_name': 'Ngô Thị Trang',
-            'email': 'sinhvien10@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234581',
-            'student_id': 'SV010'
+            "role": student_role,
+            "full_name": "Ngô Thị Trang",
+            "email": "sinhvien10@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234581",
+            "student_id": "SV010",
+            "gender": "female",
         },
         {
-            'role': student_role,
-            'full_name': 'Lý Văn Thành',
-            'email': 'sinhvien11@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234582',
-            'student_id': 'SV011'
+            "role": student_role,
+            "full_name": "Lý Văn Thành",
+            "email": "sinhvien11@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234582",
+            "student_id": "SV011",
         },
         {
-            'role': student_role,
-            'full_name': 'Phan Thị Linh',
-            'email': 'sinhvien12@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234583',
-            'student_id': 'SV012'
+            "role": student_role,
+            "full_name": "Phan Thị Linh",
+            "email": "sinhvien12@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234583",
+            "student_id": "SV012",
         },
         {
-            'role': student_role,
-            'full_name': 'Cao Văn Minh',
-            'email': 'sinhvien13@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234584',
-            'student_id': 'SV013'
+            "role": student_role,
+            "full_name": "Cao Văn Minh",
+            "email": "sinhvien13@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234584",
+            "student_id": "SV013",
         },
         {
-            'role': student_role,
-            'full_name': 'Võ Thị Yến',
-            'email': 'sinhvien14@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234585',
-            'student_id': 'SV014'
+            "role": student_role,
+            "full_name": "Võ Thị Yến",
+            "email": "sinhvien14@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234585",
+            "student_id": "SV014",
         },
         {
-            'role': student_role,
-            'full_name': 'Tạ Văn Dũng',
-            'email': 'sinhvien15@student.edu.vn',
-            'password': 'sinhvien123',
-            'phone_number': '0901234586',
-            'student_id': 'SV015'
-        }
+            "role": student_role,
+            "full_name": "Tạ Văn Dũng",
+            "email": "sinhvien15@student.edu.vn",
+            "password": "sinhvien123",
+            "phone_number": "0901234586",
+            "student_id": "SV015",
+        },
     ]
 
     for user_data in users_data:
         # Kiểm tra user đã tồn tại chưa
         if not User.query.filter_by(email=user_data['email']).first():
             user = User(
-                role_id=user_data['role'].role_id,
-                full_name=user_data['full_name'],
-                email=user_data['email'],
-                password_hash=generate_password_hash(user_data['password']),
-                phone_number=user_data['phone_number'],
-                student_id=user_data['student_id'],
-                is_active=True
+                role_id=user_data["role"].role_id,
+                full_name=user_data["full_name"],
+                email=user_data["email"],
+                password_hash=generate_password_hash(user_data["password"]),
+                phone_number=user_data["phone_number"],
+                student_id=user_data["student_id"],
+                gender=user_data.get("gender", "other"),
+                is_active=True,
             )
             db.session.add(user)
 
@@ -216,16 +240,23 @@ with app.app_context():
     # Seed Buildings
     print("Seeding Buildings...")
     buildings_data = [
-        'Tòa A - Khu Nam',
-        'Tòa B - Khu Nam', 
-        'Tòa C - Khu Bắc',
-        'Tòa D - Khu Bắc',
-        'Tòa E - Khu Trung tâm'
+        {"building_name": "Tòa A - Khu Nam", "gender": "male"},
+        {"building_name": "Tòa B - Khu Nam", "gender": "male"},
+        {"building_name": "Tòa C - Khu Bắc", "gender": "female"},
+        {"building_name": "Tòa D - Khu Bắc", "gender": "female"},
+        {"building_name": "Tòa E - Khu Trung tâm", "gender": "all"},
     ]
 
-    for building_name in buildings_data:
-        if not Building.query.filter_by(building_name=building_name).first():
-            db.session.add(Building(building_name=building_name))
+    for building_data in buildings_data:
+        if not Building.query.filter_by(
+            building_name=building_data["building_name"]
+        ).first():
+            db.session.add(
+                Building(
+                    building_name=building_data["building_name"],
+                    gender=building_data["gender"],
+                )
+            )
     db.session.commit()
     print("✓ Buildings seeded successfully")
 
@@ -301,7 +332,7 @@ with app.app_context():
         for i, student in enumerate(students):
             # Mỗi sinh viên có thể có nhiều registration
             num_registrations = random.randint(1, 3)  # 1-3 đơn đăng ký per student
-            
+
             for reg_count in range(num_registrations):
                 if (i * num_registrations + reg_count) < len(available_rooms):
                     room = available_rooms[i * num_registrations + reg_count]
@@ -342,10 +373,10 @@ with app.app_context():
     # Seed Contracts - Enhanced Version
     print("Seeding Contracts...")
     approved_registrations = Registration.query.filter_by(status='approved').all()
-    
+
     # Các mẫu contract code prefix
     contract_prefixes = ['HD', 'CT', 'KTX']
-    
+
     for i, registration in enumerate(approved_registrations):
         # Kiểm tra đã có contract chưa
         if not Contract.query.filter_by(registration_id=registration.registration_id).first():
@@ -367,7 +398,7 @@ with app.app_context():
                     'weight': 0.2  # 20% hợp đồng 3 tháng
                 }
             ]
-            
+
             # Chọn loại hợp đồng dựa trên weight
             rand = random.random()
             if rand < 0.5:
@@ -376,16 +407,16 @@ with app.app_context():
                 contract_type = contract_types[1]  # 6 tháng
             else:
                 contract_type = contract_types[2]  # 3 tháng
-            
+
             # Tạo ngày bắt đầu và kết thúc
             start_date = date.today() - timedelta(days=contract_type['start_offset_days'])
             end_date = start_date + timedelta(days=contract_type['duration_days'])
-            
+
             # Tạo mã hợp đồng đa dạng
             prefix = random.choice(contract_prefixes)
             year = start_date.year
             contract_code = f"{prefix}{year}{registration.registration_id:04d}"
-            
+
             # Đảm bảo contract_code unique
             counter = 1
             original_code = contract_code

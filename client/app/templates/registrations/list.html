@@ -178,7 +178,7 @@
                         </td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm" role="group">
-                                <a href="{{ url_for('registrations.view_registration', registration_id=reg.registration_id) }}" 
+                                <a href="{{ url_for('registrations.get_registration', registration_id=reg.registration_id) }}"
                                    class="btn btn-outline-info" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
                                 </a>
@@ -254,61 +254,8 @@
 </nav>
 {% endif %}
 
-<!-- Approve Modal -->
-<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="approveModalLabel">
-                    <i class="fas fa-check-circle"></i> Xác nhận duyệt đơn
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Bạn có chắc chắn muốn <strong class="text-success">duyệt</strong> đơn đăng ký này không?</p>
-                <div class="alert alert-info">
-                    <strong>Sinh viên:</strong> <span id="approveStudentName"></span><br>
-                    <strong>Phòng:</strong> <span id="approveRoomNumber"></span>
-                </div>
-                <p class="text-muted small">Sau khi duyệt, hệ thống sẽ tự động tạo hợp đồng cho sinh viên.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-success" id="confirmApproveBtn">
-                    <i class="fas fa-check"></i> Duyệt đơn
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="rejectModalLabel">
-                    <i class="fas fa-times-circle"></i> Xác nhận từ chối đơn
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Bạn có chắc chắn muốn <strong class="text-danger">từ chối</strong> đơn đăng ký này không?</p>
-                <div class="alert alert-warning">
-                    <strong>Sinh viên:</strong> <span id="rejectStudentName"></span><br>
-                    <strong>Phòng:</strong> <span id="rejectRoomNumber"></span>
-                </div>
-                <p class="text-muted small">Sau khi từ chối, sinh viên có thể đăng ký lại phòng khác.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" id="confirmRejectBtn">
-                    <i class="fas fa-times"></i> Từ chối đơn
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'registrations/modals.html' %}
 
 {% endblock %}
 

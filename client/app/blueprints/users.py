@@ -80,6 +80,7 @@ def create_user():
         "phone_number": request.form.get("phone_number"),
         "student_id": request.form.get("student_id"),
         "role_name": request.form.get("role_name"),
+        "gender": request.form.get("gender"),
         "is_active": request.form.get("is_active") == "true",
         "password": request.form.get("password"),
     }

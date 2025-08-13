@@ -95,6 +95,7 @@ def get_users():
                     "email": user.email,
                     "phone_number": user.phone_number,
                     "student_id": user.student_id,
+                    "gender": user.gender,
                     "role": user.role.role_name,
                     "created_at": user.created_at.isoformat(),
                     "is_active": user.is_active,
@@ -186,6 +187,7 @@ def get_user(user_id):
                 "email": user.email,
                 "phone_number": user.phone_number,
                 "student_id": user.student_id,
+                "gender": user.gender,
                 "role": user.role.role_name,
                 "created_at": user.created_at.isoformat(),
                 "is_active": user.is_active,
@@ -289,6 +291,7 @@ def create_user():
             password_hash=generate_password_hash(data["password"]),
             phone_number=data.get("phone_number"),
             student_id=data.get("student_id"),
+            gender=data.get("gender", "other"),
             is_active=data.get("is_active", True),
         )
 
@@ -300,7 +303,12 @@ def create_user():
                 "user_id": user.user_id,
                 "full_name": user.full_name,
                 "email": user.email,
+                "phone_number": user.phone_number,
+                "student_id": user.student_id,
+                "gender": user.gender,
                 "role": user.role.role_name,
+                "created_at": user.created_at.isoformat(),
+                "is_active": user.is_active,
             }
         }
 
@@ -389,6 +397,8 @@ def update_user(user_id):
             user.full_name = data["full_name"]
         if "phone_number" in data:
             user.phone_number = data["phone_number"]
+        if "gender" in data:
+            user.gender = data["gender"]
 
         # Chỉ Admin/Management mới được cập nhật role và is_active
         if current_user.role.role_name in ["admin", "management"]:
@@ -407,7 +417,10 @@ def update_user(user_id):
                 "full_name": user.full_name,
                 "email": user.email,
                 "phone_number": user.phone_number,
+                "student_id": user.student_id,
+                "gender": user.gender,
                 "role": user.role.role_name,
+                "created_at": user.created_at.isoformat(),
                 "is_active": user.is_active,
             }
         }

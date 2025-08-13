@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
 from app.extensions import db
-from app.models import Contract, ContractHistory, Registration, Room, User
+from app.models import Contract, Registration, Room, User
 from app.utils.api_response import APIResponse
 from app.utils.decorators import require_role
 from flask import Blueprint, jsonify, request
@@ -106,6 +106,15 @@ def create_registration():
                 message="Phòng đã đầy hoặc không khả dụng", status_code=400
             )
 
+        # Kiểm tra giới tính của sinh viên và tòa nhà
+        building_gender = room.building.gender
+        student_gender = current_user.gender
+        if building_gender != "all" and building_gender != student_gender:
+            return APIResponse.error(
+                message=f"Bạn chỉ được đăng ký phòng ở tòa nhà dành cho giới tính '{student_gender}'",
+                status_code=400,
+            )
+
         # Kiểm tra sinh viên đã có đơn đăng ký pending/approved chưa
         existing_registration = (
             Registration.query.filter_by(student_id=current_user_id)
@@ -146,6 +155,37 @@ def create_registration():
     except Exception as e:
         db.session.rollback()
         return APIResponse.error(message=str(e), status_code=500)
+
+
+@registrations_bp.route("/<int:registration_id>/json", methods=["GET"])
+@jwt_required()
+def get_registration_json(registration_id):
+    """Trả về thông tin đăng ký dưới dạng JSON cho modal"""
+    try:
+        registration = Registration.query.get(registration_id)
+        if not registration:
+            return jsonify({"success": False, "message": "Đăng ký không tồn tại"}), 404
+
+        reg_data = {
+            "registration_id": registration.registration_id,
+            "registration_date": registration.registration_date.isoformat(),
+            "status": registration.status,
+            "student": {
+                "full_name": registration.student.full_name,
+                "student_id": registration.student.student_id,
+                "email": registration.student.email,
+            },
+            "room": {
+                "room_number": registration.room.room_number,
+                "building_name": registration.room.building.building_name,
+                "room_type": registration.room.room_type.type_name,
+                "price": float(registration.room.room_type.price),
+            },
+        }
+        return jsonify({"success": True, "registration": reg_data})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
 
 @registrations_bp.route('/<int:registration_id>/approve', methods=['POST'])
 @jwt_required()
@@ -193,25 +233,6 @@ def approve_registration(registration_id):
 
         db.session.add(contract)
         db.session.flush()  # To get the contract ID
-
-        # Tạo lịch sử hợp đồng
-        import json
-
-        history = ContractHistory(
-            contract_id=contract.contract_id,
-            user_id=get_jwt_identity(),
-            action="created",
-            new_value=json.dumps(
-                {
-                    "contract_code": contract_code,
-                    "start_date": start_date.isoformat(),
-                    "end_date": end_date.isoformat(),
-                    "registration_id": registration.registration_id,
-                }
-            ),
-            notes=f"Hợp đồng được tạo tự động khi duyệt đơn đăng ký #{registration.registration_id}",
-        )
-        db.session.add(history)
 
         db.session.commit()
 

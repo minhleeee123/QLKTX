@@ -1,5 +1,7 @@
 DROP DATABASE IF EXISTS qlktx;
+
 CREATE DATABASE IF NOT EXISTS qlktx;
+
 USE qlktx;
 
 -- =================================================================
@@ -21,11 +23,11 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     phone_number VARCHAR(15),
     student_id VARCHAR(20) UNIQUE, -- Mã số sinh viên
+    gender VARCHAR(10) NOT NULL, -- 'male', 'female', 'other'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (role_id) REFERENCES roles(role_id)
+    FOREIGN KEY (role_id) REFERENCES roles (role_id)
 );
-
 
 -- =================================================================
 -- 2. BẢNG QUẢN LÝ PHÒNG ỐC VÀ CƠ SỞ VẬT CHẤT
@@ -34,7 +36,8 @@ CREATE TABLE users (
 -- Bảng lưu thông tin các tòa nhà/khu
 CREATE TABLE buildings (
     building_id INT PRIMARY KEY AUTO_INCREMENT,
-    building_name VARCHAR(100) NOT NULL
+    building_name VARCHAR(100) NOT NULL,
+    gender VARCHAR(10) NOT NULL -- 'male', 'female', 'all'
 );
 
 -- Bảng lưu các loại phòng
@@ -53,10 +56,9 @@ CREATE TABLE rooms (
     room_type_id INT NOT NULL,
     status VARCHAR(50) DEFAULT 'available', -- 'available', 'occupied', 'pending_approval', 'maintenance'
     current_occupancy INT DEFAULT 0,
-    FOREIGN KEY (building_id) REFERENCES buildings(building_id),
-    FOREIGN KEY (room_type_id) REFERENCES room_types(room_type_id)
+    FOREIGN KEY (building_id) REFERENCES buildings (building_id),
+    FOREIGN KEY (room_type_id) REFERENCES room_types (room_type_id)
 );
-
 
 -- =================================================================
 -- 3. BẢNG XỬ LÝ NGHIỆP VỤ CHÍNH
@@ -69,8 +71,8 @@ CREATE TABLE registrations (
     room_id INT NOT NULL,
     status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(user_id),
-    FOREIGN KEY (room_id) REFERENCES rooms(room_id)
+    FOREIGN KEY (student_id) REFERENCES users (user_id),
+    FOREIGN KEY (room_id) REFERENCES rooms (room_id)
 );
 
 -- Bảng lưu hợp đồng
@@ -81,7 +83,7 @@ CREATE TABLE contracts (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (registration_id) REFERENCES registrations(registration_id)
+    FOREIGN KEY (registration_id) REFERENCES registrations (registration_id)
 );
 
 -- Bảng lưu thông tin thanh toán
@@ -94,10 +96,9 @@ CREATE TABLE payments (
     status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'confirmed', 'failed'
     proof_image_url VARCHAR(255), -- URL ảnh chụp màn hình giao dịch
     confirmed_by_user_id INT, -- ID người xác nhận
-    FOREIGN KEY (contract_id) REFERENCES contracts(contract_id),
-    FOREIGN KEY (confirmed_by_user_id) REFERENCES users(user_id)
+    FOREIGN KEY (contract_id) REFERENCES contracts (contract_id),
+    FOREIGN KEY (confirmed_by_user_id) REFERENCES users (user_id)
 );
-
 
 -- =================================================================
 -- 4. BẢNG NGHIỆP VỤ BẢO TRÌ
@@ -114,7 +115,7 @@ CREATE TABLE maintenance_requests (
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     assigned_to_user_id INT, -- ID nhân viên bảo trì được phân công
     completed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(user_id),
-    FOREIGN KEY (room_id) REFERENCES rooms(room_id),
-    FOREIGN KEY (assigned_to_user_id) REFERENCES users(user_id)
+    FOREIGN KEY (student_id) REFERENCES users (user_id),
+    FOREIGN KEY (room_id) REFERENCES rooms (room_id),
+    FOREIGN KEY (assigned_to_user_id) REFERENCES users (user_id)
 );

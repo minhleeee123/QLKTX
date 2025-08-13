@@ -1,0 +1,272 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registration-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .registration-status-badge {
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+    }
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    .status-approved {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .info-card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+    .info-card .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+    .info-value {
+        color: #212529;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Registration Header -->
+    <div class="registration-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-1">
+                    <i class="fas fa-file-alt me-2"></i>
+                    Chi tiết đăng ký #{{ registration.registration_id }}
+                </h2>
+                <p class="mb-0 opacity-75">
+                    <i class="fas fa-calendar me-1"></i>
+                    Ngày đăng ký: {{ registration.registration_date }}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if registration.status == 'pending' %}
+                    <span class="registration-status-badge status-pending">
+                        <i class="fas fa-clock me-1"></i> Chờ duyệt
+                    </span>
+                {% elif registration.status == 'approved' %}
+                    <span class="registration-status-badge status-approved">
+                        <i class="fas fa-check-circle me-1"></i> Đã duyệt
+                    </span>
+                {% elif registration.status == 'rejected' %}
+                    <span class="registration-status-badge status-rejected">
+                        <i class="fas fa-times-circle me-1"></i> Đã từ chối
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Student Information -->
+        <div class="col-md-6">
+            <div class="card info-card">
+                <div class="card-header">
+                    <i class="fas fa-user me-2"></i>Thông tin sinh viên
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="info-label">Họ và tên:</span>
+                        <span class="info-value">{{ registration.student.full_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Mã sinh viên:</span>
+                        <span class="info-value">{{ registration.student.student_id }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Email:</span>
+                        <span class="info-value">{{ registration.student.email }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Information -->
+        <div class="col-md-6">
+            <div class="card info-card">
+                <div class="card-header">
+                    <i class="fas fa-bed me-2"></i>Thông tin phòng
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="info-label">Số phòng:</span>
+                        <span class="info-value">{{ registration.room.room_number }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Tòa nhà:</span>
+                        <span class="info-value">{{ registration.room.building_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Loại phòng:</span>
+                        <span class="info-value">{{ registration.room.room_type }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Giá phòng:</span>
+                        <span class="info-value text-success fw-bold">
+                            {{ "{:,.0f}".format(registration.room.price) }} VNĐ/tháng
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card info-card">
+                <div class="card-body text-center">
+                    <a href="{{ url_for('registrations.list_registrations') }}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
+                    </a>
+                    
+                    {% if registration.status == 'pending' %}
+                        <button class="btn btn-success me-2" 
+                                title="Duyệt đơn"
+                                data-action="approve"
+                                data-registration-id="{{ registration.registration_id }}"
+                                data-student-name="{{ registration.student.full_name }}">
+                            <i class="fas fa-check me-1"></i> Duyệt đơn
+                        </button>
+                        <button class="btn btn-danger"
+                                title="Từ chối đơn"
+                                data-action="reject"
+                                data-registration-id="{{ registration.registration_id }}"
+                                data-student-name="{{ registration.student.full_name }}">
+                            <i class="fas fa-times me-1"></i> Từ chối
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="actionModalTitle">Xác nhận</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="actionModalBody">
+                <!-- Content will be inserted via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirmAction">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const actionButtons = document.querySelectorAll('[data-action]');
+    const actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
+    const confirmButton = document.getElementById('confirmAction');
+    
+    let currentAction = null;
+    let currentRegistrationId = null;
+
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const registrationId = this.dataset.registrationId;
+            const studentName = this.dataset.studentName;
+            
+            currentAction = action;
+            currentRegistrationId = registrationId;
+
+            const title = action === 'approve' ? 'Duyệt đơn đăng ký' : 'Từ chối đơn đăng ký';
+            const message = action === 'approve' 
+                ? `Bạn có chắc chắn muốn duyệt đơn đăng ký của sinh viên <strong>${studentName}</strong>?`
+                : `Bạn có chắc chắn muốn từ chối đơn đăng ký của sinh viên <strong>${studentName}</strong>?`;
+            
+            document.getElementById('actionModalTitle').textContent = title;
+            document.getElementById('actionModalBody').innerHTML = message;
+            
+            confirmButton.className = action === 'approve' ? 'btn btn-success' : 'btn btn-danger';
+            confirmButton.textContent = action === 'approve' ? 'Duyệt' : 'Từ chối';
+            
+            actionModal.show();
+        });
+    });
+
+    confirmButton.addEventListener('click', function() {
+        if (currentAction && currentRegistrationId) {
+            const url = `/registrations/${currentRegistrationId}/${currentAction}`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message and redirect
+                    alert(data.message || 'Thành công!');
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra!');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi xử lý yêu cầu!');
+            })
+            .finally(() => {
+                actionModal.hide();
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

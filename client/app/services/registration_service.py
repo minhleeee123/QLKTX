@@ -25,7 +25,7 @@ class RegistrationService:
     def get_registration(registration_id: int) -> Dict[str, Any]:
         """Get registration details by ID"""
         # Return the complete API response (no data extraction)
-        return api_client.get(f"/registrations/{registration_id}")
+        return api_client.get(f"/registrations/{registration_id}/json")
 
     @staticmethod
     def create_registration(room_id: int) -> Dict[str, Any]:

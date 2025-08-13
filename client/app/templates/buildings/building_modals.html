@@ -11,11 +11,22 @@
                 <input type="hidden" id="buildingId" name="building_id" value="">
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="buildingName" class="form-label">Tên tòa nhà <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="buildingName" name="building_name" required>
                                 <div class="text-danger small" id="buildingNameError"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="buildingGender" class="form-label">Giới tính <span class="text-danger">*</span></label>
+                                <select class="form-select" id="buildingGender" name="gender" required>
+                                    <option value="male">Nam</option>
+                                    <option value="female">Nữ</option>
+                                    <option value="all">Tất cả</option>
+                                </select>
+                                <div class="text-danger small" id="buildingGenderError"></div>
                             </div>
                         </div>
                     </div>
